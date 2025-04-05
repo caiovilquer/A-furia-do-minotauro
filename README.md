@@ -124,7 +124,7 @@ As telas usam botões e texto via Pygame, com um background temático. Os dados 
 
 1. **Clonar ou baixar** este repositório:
    ```bash
-   git clone https://github.com/seuUsuario/labirinto-sensorial.git
+   git clone https://github.com/caiovilquer/labirinto-sensorial-PCS.git
    ```
 2. **Instalar dependências** do Python:
    ```bash

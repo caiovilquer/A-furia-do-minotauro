@@ -143,7 +143,7 @@ class JogoLabirinto:
 
     def verificar_colisao(self):
         # chance de colisão meramente ilustrativa
-        if random.random() < 0.002:
+        if random.random() < 0.02:
             self.vidas -= 1
             self.feedback_colisao()
 
@@ -213,7 +213,7 @@ class JogoLabirinto:
 
             # Se acabou as vidas
             if self.vidas <= 0:
-                print("Você perdeu todas as vidas! Reiniciando nível...")
+                self.jogo_ativo = tela_falhou(tela);
                 tempo_total = time.time() - self.inicio_tempo
                 self.salvar_progresso(tempo_total, falhou=True)
                 self.vidas = 3
@@ -369,6 +369,67 @@ def tela_escolha_usuario(tela):
         txt_surface = input_font.render(usuario_digitado, True, PRETO)
         tela.blit(txt_surface, (input_box.x+10, input_box.y+10))
         desenhar_texto("Novo usuário e ENTER:", input_font, COR_TEXTO, tela, input_box.x, input_box.y - 50)
+
+        pygame.display.update()
+
+def tela_falhou(tela):
+    clock = pygame.time.Clock()
+    fonte_titulo = FONTE_TITULO
+    fonte_botao = FONTE_BOTAO
+
+    titulo_x = LARGURA_TELA//2 - 600
+    titulo_y = 400
+
+    while True:
+        events = pygame.event.get()
+        clock.tick(FPS)
+        for event in events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        if background_img:
+            tela.blit(background_img, (0, 0))
+        else:
+            tela.fill(AZUL_CLARO)
+
+        desenhar_texto("Você perdeu todas as vidas!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+
+        # Botão Rejogar
+        clicou_rejogar, _ = desenhar_botao_estilizado(
+            texto="Rejogar Nível",
+            x=LARGURA_TELA//2 - 300,
+            y=600,
+            largura=400,
+            altura=70,
+            cor_normal=(50, 200, 50),
+            cor_hover=(50, 255, 50),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_rejogar:
+            return True
+        
+        # Botão Voltar
+        clicou_voltar, _ = desenhar_botao_estilizado(
+            texto="Voltar",
+            x=LARGURA_TELA//2 - 300,
+            y=700,
+            largura=400,
+            altura=70,
+            cor_normal=(255, 200, 0),
+            cor_hover=(255, 255, 0),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_voltar:
+            return False
 
         pygame.display.update()
 

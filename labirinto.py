@@ -19,15 +19,16 @@ ESCALA_CINZA = False  # Ajuste para True se quiser todos os botões em escala de
 
 # FUNÇÃO AUXILIAR PARA CONVERTER COR EM ESCALA DE CINZA
 def to_gray(r, g, b):
-    return (int(0.2989*r), int(0.5870*g), int(0.1140*b))
+    gray = int(0.2989*r + 0.5870*g + 0.1140*b)
+    return (gray, gray, gray)
 
 # CORES E ESTILO DE FONTE PARA ASPECTO PUZZLE
 COR_TITULO = (250, 250, 100)
 COR_TEXTO = (255, 200, 0)
-COR_BOTAO_TEXTO = (0, 0, 0)
+COR_BOTAO_TEXTO = (255, 255, 255)
 
 FONTE_TITULO = pygame.font.SysFont("comicsansms", 80, bold=True)
-FONTE_BOTAO = pygame.font.SysFont("comicsansms", 50)
+FONTE_BOTAO = pygame.font.SysFont("comicsansms", 40)
 FONTE_TEXTO = pygame.font.SysFont("comicsansms", 40)
 
 # Demais cores
@@ -112,7 +113,6 @@ def desenhar_botao_estilizado(
     texto_render = fonte.render(texto, True, COR_BOTAO_TEXTO)
     texto_rect = texto_render.get_rect(center=(largura//2, altura//2))
     botao_surf.blit(texto_render, texto_rect)
-
     tela.blit(botao_surf, (x, y))
 
     clicou = False
@@ -132,13 +132,11 @@ def cor_com_escala_cinza(r, g, b):
         return (r, g, b)
     else:
         return to_gray(r, g, b)
-
 # === TELA DE QUANDO O JOGADOR PERDE VIDAS ===
 def tela_falhou(tela):
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
-
     titulo_x = LARGURA_TELA//2 - 600
     titulo_y = 400
 
@@ -375,7 +373,7 @@ class JogoLabirinto:
     def loop_principal(self):
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
         fonte_botao = FONTE_BOTAO
-        info_x = LARGURA_TELA//2 - 200
+        info_x = 200
         info_y = 300
         while self.jogo_ativo:
             events = pygame.event.get()
@@ -398,8 +396,8 @@ class JogoLabirinto:
             # Botão Voltar
             clicou_voltar, _ = desenhar_botao_estilizado(
                 texto="Voltar",
-                x=50,
-                y=300,
+                x=200,
+                y=600,
                 largura=200,
                 altura=70,
                 cor_normal=cor_com_escala_cinza(255, 200, 0),
@@ -765,7 +763,7 @@ def tela_menu_principal(tela, usuario):
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
 
-    global ESCALA_CINZA
+    global ESCALA_CINZA, COR_TITULO, COR_TEXTO
 
     titulo_x = LARGURA_TELA//2 - 350
     titulo_y = 100
@@ -844,8 +842,8 @@ def tela_menu_principal(tela, usuario):
         clicou_escala, _ = desenhar_botao_estilizado(
             texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
             x=LARGURA_TELA - 500,
-            y= 200,
-            largura=400,
+            y= ALTURA_TELA-100,
+            largura=500,
             altura=80,
             cor_normal=cor_com_escala_cinza(100, 100, 100),
             cor_hover=cor_com_escala_cinza(150, 150, 150),
@@ -857,6 +855,10 @@ def tela_menu_principal(tela, usuario):
         )
         if clicou_escala:
             ESCALA_CINZA = not ESCALA_CINZA
+            COR_TITULO = cor_com_escala_cinza(250, 250, 100)
+            COR_TEXTO = cor_com_escala_cinza(255, 200, 0)
+            
+            
 
         # Botão Voltar
         clicou_voltar, _ = desenhar_botao_estilizado(

@@ -6,20 +6,25 @@ import time
 import random
 from datetime import datetime
 
-
 pygame.init()
 
 # === CONFIGURAÇÕES BÁSICAS ===
 LARGURA_TELA = 1920
 ALTURA_TELA = 1080
 TITULO_JOGO = "Labirinto Sensorial"
-FPS = 30
+FPS = 60
+
+# FLAG GLOBAL PARA ESCALA DE CINZA
+ESCALA_CINZA = False  # Ajuste para True se quiser todos os botões em escala de cinza
+
+# FUNÇÃO AUXILIAR PARA CONVERTER COR EM ESCALA DE CINZA
+def to_gray(r, g, b):
+    return (int(0.2989*r), int(0.5870*g), int(0.1140*b))
 
 # CORES E ESTILO DE FONTE PARA ASPECTO PUZZLE
-COR_TITULO = (250, 250, 100)  
-COR_TEXTO = (255, 200, 0)   
-COR_BOTAO_TEXTO = (0, 0, 0)   
-
+COR_TITULO = (250, 250, 100)
+COR_TEXTO = (255, 200, 0)
+COR_BOTAO_TEXTO = (0, 0, 0)
 
 FONTE_TITULO = pygame.font.SysFont("comicsansms", 80, bold=True)
 FONTE_BOTAO = pygame.font.SysFont("comicsansms", 50)
@@ -119,6 +124,202 @@ def desenhar_botao_estilizado(
 
     return clicou, botao_rect
 
+
+# === FUNÇÃO AUXILIAR PARA OBTER COR COM ESCALA DE CINZA ===
+def cor_com_escala_cinza(r, g, b):
+    """Retorna (r, g, b) normal ou em escala de cinza dependendo de ESCALA_CINZA."""
+    if not ESCALA_CINZA:
+        return (r, g, b)
+    else:
+        return to_gray(r, g, b)
+
+# === TELA DE QUANDO O JOGADOR PERDE VIDAS ===
+def tela_falhou(tela):
+    clock = pygame.time.Clock()
+    fonte_titulo = FONTE_TITULO
+    fonte_botao = FONTE_BOTAO
+
+    titulo_x = LARGURA_TELA//2 - 600
+    titulo_y = 400
+
+    while True:
+        events = pygame.event.get()
+        clock.tick(FPS)
+        for event in events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        if background_img:
+            tela.blit(background_img, (0, 0))
+        else:
+            tela.fill(AZUL_CLARO)
+
+        desenhar_texto("Você perdeu todas as vidas!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+
+        # Botão Rejogar
+        clicou_rejogar, _ = desenhar_botao_estilizado(
+            texto="Rejogar Nível",
+            x=LARGURA_TELA//2 - 300,
+            y=600,
+            largura=400,
+            altura=70,
+            cor_normal=cor_com_escala_cinza(50, 200, 50),
+            cor_hover=cor_com_escala_cinza(50, 255, 50),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_rejogar:
+            return True
+        
+        # Botão Voltar
+        clicou_voltar, _ = desenhar_botao_estilizado(
+            texto="Voltar",
+            x=LARGURA_TELA//2 - 300,
+            y=700,
+            largura=400,
+            altura=70,
+            cor_normal=cor_com_escala_cinza(255, 200, 0),
+            cor_hover=cor_com_escala_cinza(255, 255, 0),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_voltar:
+            return False
+
+        pygame.display.update()
+
+
+def tela_conclusao(tela):
+    clock = pygame.time.Clock()
+    fonte_titulo = FONTE_TITULO
+    fonte_botao = FONTE_BOTAO
+
+    titulo_x = LARGURA_TELA//2 - 800
+    titulo_y = 400
+
+    while True:
+        events = pygame.event.get()
+        clock.tick(FPS)
+        for event in events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        if background_img:
+            tela.blit(background_img, (0, 0))
+        else:
+            tela.fill(AZUL_CLARO)
+
+        desenhar_texto("Parabéns! Você concluiu todos os níveis!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+
+        # Botão Voltar
+        clicou_voltar, _ = desenhar_botao_estilizado(
+            texto="Voltar",
+            x=LARGURA_TELA//2 - 300,
+            y=600,
+            largura=400,
+            altura=70,
+            cor_normal=cor_com_escala_cinza(255, 200, 0),
+            cor_hover=cor_com_escala_cinza(255, 255, 0),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_voltar:
+            return
+
+        pygame.display.update()
+
+
+def tela_conclusao_nivel(tela, nivel, tempo):
+    clock = pygame.time.Clock()
+    fonte_titulo = FONTE_TITULO
+    fonte_botao = FONTE_BOTAO
+
+    titulo_x = LARGURA_TELA//2 - 900
+    titulo_y = 400
+
+    while True:
+        events = pygame.event.get()
+        clock.tick(FPS)
+        for event in events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        if background_img:
+            tela.blit(background_img, (0, 0))
+        else:
+            tela.fill(AZUL_CLARO)
+
+        desenhar_texto(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+
+        # Botão Rejogar Nível
+        clicou_rejogar, _ = desenhar_botao_estilizado(
+            texto="Rejogar Nível",
+            x=LARGURA_TELA//2 - 300,
+            y=600,
+            largura=400,
+            altura=70,
+            cor_normal=cor_com_escala_cinza(50, 200, 50),
+            cor_hover=cor_com_escala_cinza(50, 255, 50),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_rejogar:
+            return nivel, True
+        
+        # Botão Avançar Nível
+        clicou_avancar, _ = desenhar_botao_estilizado(
+            texto="Avançar Nível",
+            x=LARGURA_TELA//2 - 300,
+            y=700,
+            largura=400,
+            altura=70,
+            cor_normal=cor_com_escala_cinza(50, 50, 200),
+            cor_hover=cor_com_escala_cinza(50, 50, 255),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_avancar:
+            return nivel + 1, True
+        
+        # Botão Voltar
+        clicou_voltar, _ = desenhar_botao_estilizado(
+            texto="Voltar",
+            x=LARGURA_TELA//2 - 300,
+            y=800,
+            largura=400,
+            altura=70,
+            cor_normal=cor_com_escala_cinza(255, 200, 0),
+            cor_hover=cor_com_escala_cinza(255, 255, 0),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_voltar:
+            return nivel, False
+
+        pygame.display.update()
+
+
 # === CLASSE DO JOGO ===
 class JogoLabirinto:
     def __init__(self, tela, usuario, nivel_inicial=None):
@@ -165,7 +366,7 @@ class JogoLabirinto:
             "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         }
         
-        if self.nivel_atual >= self.usuarios_data[self.usuario]["nivel"] and not falhou: 
+        if self.nivel_atual >= self.usuarios_data[self.usuario]["nivel"] and not falhou:
             usuario_data["nivel"] = self.nivel_atual + 1
         
         usuario_data.setdefault("tentativas", []).append(tentativa_info)
@@ -174,6 +375,8 @@ class JogoLabirinto:
     def loop_principal(self):
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
         fonte_botao = FONTE_BOTAO
+        info_x = LARGURA_TELA//2 - 200
+        info_y = 300
         while self.jogo_ativo:
             events = pygame.event.get()
             self.clock.tick(FPS)
@@ -199,8 +402,8 @@ class JogoLabirinto:
                 y=300,
                 largura=200,
                 altura=70,
-                cor_normal=(255, 200, 0),
-                cor_hover=(255, 255, 0),
+                cor_normal=cor_com_escala_cinza(255, 200, 0),
+                cor_hover=cor_com_escala_cinza(255, 255, 0),
                 fonte=fonte_botao,
                 tela=self.tela,
                 events=events,
@@ -213,7 +416,7 @@ class JogoLabirinto:
 
             # Se acabou as vidas
             if self.vidas <= 0:
-                self.jogo_ativo = tela_falhou(tela);
+                self.jogo_ativo = tela_falhou(tela)
                 tempo_total = time.time() - self.inicio_tempo
                 self.salvar_progresso(tempo_total, falhou=True)
                 self.vidas = 3
@@ -224,20 +427,19 @@ class JogoLabirinto:
                 tempo_total = time.time() - self.inicio_tempo
                 
                 if self.nivel_atual >= 8:
-                    tela_conclusao(tela);
+                    tela_conclusao(tela)
                     return
                 else:
                     self.salvar_progresso(tempo_total)
                     self.nivel_atual, self.jogo_ativo = tela_conclusao_nivel(tela, self.nivel_atual, tempo_total)
                     self.vidas = 3
                     self.inicio_tempo = time.time()
-                
 
             # Mostrar textos (posicionados e espaçados)
-            desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, 30, 30)
-            desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, 30, 90)
-            desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, 30, 150)
-            desenhar_texto(f"Tempo: {int(time.time() - self.inicio_tempo)} s", self.fonte, COR_TEXTO, self.tela, 30, 210)
+            desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
+            desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 60)
+            desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 120)
+            desenhar_texto(f"Tempo: {int(time.time() - self.inicio_tempo)} s", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 180)
 
             pygame.display.update()
 
@@ -251,18 +453,16 @@ def tela_escolha_usuario(tela):
     usuarios_data = carregar_usuarios()
     lista_usuarios = list(usuarios_data.keys())
 
-    # Ajuste de posicionamento para evitar sobreposição
     titulo_x = LARGURA_TELA//2 - 400
     titulo_y = 100
 
     y_inicial_botoes = 250  # onde começam a listar os usuários
     espacamento_botoes = 90 # espaçamento entre botões de usuários
 
-    # onde ficará a input_box, abaixo dos botões
     input_box = pygame.Rect(LARGURA_TELA//2 - 200, y_inicial_botoes + len(lista_usuarios)*espacamento_botoes + 50, 400, 60)
 
-    cor_ativo = (200, 200, 200)
-    cor_inativo = (150, 150, 150)
+    cor_ativo = cor_com_escala_cinza(200, 200, 200)
+    cor_inativo = cor_com_escala_cinza(150, 150, 150)
     cor_atual = cor_inativo
     usuario_digitado = ""
     ativo_input = False
@@ -307,16 +507,12 @@ def tela_escolha_usuario(tela):
 
         # Lista de usuários
         y_offset = y_inicial_botoes
-
-        # Para cada usuário, criamos DOIS botões: selecionar e deletar
         for usr in lista_usuarios:
-            # Botão do usuário
             x_user_btn = LARGURA_TELA//2 - 220
             y_user_btn = y_offset
             w_user_btn = 300
             h_user_btn = 70
 
-            # Botão deletar ao lado
             x_del_btn = x_user_btn + w_user_btn + 20
             w_del_btn = 120
             h_del_btn = 70
@@ -327,8 +523,8 @@ def tela_escolha_usuario(tela):
                 y=y_user_btn,
                 largura=w_user_btn,
                 altura=h_user_btn,
-                cor_normal=(0, 200, 0),
-                cor_hover=(0, 255, 0),
+                cor_normal=cor_com_escala_cinza(0, 200, 0),
+                cor_hover=cor_com_escala_cinza(0, 255, 0),
                 fonte=fonte_botao,
                 tela=tela,
                 events=events,
@@ -337,15 +533,15 @@ def tela_escolha_usuario(tela):
             )
             if clicou_user:
                 return usr
-
+            
             clicou_delete, _ = desenhar_botao_estilizado(
                 texto="Del",
                 x=x_del_btn,
                 y=y_user_btn,
                 largura=w_del_btn,
                 altura=h_del_btn,
-                cor_normal=(200, 0, 0),
-                cor_hover=(255, 0, 0),
+                cor_normal=cor_com_escala_cinza(200, 0, 0),
+                cor_hover=cor_com_escala_cinza(255, 0, 0),
                 fonte=fonte_botao,
                 tela=tela,
                 events=events,
@@ -353,205 +549,19 @@ def tela_escolha_usuario(tela):
                 border_radius=10
             )
             if clicou_delete:
-                # Apagar este usuário do JSON
                 if usr in usuarios_data:
                     del usuarios_data[usr]
                 salvar_usuarios(usuarios_data)
-                # Apagar da lista local para não gerar erro
                 lista_usuarios.remove(usr)
                 input_box = pygame.Rect(LARGURA_TELA//2 - 200, y_inicial_botoes + len(lista_usuarios)*espacamento_botoes + 50, 400, 60)
                 break 
 
             y_offset += espacamento_botoes
 
-        # Caixa de texto para novo usuário
         pygame.draw.rect(tela, cor_atual, input_box, 0, border_radius=10)
         txt_surface = input_font.render(usuario_digitado, True, PRETO)
         tela.blit(txt_surface, (input_box.x+10, input_box.y+10))
         desenhar_texto("Novo usuário e ENTER:", input_font, COR_TEXTO, tela, input_box.x, input_box.y - 50)
-
-        pygame.display.update()
-
-def tela_falhou(tela):
-    clock = pygame.time.Clock()
-    fonte_titulo = FONTE_TITULO
-    fonte_botao = FONTE_BOTAO
-
-    titulo_x = LARGURA_TELA//2 - 600
-    titulo_y = 400
-
-    while True:
-        events = pygame.event.get()
-        clock.tick(FPS)
-        for event in events:
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        if background_img:
-            tela.blit(background_img, (0, 0))
-        else:
-            tela.fill(AZUL_CLARO)
-
-        desenhar_texto("Você perdeu todas as vidas!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
-
-        # Botão Rejogar
-        clicou_rejogar, _ = desenhar_botao_estilizado(
-            texto="Rejogar Nível",
-            x=LARGURA_TELA//2 - 300,
-            y=600,
-            largura=400,
-            altura=70,
-            cor_normal=(50, 200, 50),
-            cor_hover=(50, 255, 50),
-            fonte=fonte_botao,
-            tela=tela,
-            events=events,
-            imagem_fundo=None,
-            border_radius=15
-        )
-        if clicou_rejogar:
-            return True
-        
-        # Botão Voltar
-        clicou_voltar, _ = desenhar_botao_estilizado(
-            texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
-            y=700,
-            largura=400,
-            altura=70,
-            cor_normal=(255, 200, 0),
-            cor_hover=(255, 255, 0),
-            fonte=fonte_botao,
-            tela=tela,
-            events=events,
-            imagem_fundo=None,
-            border_radius=15
-        )
-        if clicou_voltar:
-            return False
-
-        pygame.display.update()
-
-def tela_conclusao(tela):
-    clock = pygame.time.Clock()
-    fonte_titulo = FONTE_TITULO
-    fonte_botao = FONTE_BOTAO
-
-    titulo_x = LARGURA_TELA//2 - 800
-    titulo_y = 400
-
-    while True:
-        events = pygame.event.get()
-        clock.tick(FPS)
-        for event in events:
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        if background_img:
-            tela.blit(background_img, (0, 0))
-        else:
-            tela.fill(AZUL_CLARO)
-
-        desenhar_texto("Parabéns! Você concluiu todos os níveis!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
-
-        # Botão Voltar
-        clicou_voltar, _ = desenhar_botao_estilizado(
-            texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
-            y=600,
-            largura=400,
-            altura=70,
-            cor_normal=(255, 200, 0),
-            cor_hover=(255, 255, 0),
-            fonte=fonte_botao,
-            tela=tela,
-            events=events,
-            imagem_fundo=None,
-            border_radius=15
-        )
-        if clicou_voltar:
-            return
-
-        pygame.display.update()
-        
-def tela_conclusao_nivel(tela, nivel, tempo):
-    clock = pygame.time.Clock()
-    fonte_titulo = FONTE_TITULO
-    fonte_botao = FONTE_BOTAO
-
-    titulo_x = LARGURA_TELA//2 - 900
-    titulo_y = 400
-
-    while True:
-        events = pygame.event.get()
-        clock.tick(FPS)
-        for event in events:
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        if background_img:
-            tela.blit(background_img, (0, 0))
-        else:
-            tela.fill(AZUL_CLARO)
-
-        desenhar_texto(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
-
-        # Botão Rejogar Nível
-        clicou_rejogar, _ = desenhar_botao_estilizado(
-            texto="Rejogar Nível",
-            x=LARGURA_TELA//2 - 300,
-            y=600,
-            largura=400,
-            altura=70,
-            cor_normal=(50, 200, 50),
-            cor_hover=(50, 255, 50),
-            fonte=fonte_botao,
-            tela=tela,
-            events=events,
-            imagem_fundo=None,
-            border_radius=15
-        )
-        if clicou_rejogar:
-            return nivel, True
-        
-        # Botão Avançar Nível
-        clicou_avancar, _ = desenhar_botao_estilizado(
-            texto="Avançar Nível",
-            x=LARGURA_TELA//2 - 300,
-            y=700,
-            largura=400,
-            altura=70,
-            cor_normal=(50, 50, 200),
-            cor_hover=(50, 50, 255),
-            fonte=fonte_botao,
-            tela=tela,
-            events=events,
-            imagem_fundo=None,
-            border_radius=15
-        )
-        if clicou_avancar:
-            return nivel + 1, True
-        
-        # Botão Voltar
-        clicou_voltar, _ = desenhar_botao_estilizado(
-            texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
-            y=800,
-            largura=400,
-            altura=70,
-            cor_normal=(255, 200, 0),
-            cor_hover=(255, 255, 0),
-            fonte=fonte_botao,
-            tela=tela,
-            events=events,
-            imagem_fundo=None,
-            border_radius=15
-        )
-        if clicou_voltar:
-            return nivel, False
 
         pygame.display.update()
 
@@ -594,8 +604,8 @@ def tela_rejogar(tela, usuario):
                 y=y_offset,
                 largura=200,
                 altura=70,
-                cor_normal=(50, 50, 200),
-                cor_hover=(80, 80, 255),
+                cor_normal=cor_com_escala_cinza(50, 50, 200),
+                cor_hover=cor_com_escala_cinza(80, 80, 255),
                 fonte=fonte_botao,
                 tela=tela,
                 events=events,
@@ -613,8 +623,8 @@ def tela_rejogar(tela, usuario):
             y=y_offset,
             largura=400,
             altura=70,
-            cor_normal=(255, 200, 0),
-            cor_hover=(255, 255, 0),
+            cor_normal=cor_com_escala_cinza(255, 200, 0),
+            cor_hover=cor_com_escala_cinza(255, 255, 0),
             fonte=fonte_botao,
             tela=tela,
             events=events,
@@ -637,7 +647,6 @@ def tela_desempenho(tela, usuario):
     nivel = usuarios_data[usuario].get("nivel", 1)
     tentativas = usuarios_data[usuario].get("tentativas", [])
 
-    # Níveis presentes nas tentativas
     niveis_jogados = sorted(set(t["nivel"] for t in tentativas))
     if not niveis_jogados:
         niveis_jogados = [1]
@@ -645,9 +654,8 @@ def tela_desempenho(tela, usuario):
     indice_nivel_selecionado = 0
 
     def mostrar_tentativas_nivel(nivel_escolhido):
-        # Exibiremos apenas as 6 últimas para evitar overlap
         all_t = [t for t in tentativas if t["nivel"] == nivel_escolhido]
-        return all_t[-6:]  # as últimas 6
+        return all_t[-6:]
 
     titulo_x = 100
     titulo_y = 50
@@ -670,16 +678,15 @@ def tela_desempenho(tela, usuario):
 
         desenhar_texto(f"Desempenho de {usuario}", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
         desenhar_texto(f"Nível atual: {nivel}", fonte_texto, COR_TEXTO, tela, 100, 180)
-
-        # Botões de navegação de nível
+        
         clicou_ant, _ = desenhar_botao_estilizado(
             texto="<",
             x=100,
             y=300,
             largura=80,
             altura=80,
-            cor_normal=(150,150,150),
-            cor_hover=(200,200,200),
+            cor_normal=cor_com_escala_cinza(150, 150, 150),
+            cor_hover=cor_com_escala_cinza(200, 200, 200),
             fonte=pygame.font.SysFont("arial", 50),
             tela=tela,
             events=events,
@@ -697,8 +704,8 @@ def tela_desempenho(tela, usuario):
             y=300,
             largura=80,
             altura=80,
-            cor_normal=(150,150,150),
-            cor_hover=(200,200,200),
+            cor_normal=cor_com_escala_cinza(150, 150, 150),
+            cor_hover=cor_com_escala_cinza(200, 200, 200),
             fonte=pygame.font.SysFont("arial", 50),
             tela=tela,
             events=events,
@@ -733,15 +740,14 @@ def tela_desempenho(tela, usuario):
             desenhar_texto(f"{idx+1} - {texto_tent}", fonte_texto, COR_TEXTO, tela, 100, y_pos)
             y_pos += 50
 
-        # Botão Voltar
         clicou_voltar, _ = desenhar_botao_estilizado(
             texto="Voltar",
             x=100,
             y=y_pos + 50,
             largura=400,
             altura=70,
-            cor_normal=(255, 200, 0),
-            cor_hover=(255, 255, 0),
+            cor_normal=cor_com_escala_cinza(255, 200, 0),
+            cor_hover=cor_com_escala_cinza(255, 255, 0),
             fonte=fonte_botao,
             tela=tela,
             events=events,
@@ -752,12 +758,14 @@ def tela_desempenho(tela, usuario):
             return
 
         pygame.display.update()
-      
+
 # === TELA DE MENU PRINCIPAL ===
 def tela_menu_principal(tela, usuario):
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
+
+    global ESCALA_CINZA
 
     titulo_x = LARGURA_TELA//2 - 350
     titulo_y = 100
@@ -787,8 +795,8 @@ def tela_menu_principal(tela, usuario):
             y=y_inicial,
             largura=400,
             altura=80,
-            cor_normal=(50, 200, 50),
-            cor_hover=(50, 255, 50),
+            cor_normal=cor_com_escala_cinza(180, 100, 50),
+            cor_hover=cor_com_escala_cinza(50, 255, 50),
             fonte=fonte_botao,
             tela=tela,
             events=events,
@@ -804,8 +812,8 @@ def tela_menu_principal(tela, usuario):
             y=y_inicial + espacamento_botoes,
             largura=400,
             altura=80,
-            cor_normal=(50, 50, 200),
-            cor_hover=(50, 50, 255),
+            cor_normal=cor_com_escala_cinza(50, 50, 200),
+            cor_hover=cor_com_escala_cinza(50, 50, 255),
             fonte=fonte_botao,
             tela=tela,
             events=events,
@@ -821,8 +829,8 @@ def tela_menu_principal(tela, usuario):
             y=y_inicial + espacamento_botoes*2,
             largura=400,
             altura=80,
-            cor_normal=(180, 100, 50),
-            cor_hover=(200, 140, 50),
+            cor_normal=cor_com_escala_cinza(180, 100, 50),
+            cor_hover=cor_com_escala_cinza(50, 255, 50),
             fonte=fonte_botao,
             tela=tela,
             events=events,
@@ -832,14 +840,33 @@ def tela_menu_principal(tela, usuario):
         if clicou_rejogar:
             return "REJOGAR"
 
+        # Botão para LIGAR/DESLIGAR escala de cinza
+        clicou_escala, _ = desenhar_botao_estilizado(
+            texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
+            x=LARGURA_TELA - 500,
+            y= 200,
+            largura=400,
+            altura=80,
+            cor_normal=cor_com_escala_cinza(100, 100, 100),
+            cor_hover=cor_com_escala_cinza(150, 150, 150),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_escala:
+            ESCALA_CINZA = not ESCALA_CINZA
+
+        # Botão Voltar
         clicou_voltar, _ = desenhar_botao_estilizado(
             texto="Voltar",
             x=LARGURA_TELA//2 - 200,
-            y=y_inicial + espacamento_botoes*3,
+            y=y_inicial + espacamento_botoes*4,
             largura=400,
             altura=80,
-            cor_normal=(255, 200, 0),
-            cor_hover=(255, 255, 0),
+            cor_normal=cor_com_escala_cinza(255, 200, 0),
+            cor_hover=cor_com_escala_cinza(255, 255, 0),
             fonte=fonte_botao,
             tela=tela,
             events=events,
@@ -852,11 +879,11 @@ def tela_menu_principal(tela, usuario):
         clicou_sair, _ = desenhar_botao_estilizado(
             texto="Sair",
             x=LARGURA_TELA//2 - 200,
-            y=y_inicial + espacamento_botoes*4,
+            y=y_inicial + espacamento_botoes*5,
             largura=400,
             altura=80,
-            cor_normal=(200, 50, 50),
-            cor_hover=(255, 50, 50),
+            cor_normal=cor_com_escala_cinza(200, 50, 50),
+            cor_hover=cor_com_escala_cinza(255, 50, 50),
             fonte=fonte_botao,
             tela=tela,
             events=events,

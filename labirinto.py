@@ -207,7 +207,7 @@ def tela_falhou(tela):
         # Botão Rejogar
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2 - 241,
             y=600,
             largura=400,
             altura=70,
@@ -225,7 +225,7 @@ def tela_falhou(tela):
         # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2 - 241,
             y=700,
             largura=400,
             altura=70,
@@ -269,7 +269,7 @@ def tela_conclusao(tela):
         # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2 - 241,
             y=600,
             largura=400,
             altura=70,
@@ -313,11 +313,11 @@ def tela_conclusao_nivel(tela, nivel, tempo):
         # Botão Rejogar Nível
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2-241,
             y=600,
             largura=400,
             altura=70,
-            cor_normal=cor_com_escala_cinza(50, 200, 50),
+            cor_normal=cor_com_escala_cinza(0, 200, 50),
             cor_hover=cor_com_escala_cinza(50, 255, 50),
             fonte=fonte_botao,
             tela=tela,
@@ -331,7 +331,7 @@ def tela_conclusao_nivel(tela, nivel, tempo):
         # Botão Avançar Nível
         clicou_avancar, _ = desenhar_botao(
             texto="Avançar Nível",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2-241,
             y=700,
             largura=400,
             altura=70,
@@ -349,7 +349,7 @@ def tela_conclusao_nivel(tela, nivel, tempo):
         # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2- 241,
             y=800,
             largura=400,
             altura=70,
@@ -502,7 +502,7 @@ class JogoLabirinto:
             desenhar_barra_progresso(
                 self.tela,
                 x=info_x,
-                y=info_y + 245,
+                y=info_y + 241,
                 largura=400,
                 altura=40,
                 progresso=self.progresso,
@@ -646,7 +646,7 @@ def tela_rejogar(tela, usuario):
     nivel_atual = usuarios_data[usuario]["nivel"]
     niveis_disponiveis = list(range(1, nivel_atual + 1))
 
-    titulo_x = LARGURA_TELA//2 - 400
+    titulo_x = LARGURA_TELA//2 - 300
     titulo_y = 100
     y_inicial_botoes = 250
     espacamento = 90
@@ -671,7 +671,7 @@ def tela_rejogar(tela, usuario):
             txt_btn = f"Nível {lvl}"
             clicou, _ = desenhar_botao(
                 texto=txt_btn,
-                x=LARGURA_TELA//2 - 200,
+                x=LARGURA_TELA//2-130,
                 y=y_offset,
                 largura=200,
                 altura=70,
@@ -690,7 +690,7 @@ def tela_rejogar(tela, usuario):
         # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2 - 241,
             y=y_offset,
             largura=400,
             altura=70,
@@ -900,8 +900,8 @@ def tela_menu_principal(tela, usuario):
             y=y_inicial + espacamento_botoes*2,
             largura=400,
             altura=80,
-            cor_normal=cor_com_escala_cinza(180, 100, 50),
-            cor_hover=cor_com_escala_cinza(50, 255, 50),
+            cor_normal=cor_com_escala_cinza(0, 200, 0),
+            cor_hover=cor_com_escala_cinza(0, 255, 0),
             fonte=fonte_botao,
             tela=tela,
             events=events,

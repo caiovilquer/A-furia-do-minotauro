@@ -154,7 +154,7 @@ labirinto-sensorial/
 │
 ├─ background_labirinto.png   # Imagem de fundo (opcional)
 ├─ usuarios.json              # Banco de dados local em formato JSON
-├─ main.py                    # Arquivo principal que executa o jogo
+├─ labirinto.py                    # Arquivo principal que executa o jogo
 ├─ <outros_arquivos>.py       # Módulos (caso tenha separado telas em diferentes arquivos)
 ├─ README.md                  # Este arquivo de documentação
 └─ firmware_arduino/          # Exemplo de firmware .ino para ler sensores e acionar servos

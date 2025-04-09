@@ -14,8 +14,9 @@ ALTURA_TELA = 1080
 TITULO_JOGO = "Labirinto Sensorial"
 FPS = 60
 
-# FLAG GLOBAL PARA ESCALA DE CINZA
+# FLAGS GLOBAIS
 ESCALA_CINZA = False  # Ajuste para True se quiser todos os botões em escala de cinza
+SOM_LIGADO = True  # Ajuste para False se quiser desativar os sons
 
 # FUNÇÃO AUXILIAR PARA CONVERTER COR EM ESCALA DE CINZA
 def to_gray(r, g, b):
@@ -29,6 +30,7 @@ COR_BOTAO_TEXTO = (255, 255, 255)
 
 FONTE_TITULO = pygame.font.SysFont("comicsansms", 80, bold=True)
 FONTE_BOTAO = pygame.font.SysFont("comicsansms", 40)
+FONTE_BARRA = pygame.font.SysFont("comicsansms", 30)
 FONTE_TEXTO = pygame.font.SysFont("comicsansms", 40)
 
 # Demais cores
@@ -73,8 +75,16 @@ def salvar_usuarios(data):
     with open(USUARIOS_JSON, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
+# === FUNÇÃO AUXILIAR PARA OBTER COR COM ESCALA DE CINZA ===
+def cor_com_escala_cinza(r, g, b):
+    """Retorna (r, g, b) normal ou em escala de cinza dependendo de ESCALA_CINZA."""
+    if not ESCALA_CINZA:
+        return (r, g, b)
+    else:
+        return to_gray(r, g, b)
+
 # === BOTÃO ESTILIZADO ===
-def desenhar_botao_estilizado(
+def desenhar_botao(
     texto,
     x,
     y,
@@ -124,14 +134,53 @@ def desenhar_botao_estilizado(
 
     return clicou, botao_rect
 
+# === FUNÇÃO PARA DESENHAR UMA BARRA DE PROGRESSO ===
+def desenhar_barra_progresso(
+    tela,
+    x,
+    y,
+    largura,
+    altura,
+    progresso,
+    cor_fundo=(50, 50, 50),
+    cor_barra=(0, 200, 0),
+    cor_outline=(255, 255, 255),
+    border_radius=15
+):
+    # Garantir que o progresso está entre 0 e 1
+    if progresso < 0:
+        progresso = 0
+    elif progresso > 1:
+        progresso = 1
 
-# === FUNÇÃO AUXILIAR PARA OBTER COR COM ESCALA DE CINZA ===
-def cor_com_escala_cinza(r, g, b):
-    """Retorna (r, g, b) normal ou em escala de cinza dependendo de ESCALA_CINZA."""
-    if not ESCALA_CINZA:
-        return (r, g, b)
-    else:
-        return to_gray(r, g, b)
+    # Superfície para compor a barra (permite alpha, bordas etc.)
+    bar_surface = pygame.Surface((largura, altura), pygame.SRCALPHA)
+    bar_surface = bar_surface.convert_alpha()
+
+    # Retângulo completo para fundo da barra
+    fundo_rect = pygame.Rect(0, 0, largura, altura)
+    pygame.draw.rect(bar_surface, cor_fundo, fundo_rect, border_radius=border_radius)
+
+    # Parte preenchida com base no progresso
+    fill_width = int(largura * progresso)
+    if fill_width > 0:
+        fill_rect = pygame.Rect(0, 0, fill_width, altura)
+        pygame.draw.rect(bar_surface, cor_barra, fill_rect, border_radius=border_radius)
+
+    # Desenha um contorno (outline) ao redor de toda a barra
+    pygame.draw.rect(bar_surface, cor_outline, fundo_rect, width=2, border_radius=border_radius)
+    
+    # Desenha o texto de progresso na barra
+    fonte = FONTE_BARRA
+    percent_txt = f"Progresso: {int(progresso * 100)}%"
+    text_render = fonte.render(percent_txt, True, (255,255,255))
+    text_rect = text_render.get_rect(center=(x + largura//2, y + altura//2 - 3))
+    
+    # Finalmente, “blitar” a barra pronta na tela principal
+    tela.blit(bar_surface, (x, y))
+    tela.blit(text_render, text_rect)
+    
+    
 # === TELA DE QUANDO O JOGADOR PERDE VIDAS ===
 def tela_falhou(tela):
     clock = pygame.time.Clock()
@@ -156,7 +205,7 @@ def tela_falhou(tela):
         desenhar_texto("Você perdeu todas as vidas!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
         # Botão Rejogar
-        clicou_rejogar, _ = desenhar_botao_estilizado(
+        clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
             x=LARGURA_TELA//2 - 300,
             y=600,
@@ -174,7 +223,7 @@ def tela_falhou(tela):
             return True
         
         # Botão Voltar
-        clicou_voltar, _ = desenhar_botao_estilizado(
+        clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA//2 - 300,
             y=700,
@@ -218,7 +267,7 @@ def tela_conclusao(tela):
         desenhar_texto("Parabéns! Você concluiu todos os níveis!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
         # Botão Voltar
-        clicou_voltar, _ = desenhar_botao_estilizado(
+        clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA//2 - 300,
             y=600,
@@ -262,7 +311,7 @@ def tela_conclusao_nivel(tela, nivel, tempo):
         desenhar_texto(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
         # Botão Rejogar Nível
-        clicou_rejogar, _ = desenhar_botao_estilizado(
+        clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
             x=LARGURA_TELA//2 - 300,
             y=600,
@@ -280,7 +329,7 @@ def tela_conclusao_nivel(tela, nivel, tempo):
             return nivel, True
         
         # Botão Avançar Nível
-        clicou_avancar, _ = desenhar_botao_estilizado(
+        clicou_avancar, _ = desenhar_botao(
             texto="Avançar Nível",
             x=LARGURA_TELA//2 - 300,
             y=700,
@@ -298,7 +347,7 @@ def tela_conclusao_nivel(tela, nivel, tempo):
             return nivel + 1, True
         
         # Botão Voltar
-        clicou_voltar, _ = desenhar_botao_estilizado(
+        clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA//2 - 300,
             y=800,
@@ -337,21 +386,29 @@ class JogoLabirinto:
         self.inicio_tempo = time.time()
         self.jogo_ativo = True
 
+        # Progresso do jogador (de 0.0 a 1.0)
+        self.progresso = 0.0
+
     def atualizar_labirinto(self):
         pass
 
     def verificar_colisao(self):
         # chance de colisão meramente ilustrativa
-        if random.random() < 0.02:
+        # se houver colisão, também atualiza o progresso
+        if random.random() < 0.002:
+            # Progresso simulado de 0 a 1, mas no projeto real vira do Arduino
+            # Exemplo: self.progresso = valorLido / 100.0
+            self.progresso = random.random()
+
             self.vidas -= 1
             self.feedback_colisao()
 
     def feedback_colisao(self):
-        pass
+        print(f"Colisão! Progresso atual: {self.progresso:.2f}")
 
     def verifica_conclusao_nivel(self):
-        # Simulação de conclusão de nível
-        if (time.time() - self.inicio_tempo) > 5:
+        # Simulação de conclusão de nível (após 5s)
+        if (time.time() - self.inicio_tempo) > 10:
             return True
         return False
 
@@ -393,8 +450,8 @@ class JogoLabirinto:
             else:
                 self.tela.fill(AZUL_CLARO)
 
-            # Botão Voltar
-            clicou_voltar, _ = desenhar_botao_estilizado(
+            # BOTÃO VOLTAR
+            clicou_voltar, _ = desenhar_botao(
                 texto="Voltar",
                 x=200,
                 y=600,
@@ -423,7 +480,6 @@ class JogoLabirinto:
             # Se concluiu o nível
             if self.verifica_conclusao_nivel():
                 tempo_total = time.time() - self.inicio_tempo
-                
                 if self.nivel_atual >= 8:
                     tela_conclusao(tela)
                     return
@@ -438,6 +494,23 @@ class JogoLabirinto:
             desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 60)
             desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 120)
             desenhar_texto(f"Tempo: {int(time.time() - self.inicio_tempo)} s", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 180)
+
+            # Desenhar barra de progresso
+            # O valor de self.progresso varia de 0.0 a 1.0, representando 0% a 100%.
+            cor_barra_fundo = cor_com_escala_cinza(50, 50, 50)
+            cor_barra_frente = cor_com_escala_cinza(0, 200, 0)
+            desenhar_barra_progresso(
+                self.tela,
+                x=info_x,
+                y=info_y + 245,
+                largura=400,
+                altura=40,
+                progresso=self.progresso,
+                cor_fundo=cor_com_escala_cinza(50, 50, 50),
+                cor_barra=cor_com_escala_cinza(0, 200, 0),
+                cor_outline=cor_com_escala_cinza(255, 255, 255),
+                border_radius=10
+            )
 
             pygame.display.update()
 
@@ -515,7 +588,7 @@ def tela_escolha_usuario(tela):
             w_del_btn = 120
             h_del_btn = 70
 
-            clicou_user, _ = desenhar_botao_estilizado(
+            clicou_user, _ = desenhar_botao(
                 texto=usr,
                 x=x_user_btn,
                 y=y_user_btn,
@@ -532,7 +605,7 @@ def tela_escolha_usuario(tela):
             if clicou_user:
                 return usr
             
-            clicou_delete, _ = desenhar_botao_estilizado(
+            clicou_delete, _ = desenhar_botao(
                 texto="Del",
                 x=x_del_btn,
                 y=y_user_btn,
@@ -596,7 +669,7 @@ def tela_rejogar(tela, usuario):
         y_offset = y_inicial_botoes
         for lvl in niveis_disponiveis:
             txt_btn = f"Nível {lvl}"
-            clicou, _ = desenhar_botao_estilizado(
+            clicou, _ = desenhar_botao(
                 texto=txt_btn,
                 x=LARGURA_TELA//2 - 200,
                 y=y_offset,
@@ -615,7 +688,7 @@ def tela_rejogar(tela, usuario):
             y_offset += espacamento
 
         # Botão Voltar
-        clicou_voltar, _ = desenhar_botao_estilizado(
+        clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA//2 - 300,
             y=y_offset,
@@ -677,14 +750,14 @@ def tela_desempenho(tela, usuario):
         desenhar_texto(f"Desempenho de {usuario}", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
         desenhar_texto(f"Nível atual: {nivel}", fonte_texto, COR_TEXTO, tela, 100, 180)
         
-        clicou_ant, _ = desenhar_botao_estilizado(
+        clicou_ant, _ = desenhar_botao(
             texto="<",
             x=100,
             y=300,
             largura=80,
             altura=80,
-            cor_normal=cor_com_escala_cinza(150, 150, 150),
-            cor_hover=cor_com_escala_cinza(200, 200, 200),
+            cor_normal=cor_com_escala_cinza(150,150,150),
+            cor_hover=cor_com_escala_cinza(200,200,200),
             fonte=pygame.font.SysFont("arial", 50),
             tela=tela,
             events=events,
@@ -696,14 +769,14 @@ def tela_desempenho(tela, usuario):
             if indice_nivel_selecionado < 0:
                 indice_nivel_selecionado = 0
 
-        clicou_prox, _ = desenhar_botao_estilizado(
+        clicou_prox, _ = desenhar_botao(
             texto=">",
             x=220,
             y=300,
             largura=80,
             altura=80,
-            cor_normal=cor_com_escala_cinza(150, 150, 150),
-            cor_hover=cor_com_escala_cinza(200, 200, 200),
+            cor_normal=cor_com_escala_cinza(150,150,150),
+            cor_hover=cor_com_escala_cinza(200,200,200),
             fonte=pygame.font.SysFont("arial", 50),
             tela=tela,
             events=events,
@@ -738,7 +811,7 @@ def tela_desempenho(tela, usuario):
             desenhar_texto(f"{idx+1} - {texto_tent}", fonte_texto, COR_TEXTO, tela, 100, y_pos)
             y_pos += 50
 
-        clicou_voltar, _ = desenhar_botao_estilizado(
+        clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=100,
             y=y_pos + 50,
@@ -763,7 +836,7 @@ def tela_menu_principal(tela, usuario):
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
 
-    global ESCALA_CINZA, COR_TITULO, COR_TEXTO
+    global ESCALA_CINZA, COR_TITULO, COR_TEXTO, SOM_LIGADO
 
     titulo_x = LARGURA_TELA//2 - 350
     titulo_y = 100
@@ -787,7 +860,7 @@ def tela_menu_principal(tela, usuario):
         y_inicial = 300
         espacamento_botoes = 120
 
-        clicou_jogar, _ = desenhar_botao_estilizado(
+        clicou_jogar, _ = desenhar_botao(
             texto="Iniciar Jogo",
             x=LARGURA_TELA//2 - 200,
             y=y_inicial,
@@ -804,7 +877,7 @@ def tela_menu_principal(tela, usuario):
         if clicou_jogar:
             return "JOGAR"
 
-        clicou_desempenho, _ = desenhar_botao_estilizado(
+        clicou_desempenho, _ = desenhar_botao(
             texto="Ver Desempenho",
             x=LARGURA_TELA//2 - 200,
             y=y_inicial + espacamento_botoes,
@@ -821,7 +894,7 @@ def tela_menu_principal(tela, usuario):
         if clicou_desempenho:
             return "DESEMPENHO"
 
-        clicou_rejogar, _ = desenhar_botao_estilizado(
+        clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
             x=LARGURA_TELA//2 - 200,
             y=y_inicial + espacamento_botoes*2,
@@ -839,7 +912,7 @@ def tela_menu_principal(tela, usuario):
             return "REJOGAR"
 
         # Botão para LIGAR/DESLIGAR escala de cinza
-        clicou_escala, _ = desenhar_botao_estilizado(
+        clicou_escala, _ = desenhar_botao(
             texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
             x=LARGURA_TELA - 500,
             y= ALTURA_TELA-100,
@@ -858,10 +931,29 @@ def tela_menu_principal(tela, usuario):
             COR_TITULO = cor_com_escala_cinza(250, 250, 100)
             COR_TEXTO = cor_com_escala_cinza(255, 200, 0)
             
+        clicou_som, _ = desenhar_botao(
+            texto="Ativar Som" if not SOM_LIGADO else "Desativar Som",
+            x=LARGURA_TELA - 500,
+            y= ALTURA_TELA-200,
+            largura=500,
+            altura=80,
+            cor_normal=cor_com_escala_cinza(100, 100, 100),
+            cor_hover=cor_com_escala_cinza(150, 150, 150),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=None,
+            border_radius=15
+        )
+        if clicou_som:
+            SOM_LIGADO = not SOM_LIGADO
+            if SOM_LIGADO:
+                pygame.mixer.music.unpause()
+            else:
+                pygame.mixer.music.pause()
             
-
         # Botão Voltar
-        clicou_voltar, _ = desenhar_botao_estilizado(
+        clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA//2 - 200,
             y=y_inicial + espacamento_botoes*4,
@@ -878,7 +970,7 @@ def tela_menu_principal(tela, usuario):
         if clicou_voltar:
             return "VOLTAR"
 
-        clicou_sair, _ = desenhar_botao_estilizado(
+        clicou_sair, _ = desenhar_botao(
             texto="Sair",
             x=LARGURA_TELA//2 - 200,
             y=y_inicial + espacamento_botoes*5,

@@ -2,3 +2,4 @@ usuarios.json
 build
 dist
 labirinto.spec
+__pycache__

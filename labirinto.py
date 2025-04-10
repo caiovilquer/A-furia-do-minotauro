@@ -5,6 +5,9 @@ import json
 import time
 import random
 from datetime import datetime
+import serial
+import math 
+import serial.tools.list_ports
 
 pygame.init()
 
@@ -17,6 +20,7 @@ FPS = 60
 # FLAGS GLOBAIS
 ESCALA_CINZA = False  # Ajuste para True se quiser todos os botões em escala de cinza
 SOM_LIGADO = True  # Ajuste para False se quiser desativar os sons
+PORTA_SELECIONADA = None  # Para armazenar a escolha da porta serial do Arduino
 
 # FUNÇÃO AUXILIAR PARA CONVERTER COR EM ESCALA DE CINZA
 def to_gray(r, g, b):
@@ -75,9 +79,8 @@ def salvar_usuarios(data):
     with open(USUARIOS_JSON, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-# === FUNÇÃO AUXILIAR PARA OBTER COR COM ESCALA DE CINZA ===
+# === FUNÇÃO AUXILIAR PARA OBTER COR COM ESCALA_DE_CINZA ===
 def cor_com_escala_cinza(r, g, b):
-    """Retorna (r, g, b) normal ou em escala de cinza dependendo de ESCALA_CINZA."""
     if not ESCALA_CINZA:
         return (r, g, b)
     else:
@@ -147,41 +150,34 @@ def desenhar_barra_progresso(
     cor_outline=(255, 255, 255),
     border_radius=15
 ):
-    # Garantir que o progresso está entre 0 e 1
     if progresso < 0:
         progresso = 0
     elif progresso > 1:
         progresso = 1
 
-    # Superfície para compor a barra (permite alpha, bordas etc.)
     bar_surface = pygame.Surface((largura, altura), pygame.SRCALPHA)
     bar_surface = bar_surface.convert_alpha()
 
-    # Retângulo completo para fundo da barra
     fundo_rect = pygame.Rect(0, 0, largura, altura)
     pygame.draw.rect(bar_surface, cor_fundo, fundo_rect, border_radius=border_radius)
 
-    # Parte preenchida com base no progresso
     fill_width = int(largura * progresso)
     if fill_width > 0:
         fill_rect = pygame.Rect(0, 0, fill_width, altura)
         pygame.draw.rect(bar_surface, cor_barra, fill_rect, border_radius=border_radius)
 
-    # Desenha um contorno (outline) ao redor de toda a barra
     pygame.draw.rect(bar_surface, cor_outline, fundo_rect, width=2, border_radius=border_radius)
-    
-    # Desenha o texto de progresso na barra
+
     fonte = FONTE_BARRA
     percent_txt = f"Progresso: {int(progresso * 100)}%"
     text_render = fonte.render(percent_txt, True, (255,255,255))
     text_rect = text_render.get_rect(center=(x + largura//2, y + altura//2 - 3))
-    
-    # Finalmente, “blitar” a barra pronta na tela principal
+
     tela.blit(bar_surface, (x, y))
     tela.blit(text_render, text_rect)
-    
-    
-# === TELA DE QUANDO O JOGADOR PERDE VIDAS ===
+
+# === FUNÇÕES DE TELA ===
+
 def tela_falhou(tela):
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
@@ -204,10 +200,9 @@ def tela_falhou(tela):
 
         desenhar_texto("Você perdeu todas as vidas!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
-        # Botão Rejogar
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2 - 241,
             y=600,
             largura=400,
             altura=70,
@@ -222,10 +217,9 @@ def tela_falhou(tela):
         if clicou_rejogar:
             return True
         
-        # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2 - 241,
             y=700,
             largura=400,
             altura=70,
@@ -241,7 +235,6 @@ def tela_falhou(tela):
             return False
 
         pygame.display.update()
-
 
 def tela_conclusao(tela):
     clock = pygame.time.Clock()
@@ -266,10 +259,9 @@ def tela_conclusao(tela):
 
         desenhar_texto("Parabéns! Você concluiu todos os níveis!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
-        # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2 - 241,
             y=600,
             largura=400,
             altura=70,
@@ -285,7 +277,6 @@ def tela_conclusao(tela):
             return
 
         pygame.display.update()
-
 
 def tela_conclusao_nivel(tela, nivel, tempo):
     clock = pygame.time.Clock()
@@ -310,14 +301,13 @@ def tela_conclusao_nivel(tela, nivel, tempo):
 
         desenhar_texto(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
-        # Botão Rejogar Nível
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2-241,
             y=600,
             largura=400,
             altura=70,
-            cor_normal=cor_com_escala_cinza(50, 200, 50),
+            cor_normal=cor_com_escala_cinza(0, 200, 50),
             cor_hover=cor_com_escala_cinza(50, 255, 50),
             fonte=fonte_botao,
             tela=tela,
@@ -328,10 +318,9 @@ def tela_conclusao_nivel(tela, nivel, tempo):
         if clicou_rejogar:
             return nivel, True
         
-        # Botão Avançar Nível
         clicou_avancar, _ = desenhar_botao(
             texto="Avançar Nível",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2-241,
             y=700,
             largura=400,
             altura=70,
@@ -346,10 +335,9 @@ def tela_conclusao_nivel(tela, nivel, tempo):
         if clicou_avancar:
             return nivel + 1, True
         
-        # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2- 241,
             y=800,
             largura=400,
             altura=70,
@@ -363,6 +351,75 @@ def tela_conclusao_nivel(tela, nivel, tempo):
         )
         if clicou_voltar:
             return nivel, False
+
+        pygame.display.update()
+
+def tela_selecao_porta(tela):
+    global PORTA_SELECIONADA
+    clock = pygame.time.Clock()
+    fonte_titulo = FONTE_TITULO
+    fonte_botao = FONTE_BOTAO
+
+    lista_portas = [p.device for p in serial.tools.list_ports.comports()]
+
+    titulo_x = LARGURA_TELA//2 - 580
+    titulo_y = 80
+
+    y_inicial_botoes = 250
+    espacamento_botoes = 90
+
+    while True:
+        events = pygame.event.get()
+        clock.tick(FPS)
+        for event in events:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        if background_img:
+            tela.blit(background_img, (0, 0))
+        else:
+            tela.fill(AZUL_CLARO)
+
+        desenhar_texto("Selecione a porta do Arduino", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+
+        y_offset = y_inicial_botoes
+        for port in lista_portas:
+            clicou, _ = desenhar_botao(
+                texto=port,
+                x=LARGURA_TELA//2 - 160,
+                y=y_offset,
+                largura=300,
+                altura=60,
+                cor_normal=cor_com_escala_cinza(0, 150, 200),
+                cor_hover=cor_com_escala_cinza(0, 200, 255),
+                fonte=fonte_botao,
+                tela=tela,
+                events=events,
+                border_radius=10
+            )
+            if clicou:
+                PORTA_SELECIONADA = port
+                return port
+            y_offset += espacamento_botoes
+
+        # Caso não tenha porta ou para simulação
+        clicou_semport, _ = desenhar_botao(
+            texto="Simulação",
+            x=LARGURA_TELA//2 - 160,
+            y=y_offset + 100,
+            largura=300,
+            altura=60,
+            cor_normal=cor_com_escala_cinza(180, 100, 50),
+            cor_hover=cor_com_escala_cinza(200, 120, 60),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            border_radius=10
+        )
+        if clicou_semport:
+            PORTA_SELECIONADA = None
+            return None
 
         pygame.display.update()
 
@@ -389,17 +446,18 @@ class JogoLabirinto:
         # Progresso do jogador (de 0.0 a 1.0)
         self.progresso = 0.0
 
+        if PORTA_SELECIONADA:
+             self.arduino = serial.Serial(PORTA_SELECIONADA, 9600)
+        else:
+             self.arduino = None
+
     def atualizar_labirinto(self):
         pass
 
     def verificar_colisao(self):
-        # chance de colisão meramente ilustrativa
-        # se houver colisão, também atualiza o progresso
+        # Exemplo local. Caso real, leríamos da serial.
         if random.random() < 0.002:
-            # Progresso simulado de 0 a 1, mas no projeto real vira do Arduino
-            # Exemplo: self.progresso = valorLido / 100.0
             self.progresso = random.random()
-
             self.vidas -= 1
             self.feedback_colisao()
 
@@ -407,7 +465,7 @@ class JogoLabirinto:
         print(f"Colisão! Progresso atual: {self.progresso:.2f}")
 
     def verifica_conclusao_nivel(self):
-        # Simulação de conclusão de nível (após 5s)
+        # Simulação de conclusão de nível (após 10s)
         if (time.time() - self.inicio_tempo) > 10:
             return True
         return False
@@ -420,10 +478,8 @@ class JogoLabirinto:
             "vidas": self.vidas,
             "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         }
-        
         if self.nivel_atual >= self.usuarios_data[self.usuario]["nivel"] and not falhou:
             usuario_data["nivel"] = self.nivel_atual + 1
-        
         usuario_data.setdefault("tentativas", []).append(tentativa_info)
         salvar_usuarios(self.usuarios_data)
 
@@ -495,19 +551,17 @@ class JogoLabirinto:
             desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 120)
             desenhar_texto(f"Tempo: {int(time.time() - self.inicio_tempo)} s", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 180)
 
-            # Desenhar barra de progresso
-            # O valor de self.progresso varia de 0.0 a 1.0, representando 0% a 100%.
             cor_barra_fundo = cor_com_escala_cinza(50, 50, 50)
             cor_barra_frente = cor_com_escala_cinza(0, 200, 0)
             desenhar_barra_progresso(
                 self.tela,
                 x=info_x,
-                y=info_y + 245,
+                y=info_y + 241,
                 largura=400,
                 altura=40,
                 progresso=self.progresso,
-                cor_fundo=cor_com_escala_cinza(50, 50, 50),
-                cor_barra=cor_com_escala_cinza(0, 200, 0),
+                cor_fundo=cor_barra_fundo,
+                cor_barra=cor_barra_frente,
                 cor_outline=cor_com_escala_cinza(255, 255, 255),
                 border_radius=10
             )
@@ -604,7 +658,7 @@ def tela_escolha_usuario(tela):
             )
             if clicou_user:
                 return usr
-            
+
             clicou_delete, _ = desenhar_botao(
                 texto="Del",
                 x=x_del_btn,
@@ -625,7 +679,7 @@ def tela_escolha_usuario(tela):
                 salvar_usuarios(usuarios_data)
                 lista_usuarios.remove(usr)
                 input_box = pygame.Rect(LARGURA_TELA//2 - 200, y_inicial_botoes + len(lista_usuarios)*espacamento_botoes + 50, 400, 60)
-                break 
+                break
 
             y_offset += espacamento_botoes
 
@@ -646,7 +700,7 @@ def tela_rejogar(tela, usuario):
     nivel_atual = usuarios_data[usuario]["nivel"]
     niveis_disponiveis = list(range(1, nivel_atual + 1))
 
-    titulo_x = LARGURA_TELA//2 - 400
+    titulo_x = LARGURA_TELA//2 - 300
     titulo_y = 100
     y_inicial_botoes = 250
     espacamento = 90
@@ -671,7 +725,7 @@ def tela_rejogar(tela, usuario):
             txt_btn = f"Nível {lvl}"
             clicou, _ = desenhar_botao(
                 texto=txt_btn,
-                x=LARGURA_TELA//2 - 200,
+                x=LARGURA_TELA//2-130,
                 y=y_offset,
                 largura=200,
                 altura=70,
@@ -687,10 +741,9 @@ def tela_rejogar(tela, usuario):
                 return lvl
             y_offset += espacamento
 
-        # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 300,
+            x=LARGURA_TELA//2 - 241,
             y=y_offset,
             largura=400,
             altura=70,
@@ -856,7 +909,6 @@ def tela_menu_principal(tela, usuario):
 
         desenhar_texto(f"Bem-vindo, {usuario}!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
-        # Espaçamento vertical entre botões
         y_inicial = 300
         espacamento_botoes = 120
 
@@ -900,8 +952,8 @@ def tela_menu_principal(tela, usuario):
             y=y_inicial + espacamento_botoes*2,
             largura=400,
             altura=80,
-            cor_normal=cor_com_escala_cinza(180, 100, 50),
-            cor_hover=cor_com_escala_cinza(50, 255, 50),
+            cor_normal=cor_com_escala_cinza(0, 200, 0),
+            cor_hover=cor_com_escala_cinza(0, 255, 0),
             fonte=fonte_botao,
             tela=tela,
             events=events,
@@ -911,7 +963,6 @@ def tela_menu_principal(tela, usuario):
         if clicou_rejogar:
             return "REJOGAR"
 
-        # Botão para LIGAR/DESLIGAR escala de cinza
         clicou_escala, _ = desenhar_botao(
             texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
             x=LARGURA_TELA - 500,
@@ -930,7 +981,7 @@ def tela_menu_principal(tela, usuario):
             ESCALA_CINZA = not ESCALA_CINZA
             COR_TITULO = cor_com_escala_cinza(250, 250, 100)
             COR_TEXTO = cor_com_escala_cinza(255, 200, 0)
-            
+        
         clicou_som, _ = desenhar_botao(
             texto="Ativar Som" if not SOM_LIGADO else "Desativar Som",
             x=LARGURA_TELA - 500,
@@ -947,12 +998,12 @@ def tela_menu_principal(tela, usuario):
         )
         if clicou_som:
             SOM_LIGADO = not SOM_LIGADO
-            if SOM_LIGADO:
-                pygame.mixer.music.unpause()
-            else:
-                pygame.mixer.music.pause()
-            
-        # Botão Voltar
+            # se quisesse ligar/desligar musica
+            # if SOM_LIGADO:
+            #     pygame.mixer.music.unpause()
+            # else:
+            #     pygame.mixer.music.pause()
+        
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA//2 - 200,
@@ -990,12 +1041,69 @@ def tela_menu_principal(tela, usuario):
 
         pygame.display.update()
 
+def tela_inicial(tela):
+
+    clock = pygame.time.Clock()
+    rodando = True
+
+    # Texto e fonte
+    mensagem = "Pressione qualquer botão para iniciar!"
+    fonte = pygame.font.SysFont("comicsansms", 80, bold=True)
+
+    # Posição base (fixa) e parâmetros de movimento
+    base_x = LARGURA_TELA // 2
+    base_y = ALTURA_TELA // 2 - 80
+    amplitude = 40.0   # até onde o texto “sobe e desce”
+    frequencia = 0.5   # quantas “oscilações” por segundo
+
+    tempo_acumulado = 0.0
+
+    while rodando:
+        dt = clock.tick(FPS)  # tempo em ms desde o último frame
+        tempo_acumulado += dt / 1000.0  # converte para segundos
+
+        # Trata eventos
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                # Ao apertar qualquer tecla ou clicar, sai desta tela
+                rodando = False
+
+        # Desenha fundo
+        if background_img:
+            tela.blit(background_img, (0, 0))
+        else:
+            tela.fill(AZUL_CLARO)
+
+        # Cálculo do offset em Y usando sin
+        offset_y = amplitude * math.sin(2 * math.pi * frequencia * tempo_acumulado)
+        # Posição final do texto
+        pos_x = base_x
+        pos_y = base_y + offset_y
+
+        # Renderiza e desenha
+        text_surface = fonte.render(mensagem, True, AZUL_CLARO)
+        text_rect = text_surface.get_rect(center=(pos_x, pos_y))
+        tela.blit(text_surface, text_rect)
+
+        pygame.display.update()
+
+    
 # === FUNÇÃO PRINCIPAL ===
 def main():
     tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
     pygame.display.set_caption(TITULO_JOGO)
+    
+    tela_inicial(tela)
+    
+    porta_escolhida = tela_selecao_porta(tela)
+    print("PORTA ESCOLHIDA:", porta_escolhida)
+
 
     usuario_escolhido = tela_escolha_usuario(tela)
+
 
     while True:
         acao = tela_menu_principal(tela, usuario_escolhido)

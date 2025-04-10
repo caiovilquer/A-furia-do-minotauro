@@ -100,3 +100,72 @@ def desenhar_barra_progresso(
 
     tela.blit(bar_surface, (x, y))
     tela.blit(text_render, text_rect)
+    
+
+class TransitionEffect:
+    """Classe para gerenciar transições entre telas"""
+    
+    @staticmethod
+    def fade_out(tela, velocidade=5):
+        """Transição de fade out (tela escurecendo gradualmente)"""
+        largura, altura = tela.get_size()
+        overlay = pygame.Surface((largura, altura))
+        overlay.fill((0, 0, 0))
+        
+        for alpha in range(0, 255, velocidade):
+            overlay.set_alpha(alpha)
+            # Capturamos a tela atual
+            tela_atual = tela.copy()
+            # Aplicamos o overlay com transparência
+            tela_atual.blit(overlay, (0, 0))
+            # Atualizamos a tela
+            tela.blit(tela_atual, (0, 0))
+            pygame.display.update()
+            pygame.time.delay(10)
+            
+    @staticmethod
+    def fade_in(tela, velocidade=5):
+        """Transição de fade in (tela aparecendo gradualmente)"""
+        largura, altura = tela.get_size()
+        overlay = pygame.Surface((largura, altura))
+        overlay.fill((0, 0, 0))
+        
+        # Preparamos a tela base que aparecerá
+        tela_base = tela.copy()
+        
+        for alpha in range(255, -1, -velocidade):
+            overlay.set_alpha(alpha)
+            # Começamos com a tela base
+            tela.blit(tela_base, (0, 0))
+            # Aplicamos o overlay com transparência decrescente
+            tela.blit(overlay, (0, 0))
+            pygame.display.update()
+            pygame.time.delay(10)
+    
+    @staticmethod
+    def slide_left(tela, nova_tela, velocidade=20):
+        """Transição deslizando para a esquerda"""
+        largura, altura = tela.get_size()
+        tela_atual = tela.copy()
+        
+        for i in range(0, largura+1, velocidade):
+            # Desenha a tela atual deslizando para a esquerda
+            tela.blit(tela_atual, (-i, 0))
+            # Desenha a nova tela chegando pela direita
+            tela.blit(nova_tela, (largura-i, 0))
+            pygame.display.update()
+            pygame.time.delay(5)
+    
+    @staticmethod
+    def slide_right(tela, nova_tela, velocidade=20):
+        """Transição deslizando para a direita"""
+        largura, altura = tela.get_size()
+        tela_atual = tela.copy()
+        
+        for i in range(0, largura+1, velocidade):
+            # Desenha a tela atual deslizando para a direita
+            tela.blit(tela_atual, (i, 0))
+            # Desenha a nova tela chegando pela esquerda
+            tela.blit(nova_tela, (-largura+i, 0))
+            pygame.display.update()
+            pygame.time.delay(5)

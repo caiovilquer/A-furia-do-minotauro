@@ -5,7 +5,7 @@ from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
 from utils.drawing import desenhar_texto, desenhar_botao
 from utils.colors import cor_com_escala_cinza
 
-def tela_conclusao_nivel(tela, nivel, tempo):
+def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
     """Tela quando o jogador conclui um nível."""
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
@@ -79,5 +79,8 @@ def tela_conclusao_nivel(tela, nivel, tempo):
         )
         if clicou_voltar:
             return nivel, False
-
+        
+        # Garantir que as notificações de conquistas sejam exibidas
+        if sistema_conquistas and sistema_conquistas.notificacao_ativa:
+            sistema_conquistas.desenhar_notificacao(tela)
         pygame.display.update()

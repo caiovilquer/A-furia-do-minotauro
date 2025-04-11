@@ -5,7 +5,7 @@ from utils.colors import cor_com_escala_cinza
 
 def desenhar_texto(texto, fonte, cor, superficie, x, y):
     """Desenha texto na superfície especificada."""
-    text_obj = fonte.render(texto, True, cor)
+    text_obj = fonte.render(texto, True, cor_com_escala_cinza(cor[0], cor[1], cor[2]))
     text_rect = text_obj.get_rect()
     text_rect.topleft = (x, y)
     superficie.blit(text_obj, text_rect)

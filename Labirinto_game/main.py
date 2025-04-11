@@ -14,6 +14,7 @@ from screens.performance import tela_desempenho
 from screens.replay_level import tela_rejogar
 from game.game import JogoLabirinto
 from utils.drawing import TransitionEffect
+from screens.achievements_screen import tela_conquistas
 
 def main():
     """Função principal que inicia o jogo."""
@@ -24,6 +25,7 @@ def main():
     # Tela inicial
     TransitionEffect.fade_out(tela, velocidade=30)
     tela_inicial(tela)
+
     
     # Selecionar porta do Arduino
     TransitionEffect.fade_out(tela, velocidade=30)
@@ -35,14 +37,17 @@ def main():
     TransitionEffect.fade_out(tela, velocidade=30)
     usuario_escolhido = tela_escolha_usuario(tela)
 
+    from utils.achievements import SistemaConquistas
+    sistema_conquistas = SistemaConquistas()
     # Loop principal do menu
     while True:
         TransitionEffect.fade_out(tela, velocidade=30)
         acao = tela_menu_principal(tela, usuario_escolhido)
         if acao == "JOGAR":
-            TransitionEffect.fade_out(tela, velocidade=30)
-            jogo = JogoLabirinto(tela, usuario_escolhido)
+            TransitionEffect.slide_left(tela, tela.copy(), 30)
+            jogo = JogoLabirinto(tela, usuario_escolhido, sistema_conquistas=sistema_conquistas)
             jogo.loop_principal()
+            TransitionEffect.slide_right(tela, tela.copy(), 30)
         elif acao == "DESEMPENHO":
             TransitionEffect.fade_out(tela, velocidade=30)
             tela_desempenho(tela, usuario_escolhido)
@@ -51,11 +56,15 @@ def main():
             nivel_escolhido = tela_rejogar(tela, usuario_escolhido)
             if nivel_escolhido is not None:
                 TransitionEffect.fade_out(tela, velocidade=30)
-                jogo = JogoLabirinto(tela, usuario_escolhido, nivel_inicial=nivel_escolhido)
+                jogo = JogoLabirinto(tela, usuario_escolhido, nivel_inicial=nivel_escolhido, sistema_conquistas=sistema_conquistas)
                 jogo.loop_principal()
+                TransitionEffect.slide_right(tela, tela.copy(), 30)
         elif acao == "VOLTAR":
             TransitionEffect.fade_out(tela, velocidade=30)
             usuario_escolhido = tela_escolha_usuario(tela)
+        elif acao == "CONQUISTAS":
+            TransitionEffect.fade_out(tela, velocidade=30)
+            tela_conquistas(tela, usuario_escolhido)
         else:
             pygame.quit()
             sys.exit()

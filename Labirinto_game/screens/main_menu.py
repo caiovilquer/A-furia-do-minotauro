@@ -12,10 +12,8 @@ def tela_menu_principal(tela, usuario):
     fonte_botao = FONTE_BOTAO
 
     import constants
-    global ESCALA_CINZA, COR_TITULO, COR_TEXTO, SOM_LIGADO
+    global ESCALA_CINZA, SOM_LIGADO
     ESCALA_CINZA = constants.ESCALA_CINZA
-    COR_TITULO = constants.COR_TITULO
-    COR_TEXTO = constants.COR_TEXTO
     SOM_LIGADO = constants.SOM_LIGADO
 
     titulo_x = LARGURA_TELA//2 - 350
@@ -46,7 +44,7 @@ def tela_menu_principal(tela, usuario):
             largura=400,
             altura=80,
             cor_normal=cor_com_escala_cinza(180, 100, 50),
-            cor_hover=cor_com_escala_cinza(50, 255, 50),
+            cor_hover=cor_com_escala_cinza(220, 150, 100),
             fonte=fonte_botao,
             tela=tela,
             events=events,
@@ -107,10 +105,6 @@ def tela_menu_principal(tela, usuario):
         if clicou_escala:
             constants.ESCALA_CINZA = not constants.ESCALA_CINZA
             ESCALA_CINZA = constants.ESCALA_CINZA
-            constants.COR_TITULO = cor_com_escala_cinza(250, 250, 100)
-            constants.COR_TEXTO = cor_com_escala_cinza(255, 200, 0)
-            COR_TITULO = constants.COR_TITULO
-            COR_TEXTO = constants.COR_TEXTO
         
         clicou_som, _ = desenhar_botao(
             texto="Ativar Som" if not SOM_LIGADO else "Desativar Som",
@@ -151,7 +145,24 @@ def tela_menu_principal(tela, usuario):
         )
         if clicou_voltar:
             return "VOLTAR"
-
+        
+        clicou_conquistas, _ = desenhar_botao(
+        texto="Conquistas",
+        x=LARGURA_TELA//2 - 200,
+        y=y_inicial + espacamento_botoes*3,  # Ajuste este valor conforme necessário
+        largura=400,
+        altura=80,
+        cor_normal=cor_com_escala_cinza(200, 100, 200),
+        cor_hover=cor_com_escala_cinza(255, 100, 255),
+        fonte=fonte_botao,
+        tela=tela,
+        events=events,
+        imagem_fundo=None,
+        border_radius=15
+    )
+        if clicou_conquistas:
+            return "CONQUISTAS"
+        
         clicou_sair, _ = desenhar_botao(
             texto="Sair",
             x=LARGURA_TELA//2 - 200,

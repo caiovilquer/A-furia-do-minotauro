@@ -12,16 +12,22 @@ from utils.user_data import carregar_usuarios, salvar_usuarios
 from screens.game_over import tela_falhou
 from screens.level_complete import tela_conclusao_nivel
 from screens.game_complete import tela_conclusao
+from utils.achievements import SistemaConquistas
 
 class JogoLabirinto:
     """Classe principal do jogo que gerencia o estado e a lógica do jogo."""
     
-    def __init__(self, tela, usuario, nivel_inicial=None):
+    def __init__(self, tela, usuario, nivel_inicial=None, sistema_conquistas=None):
         self.tela = tela
         self.usuario = usuario
         self.clock = pygame.time.Clock()
         self.fonte = FONTE_TEXTO
-
+        if sistema_conquistas:
+            self.sistema_conquistas = sistema_conquistas
+        else:
+            self.sistema_conquistas = SistemaConquistas()
+        self.sistema_conquistas.carregar_conquistas_usuario(usuario)
+        self.colisoes = 0 
         self.usuarios_data = carregar_usuarios()
         
         if nivel_inicial is not None:
@@ -48,9 +54,10 @@ class JogoLabirinto:
     def verificar_colisao(self):
         """Verifica se houve colisão."""
         # Exemplo local. Caso real, leríamos da serial.
-        if random.random() < 0.002:
+        if random.random() < 0.000:
             self.progresso = random.random()
             self.vidas -= 1
+            self.colisoes += 1
             self.feedback_colisao()
 
     def feedback_colisao(self):
@@ -60,28 +67,62 @@ class JogoLabirinto:
     def verifica_conclusao_nivel(self):
         """Verifica se o nível foi concluído."""
         # Simulação de conclusão de nível (após 10s)
-        if (time.time() - self.inicio_tempo) > 10:
+        if (time.time() - self.inicio_tempo) > 3:
             return True
         return False
 
     def salvar_progresso(self, tempo_gasto, falhou=False):
         """Salva o progresso do jogador."""
         usuario_data = self.usuarios_data[self.usuario]
+        
+        # Preparar informações da tentativa
         tentativa_info = {
             "nivel": self.nivel_atual,
             "tempo": tempo_gasto,
             "vidas": self.vidas,
+            "colisoes": self.colisoes,
             "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         }
+        
+        # Adicionar a nova tentativa à lista
+        usuario_data.setdefault("tentativas", []).append(tentativa_info)
+        
+        # Atualizar o nível máximo desbloqueado
         if self.nivel_atual >= self.usuarios_data[self.usuario]["nivel"] and not falhou and self.nivel_atual < 8:
             usuario_data["nivel"] = self.nivel_atual + 1
-        usuario_data.setdefault("tentativas", []).append(tentativa_info)
+        
         salvar_usuarios(self.usuarios_data)
+        
+        # Preparar dados para verificação de conquistas (APÓS atualizar tentativas)
+        dados_jogo = {
+            'nivel_atual': self.nivel_atual,
+            'tempo_gasto': tempo_gasto,
+            'colisoes': self.colisoes,
+            'tentativas': usuario_data.get('tentativas', []),
+            'vidas': self.vidas,
+            'concluido': not falhou
+        }
+        
+        # Verificar conquistas com os dados atualizados
+        self.sistema_conquistas.verificar_conquistas(self.usuario, dados_jogo)
+
+    def resetar_nivel(self):
+        """Reseta o estado do jogo para o próximo nível"""
+        self.vidas = 3
+        self.progresso = 0.0
+        self.colisoes = 0
+        self.inicio_tempo = time.time()
+        # Recarga explícita das conquistas para garantir estado atualizado
+        self.sistema_conquistas.limpar_notificacoes()
+        self.sistema_conquistas.carregar_conquistas_usuario(self.usuario)
+        self.colisoes = 0 
+        self.usuarios_data = carregar_usuarios()
+        print(f"Estado do jogo resetado.")
 
     def loop_principal(self):
         """Loop principal do jogo."""
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
-        fonte_botao = pygame.font.SysFont("comicsansms", 40)  # Usando valor direto para evitar importação circular
+        fonte_botao = pygame.font.SysFont("comicsansms", 40) 
         info_x = 200
         info_y = 300
         while self.jogo_ativo:
@@ -123,24 +164,26 @@ class JogoLabirinto:
 
             # Se acabou as vidas
             if self.vidas <= 0:
-                self.jogo_ativo = tela_falhou(tela)
                 tempo_total = time.time() - self.inicio_tempo
-                self.salvar_progresso(tempo_total, falhou=True)
-                self.vidas = 3
-                self.inicio_tempo = time.time()
+                self.salvar_progresso(tempo_total, falhou=True,)
+                self.jogo_ativo = tela_falhou(tela, self.sistema_conquistas)
+                self.resetar_nivel()
 
             # Se concluiu o nível
             if self.verifica_conclusao_nivel():
                 tempo_total = time.time() - self.inicio_tempo
+                self.salvar_progresso(tempo_total)
+                
+                # Garantir que as conquistas sejam salvas explicitamente
+                self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
+                
                 if self.nivel_atual >= 8:
-                    self.salvar_progresso(tempo_total)
-                    tela_conclusao(tela)
+                    tela_conclusao(tela, self.sistema_conquistas)
+                    self.resetar_nivel()
                     return
                 else:
-                    self.salvar_progresso(tempo_total)
-                    self.nivel_atual, self.jogo_ativo = tela_conclusao_nivel(tela, self.nivel_atual, tempo_total)
-                    self.vidas = 3
-                    self.inicio_tempo = time.time()
+                    self.nivel_atual, self.jogo_ativo = tela_conclusao_nivel(tela, self.nivel_atual, tempo_total, self.sistema_conquistas)
+                    self.resetar_nivel()
 
             # Mostrar textos (posicionados e espaçados)
             desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
@@ -162,5 +205,4 @@ class JogoLabirinto:
                 cor_outline=cor_com_escala_cinza(255, 255, 255),
                 border_radius=10
             )
-
             pygame.display.update()

@@ -21,10 +21,10 @@ COR_BOTAO_TEXTO = (255, 255, 255)
 
 # Fontes
 pygame.font.init()
-FONTE_TITULO = pygame.font.SysFont("comicsansms", resize(80), bold=True)
-FONTE_BOTAO = pygame.font.SysFont("comicsansms", resize(40))
-FONTE_BARRA = pygame.font.SysFont("comicsansms", resize(30))
-FONTE_TEXTO = pygame.font.SysFont("comicsansms", resize(40))
+FONTE_TITULO = pygame.font.SysFont("comicsansms", resize(80, eh_X=True), bold=True)
+FONTE_BOTAO = pygame.font.SysFont("comicsansms", resize(40, eh_X=True))
+FONTE_BARRA = pygame.font.SysFont("comicsansms", resize(30, eh_X=True))
+FONTE_TEXTO = pygame.font.SysFont("comicsansms", resize(40, eh_X=True))
 
 # Demais cores
 BRANCO = (255, 255, 255)

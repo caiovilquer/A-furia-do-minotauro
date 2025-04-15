@@ -11,7 +11,7 @@ def tela_inicial(tela):
 
     # Texto e fonte
     mensagem = "Pressione qualquer botão para iniciar!"
-    fonte = pygame.font.SysFont("comicsansms", resize(80), bold=True)
+    fonte = pygame.font.SysFont("comicsansms", resize(80, eh_X=True), bold=True)
 
     # Posição base (fixa) e parâmetros de movimento
     base_x = LARGURA_TELA // 2

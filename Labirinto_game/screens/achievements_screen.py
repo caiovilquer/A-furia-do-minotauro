@@ -97,9 +97,9 @@ def tela_conquistas(tela, usuario):
             
             # Desenha informações da conquista
             desenhar_texto(conquista['nome'], fonte_texto, COR_TEXTO, tela, titulo_x + resize(100, eh_X=True), y_offset)
-            desenhar_texto(conquista['descricao'], pygame.font.SysFont("comicsansms", resize(30)), 
+            desenhar_texto(conquista['descricao'], pygame.font.SysFont("comicsansms", resize(30, eh_X=True)), 
                           cor_com_escala_cinza(200, 200, 200), tela, titulo_x + resize(100, eh_X=True), y_offset + resize(40))
-            desenhar_texto(status, pygame.font.SysFont("comicsansms", resize(25)), 
+            desenhar_texto(status, pygame.font.SysFont("comicsansms", resize(25, eh_X=True)), 
                           cor_status, tela, LARGURA_TELA - resize(300, eh_X=True), y_offset + resize(20))
             
             y_offset += espacamento

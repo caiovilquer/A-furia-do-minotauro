@@ -43,7 +43,7 @@ class SistemaConquistas:
         self.notificacao_duracao = 5  # segundos
         
         # Fonte para notificação
-        self.fonte_notificacao = pygame.font.SysFont("comicsansms", resize(30))
+        self.fonte_notificacao = pygame.font.SysFont("comicsansms", resize(30, eh_X=True))
         
         self.conquistas_recentes = []
     
@@ -213,13 +213,13 @@ class SistemaConquistas:
                         print(f"Erro ao carregar ícone: {e}")
             
             # Texto "CONQUISTA DESBLOQUEADA!"
-            fonte_titulo = pygame.font.SysFont("comicsansms", resize(22), bold=True)
+            fonte_titulo = pygame.font.SysFont("comicsansms", resize(22, eh_X=True), bold=True)
             texto_titulo = fonte_titulo.render("CONQUISTA DESBLOQUEADA!", True, (255, 215, 0))
             notificacao_surface.blit(texto_titulo, (resize(120, eh_X=True), resize(15)))
             
             # Texto da conquista
             nome_conquista = texto.replace("Conquista desbloqueada: ", "")
-            fonte_conquista = pygame.font.SysFont("comicsansms", resize(28))
+            fonte_conquista = pygame.font.SysFont("comicsansms", resize(28, eh_X=True))
             texto_conquista = fonte_conquista.render(nome_conquista, True, (255, 255, 255))
             notificacao_surface.blit(texto_conquista, (resize(120, eh_X=True), resize(45)))
             

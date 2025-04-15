@@ -122,7 +122,7 @@ class JogoLabirinto:
     def loop_principal(self):
         """Loop principal do jogo."""
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
-        fonte_botao = pygame.font.SysFont("comicsansms", resize(40)) 
+        fonte_botao = pygame.font.SysFont("comicsansms", resize(40, eh_X=True)) 
         info_x = resize(200, eh_X=True)
         info_y = resize(300)
         while self.jogo_ativo:

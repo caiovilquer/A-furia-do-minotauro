@@ -21,10 +21,11 @@ COR_BOTAO_TEXTO = (255, 255, 255)
 
 # Fontes
 pygame.font.init()
-FONTE_TITULO = pygame.font.SysFont("comicsansms", resize(80, eh_X=True), bold=True)
-FONTE_BOTAO = pygame.font.SysFont("comicsansms", resize(40, eh_X=True))
-FONTE_BARRA = pygame.font.SysFont("comicsansms", resize(30, eh_X=True))
-FONTE_TEXTO = pygame.font.SysFont("comicsansms", resize(40, eh_X=True))
+FONTE_TITULO = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Bold.ttf", resize(80, eh_X=True))
+FONTE_BOTAO = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(50, eh_X=True))
+FONTE_BARRA = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Regular.ttf", resize(30, eh_X=True))
+FONTE_TEXTO = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Regular.ttf", resize(40, eh_X=True))
+
 
 # Demais cores
 BRANCO = (255, 255, 255)
@@ -38,6 +39,7 @@ AZUL_CLARO = (173, 216, 230)
 # Arquivo de background
 IMAGES_PATH = "Labirinto_game/assets/images/"
 BACKGROUND_PATH = IMAGES_PATH + "tela_inicial.png"
+BUTTON_PATH = IMAGES_PATH + "button1.png"
 DIALOGO_PATH = IMAGES_PATH + "fundo_dialogo.png"
 DIALOGO_DARK_PATH = IMAGES_PATH + "fundo_dialogo_dark.png"
 SOUND_PATH = "Labirinto_game/assets/sounds"

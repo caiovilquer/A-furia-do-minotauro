@@ -1,7 +1,7 @@
 import pygame
 import sys
 import serial.tools.list_ports
-from constants import LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
+from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
 from utils.drawing import desenhar_texto, desenhar_botao, resize
 from utils.colors import cor_com_escala_cinza
@@ -54,6 +54,7 @@ def tela_selecao_porta(tela):
                 fonte=fonte_botao,
                 tela=tela,
                 events=events,
+                imagem_fundo=BUTTON_PATH,
                 border_radius=resize(10)
             )
             if clicou:
@@ -73,6 +74,7 @@ def tela_selecao_porta(tela):
             cor_hover=cor_com_escala_cinza(200, 120, 60),
             fonte=fonte_botao,
             tela=tela,
+            imagem_fundo=BUTTON_PATH,
             events=events,
             border_radius=resize(10)
         )

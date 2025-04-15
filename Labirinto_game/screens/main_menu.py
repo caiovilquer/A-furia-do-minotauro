@@ -1,6 +1,6 @@
 import pygame
 import sys
-from constants import (LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
+from constants import (BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TITULO, FONTE_BOTAO, COR_TITULO)
 from utils.drawing import desenhar_texto, desenhar_botao, resize
 from utils.colors import cor_com_escala_cinza
@@ -20,6 +20,8 @@ def tela_menu_principal(tela, usuario):
     titulo_y = resize(100)
 
     while True:
+        from utils.audio_manager import audio_manager
+        audio_manager.set_bg_volume(0.05) 
         events = pygame.event.get()
         clock.tick(FPS)
         for event in events:
@@ -51,7 +53,7 @@ def tela_menu_principal(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_jogar:
@@ -68,7 +70,7 @@ def tela_menu_principal(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_desempenho:
@@ -85,7 +87,7 @@ def tela_menu_principal(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_rejogar:
@@ -102,7 +104,7 @@ def tela_menu_principal(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_escala:
@@ -120,17 +122,14 @@ def tela_menu_principal(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_som:
+            from utils.audio_manager import audio_manager
             constants.SOM_LIGADO = not constants.SOM_LIGADO
             SOM_LIGADO = constants.SOM_LIGADO
-            # se quisesse ligar/desligar musica
-            # if SOM_LIGADO:
-            #     pygame.mixer.music.unpause()
-            # else:
-            #     pygame.mixer.music.pause()
+            audio_manager.som_ligado = SOM_LIGADO
         
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
@@ -143,7 +142,7 @@ def tela_menu_principal(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_voltar:
@@ -160,7 +159,7 @@ def tela_menu_principal(tela, usuario):
         fonte=fonte_botao,
         tela=tela,
         events=events,
-        imagem_fundo=None,
+        imagem_fundo=BUTTON_PATH,
         border_radius=resize(15)
     )
         if clicou_conquistas:
@@ -177,7 +176,7 @@ def tela_menu_principal(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_sair:

@@ -1,6 +1,6 @@
 import pygame
 import sys
-from constants import LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
+from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO
 from utils.drawing import desenhar_texto, desenhar_botao, resize
 from utils.colors import cor_com_escala_cinza
@@ -60,7 +60,7 @@ def tela_desempenho(tela, usuario):
             fonte=pygame.font.SysFont("arial", resize(50, eh_X=True)),
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(40)
         )
         if clicou_ant:
@@ -79,7 +79,7 @@ def tela_desempenho(tela, usuario):
             fonte=pygame.font.SysFont("arial", resize(50, eh_X=True)),
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(40)
         )
         if clicou_prox:
@@ -121,7 +121,7 @@ def tela_desempenho(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_voltar:

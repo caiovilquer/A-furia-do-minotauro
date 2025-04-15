@@ -122,10 +122,12 @@ class SistemaConquistas:
         return conquistas_desbloqueadas
     
     def mostrar_notificacao(self, texto):
+        from utils.audio_manager import audio_manager
         """Ativa a notificação de conquista"""
         self.notificacao_ativa = True
         self.notificacao_texto.append(texto)
         self.notificacao_inicio = time.time()
+        audio_manager.play_sound("achievement")
     
     def desenhar_notificacao(self, tela):
         """Desenha a notificação de conquista na tela com efeitos visuais aprimorados"""

@@ -20,9 +20,10 @@ class TelaDialogoInicial:
         
         if not dark:
             self.personagem = pygame.image.load("Labirinto_game/assets/images/teseu.png").convert_alpha()
+            self.personagem = pygame.transform.scale(self.personagem, (resize(800, eh_X=True), resize(800)))
         else:
             self.personagem = pygame.image.load("Labirinto_game/assets/images/teseu_old.png").convert_alpha()
-        self.personagem = pygame.transform.scale(self.personagem, (resize(800, eh_X=True), resize(800)))
+            self.personagem = pygame.transform.scale(self.personagem, (resize(540, eh_X=True), resize(800)))
         # Posiciona personagem no meio da tela
         self.personagem_rect = self.personagem.get_rect(center=(LARGURA_TELA - resize(500, eh_X=True), ALTURA_TELA - resize(400)))
         
@@ -39,10 +40,11 @@ class TelaDialogoInicial:
         self.cor_texto = (255, 255, 255)
         if not dark:
             self.linhas_dialogo = [
-            "Ei, que bom que você chegou! Eu sou Teseu, e estou explorando este grande labirinto mágico. Ouvi falar que ele tem caminhos que se mexem e um monstro escondido chamado Minotauro.",
-            "Eu preciso de alguém especial para me acompanhar. Não consigo percorrer todos esses corredores sozinho! Você poderá usar um anel mágico para desviar das paredes de metal. Mas cuidado: se encostar, perdemos uma vida.",
-            "Se isso acontecer, não desanime! Podemos tentar outra vez. Quando acertarmos o caminho, sons e luzes vão nos dar dicas de que estamos indo bem. E lá na frente, quem sabe... pode ter uma surpresa!",
-            "Então, o que acha? Vamos nos aventurar juntos? O labirinto é grande, mas com a sua ajuda, tenho certeza de que chegaremos ao fim!"
+            "Oi! Que bom que você está aqui! Eu sou Teseu, um viajante que veio até Creta para explorar este labirinto enorme. Dizem que foi construído há muitos e muitos anos pelo inventor Dédalo, e que lá no fim vive um monstro assustador chamado Minotauro.",
+            "Você parece corajoso. Poderia me ajudar a atravessar esses caminhos que se mexem e mudam o tempo todo? Qual o seu nome?",
+            "Temos conosco um anel mágico, este que você segura: com ele, precisamos desviar das paredes de metal sem encostar. Se encostar, perdemos uma vida... mas não faz mal: se acontecer, podemos tentar de novo!",
+            "Enquanto avançamos, luzes e sons vão avisar se estamos fazendo certo. A ilha de Creta é cheia de histórias e segredos, então fique de olho em cada detalhe!",
+            "Vamos juntos? Quero muito chegar ao fim do labirinto. Quem sabe possamos evitar que o Minotauro cause problemas. Você topa?"
         ]
         else:
             self.linhas_dialogo = [

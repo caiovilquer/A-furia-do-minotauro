@@ -1,6 +1,6 @@
 import pygame
 import sys
-from constants import LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
+from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
 from utils.drawing import desenhar_texto, desenhar_botao, resize
 from utils.colors import cor_com_escala_cinza
@@ -44,7 +44,7 @@ def tela_rejogar(tela, usuario):
             txt_btn = f"Nível {lvl}"
             clicou, _ = desenhar_botao(
                 texto=txt_btn,
-                x=LARGURA_TELA//2-resize(130, eh_X=True),
+                x=LARGURA_TELA//2-resize(100, eh_X=True),
                 y=y_offset,
                 largura=resize(200, eh_X=True),
                 altura=resize(70),
@@ -53,7 +53,7 @@ def tela_rejogar(tela, usuario):
                 fonte=fonte_botao,
                 tela=tela,
                 events=events,
-                imagem_fundo=None,
+                imagem_fundo=BUTTON_PATH,
                 border_radius=resize(15)
             )
             if clicou:
@@ -62,7 +62,7 @@ def tela_rejogar(tela, usuario):
 
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - resize(241, eh_X=True),
+            x=LARGURA_TELA//2 - resize(200, eh_X=True),
             y=y_offset,
             largura=resize(400, eh_X=True),
             altura=resize(70),
@@ -71,7 +71,7 @@ def tela_rejogar(tela, usuario):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_voltar:

@@ -1,6 +1,6 @@
 import pygame
 import sys
-from constants import LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
+from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
 from utils.drawing import desenhar_texto, desenhar_botao, resize
 from utils.colors import cor_com_escala_cinza
@@ -34,7 +34,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
 
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
-            x=LARGURA_TELA//2-resize(241, eh_X=True),
+            x=LARGURA_TELA//2-resize(200, eh_X=True),
             y=resize(600),
             largura=resize(400, eh_X=True),
             altura=resize(70),
@@ -43,7 +43,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_rejogar:
@@ -51,7 +51,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
         
         clicou_avancar, _ = desenhar_botao(
             texto="Avançar Nível",
-            x=LARGURA_TELA//2-resize(241, eh_X=True),
+            x=LARGURA_TELA//2-resize(200, eh_X=True),
             y=resize(700),
             largura=resize(400, eh_X=True),
             altura=resize(70),
@@ -60,7 +60,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_avancar:
@@ -68,7 +68,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
         
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2-resize(241, eh_X=True),
+            x=LARGURA_TELA//2-resize(200, eh_X=True),
             y=resize(800),
             largura=resize(400, eh_X=True),
             altura=resize(70),
@@ -77,7 +77,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_voltar:

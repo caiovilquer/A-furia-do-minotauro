@@ -4,7 +4,7 @@ import time
 import random
 from datetime import datetime
 import serial
-from constants import (LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
+from constants import (BUTTON_PATH, FONTE_BOTAO, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA)
 from utils.drawing import desenhar_texto, desenhar_botao, desenhar_barra_progresso, resize
 from utils.colors import cor_com_escala_cinza
@@ -54,7 +54,7 @@ class JogoLabirinto:
     def verificar_colisao(self):
         """Verifica se houve colisão."""
         # Exemplo local. Caso real, leríamos da serial.
-        if random.random() < 0.000:
+        if random.random() < 0.00:
             self.progresso = random.random()
             self.vidas -= 1
             self.colisoes += 1
@@ -62,6 +62,8 @@ class JogoLabirinto:
 
     def feedback_colisao(self):
         """Fornece feedback visual/sonoro para colisão."""
+        from utils.audio_manager import audio_manager
+        audio_manager.play_sound("collision")
         print(f"Colisão! Progresso atual: {self.progresso:.2f}")
 
     def verifica_conclusao_nivel(self):
@@ -104,7 +106,15 @@ class JogoLabirinto:
         }
         
         # Verificar conquistas com os dados atualizados
-        self.sistema_conquistas.verificar_conquistas(self.usuario, dados_jogo)
+        conquistas_desbloqueadas = self.sistema_conquistas.verificar_conquistas(self.usuario, dados_jogo)
+        
+        # Tocar som de sucesso se o nível foi concluído com sucesso
+        if not falhou:
+            from utils.audio_manager import audio_manager
+            audio_manager.play_sound("success")
+        elif falhou:
+            from utils.audio_manager import audio_manager
+            audio_manager.play_sound("failure")
 
     def resetar_nivel(self):
         """Reseta o estado do jogo para o próximo nível"""
@@ -122,7 +132,6 @@ class JogoLabirinto:
     def loop_principal(self):
         """Loop principal do jogo."""
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
-        fonte_botao = pygame.font.SysFont("comicsansms", resize(40, eh_X=True)) 
         info_x = resize(200, eh_X=True)
         info_y = resize(300)
         while self.jogo_ativo:
@@ -149,17 +158,17 @@ class JogoLabirinto:
 
             # BOTÃO VOLTAR
             clicou_voltar, _ = desenhar_botao(
-                texto="Voltar",
+                texto="VOLTAR",
                 x=resize(200, eh_X=True),
                 y=resize(600),
                 largura=resize(200, eh_X=True),
                 altura=resize(70),
                 cor_normal=cor_com_escala_cinza(255, 200, 0),
                 cor_hover=cor_com_escala_cinza(255, 255, 0),
-                fonte=fonte_botao,
+                fonte=FONTE_BOTAO,
                 tela=self.tela,
                 events=events,
-                imagem_fundo=None,
+                imagem_fundo=BUTTON_PATH,
                 border_radius=resize(15)
             )
             if clicou_voltar:

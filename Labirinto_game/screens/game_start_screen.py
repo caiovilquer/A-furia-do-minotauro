@@ -1,6 +1,6 @@
 import pygame
 import sys
-from constants import (LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
+from constants import (BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                       FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO)
 from utils.drawing import desenhar_texto, desenhar_botao, resize, TransitionEffect
 from utils.colors import cor_com_escala_cinza
@@ -62,7 +62,7 @@ def tela_inicio_jogo(tela):
                 fonte=fonte_botao,
                 tela=tela,
                 events=events,
-                imagem_fundo=None,
+                imagem_fundo=BUTTON_PATH,
                 border_radius=resize(15)
             )
             if clicou_continuar:
@@ -75,17 +75,17 @@ def tela_inicio_jogo(tela):
             
         # Botão Novo Jogo
         clicou_novo, _ = desenhar_botao(
-            texto="Novo Jogo",
+            texto="NOVO JOGO",
             x=LARGURA_TELA//2 - resize(200, eh_X=True),
             y=y_novo_jogo,
             largura=resize(400, eh_X=True),
             altura=resize(80),
-            cor_normal=cor_com_escala_cinza(50, 50, 200),
+            cor_normal=cor_com_escala_cinza(50, 50, 180),
             cor_hover=cor_com_escala_cinza(50, 50, 255),
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_novo:
@@ -98,12 +98,12 @@ def tela_inicio_jogo(tela):
             y=y_novo_jogo + espacamento_botoes,
             largura=resize(400, eh_X=True),
             altura=resize(80),
-            cor_normal=cor_com_escala_cinza(200, 50, 50),
+            cor_normal=cor_com_escala_cinza(180, 50, 50),
             cor_hover=cor_com_escala_cinza(255, 50, 50),
             fonte=fonte_botao,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_sair:
@@ -193,8 +193,7 @@ def perguntar_idade(tela):
         
         # Instrução
         desenhar_texto("Digite sua idade e pressione Enter", fonte_texto, COR_TEXTO, tela, 
-                     LARGURA_TELA//2 - resize(300, eh_X=True), ALTURA_TELA//2 - resize(100))
-                     
+                     LARGURA_TELA//2 - resize(300, eh_X=True), ALTURA_TELA//2 - resize(100))            
         # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
@@ -204,10 +203,10 @@ def perguntar_idade(tela):
             altura=resize(80),
             cor_normal=cor_com_escala_cinza(255, 200, 0),
             cor_hover=cor_com_escala_cinza(255, 255, 0),
-            fonte=fonte_texto,
+            fonte=FONTE_BOTAO,
             tela=tela,
             events=events,
-            imagem_fundo=None,
+            imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
         if clicou_voltar:

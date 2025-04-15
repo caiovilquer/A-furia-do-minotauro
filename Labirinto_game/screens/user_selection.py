@@ -1,6 +1,6 @@
 import pygame
 import sys
-from constants import (LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
+from constants import (BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO, PRETO)
 from utils.drawing import desenhar_texto, desenhar_botao, resize
 from utils.colors import cor_com_escala_cinza
@@ -41,35 +41,14 @@ def tela_escolha_usuario(tela):
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-                elif ativo_input:
-                    if event.key == pygame.K_RETURN:
-                        if usuario_digitado.strip() != "":
-                            if usuario_digitado.strip() not in usuarios_data:
-                                usuarios_data[usuario_digitado.strip()] = {
-                                    "nivel": 1,
-                                    "tentativas": []
-                                }
-                                salvar_usuarios(usuarios_data)
-
-                            return usuario_digitado.strip()
-                    elif event.key == pygame.K_BACKSPACE:
-                        usuario_digitado = usuario_digitado[:-1]
-                    else:
-                        usuario_digitado += event.unicode
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if input_box.collidepoint(event.pos):
-                    ativo_input = True
-                    cor_atual = cor_ativo
-                else:
-                    ativo_input = False
-                    cor_atual = cor_inativo
+                
 
         if background_img:
             tela.blit(background_img, (0, 0))
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto("Selecione ou Crie um Usuário", fonte_titulo, COR_TITULO, tela, titulo_x-resize(150, eh_X=True), titulo_y)
+        desenhar_texto("Selecione um Usuário", fonte_titulo, COR_TITULO, tela, titulo_x-resize(100, eh_X=True), titulo_y)
 
         # Lista de usuários
         y_offset = y_inicial_botoes
@@ -94,7 +73,7 @@ def tela_escolha_usuario(tela):
                 fonte=fonte_botao,
                 tela=tela,
                 events=events,
-                imagem_fundo=None,
+                imagem_fundo=BUTTON_PATH,
                 border_radius=resize(10)
             )
             if clicou_user:
@@ -111,7 +90,7 @@ def tela_escolha_usuario(tela):
                 fonte=fonte_botao,
                 tela=tela,
                 events=events,
-                imagem_fundo=None,
+                imagem_fundo=BUTTON_PATH,
                 border_radius=resize(10)
             )
             if clicou_delete:
@@ -124,9 +103,22 @@ def tela_escolha_usuario(tela):
 
             y_offset += espacamento_botoes
 
-        pygame.draw.rect(tela, cor_atual, input_box, 0, border_radius=resize(10))
-        txt_surface = input_font.render(usuario_digitado, True, PRETO)
-        tela.blit(txt_surface, (input_box.x+resize(10, eh_X=True), input_box.y+resize(10)))
-        desenhar_texto("Novo usuário e ENTER:", input_font, COR_TEXTO, tela, input_box.x, input_box.y - resize(50))
+        # Botão Voltar
+        clicou_voltar, _ = desenhar_botao(
+            texto="Voltar",
+            x=LARGURA_TELA//2 - resize(200, eh_X=True),
+            y=input_box.y + input_box.height + resize(50),
+            largura=resize(400, eh_X=True),
+            altura=resize(70),
+            cor_normal=cor_com_escala_cinza(255, 200, 0),
+            cor_hover=cor_com_escala_cinza(255, 255, 0),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=BUTTON_PATH,
+            border_radius=resize(15)
+        )
+        if clicou_voltar:
+            return None  # Return None to indicate going back
 
         pygame.display.update()

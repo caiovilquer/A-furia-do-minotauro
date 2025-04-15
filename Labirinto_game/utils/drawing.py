@@ -1,14 +1,55 @@
 import pygame
 import os
 
-from utils.colors import cor_com_escala_cinza
+
 
 def desenhar_texto(texto, fonte, cor, superficie, x, y):
     """Desenha texto na superfície especificada."""
+    from utils.colors import cor_com_escala_cinza
     text_obj = fonte.render(texto, True, cor_com_escala_cinza(cor[0], cor[1], cor[2]))
     text_rect = text_obj.get_rect()
     text_rect.topleft = (x, y)
     superficie.blit(text_obj, text_rect)
+
+def desenhar_texto_sombra(text, font, color, surf, x, y, shadow_color=(0,0,0), offset=2):
+    # Renderiza o texto principal
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect(topleft=(x, y))
+
+    # Renderiza o texto para a sombra (deslocado)
+    shadow_surface = font.render(text, True, shadow_color)
+    shadow_rect = shadow_surface.get_rect(topleft=(x + offset, y + offset))
+
+    # Desenha a sombra primeiro, depois o texto “principal”
+    surf.blit(shadow_surface, shadow_rect)
+    surf.blit(text_surface, text_rect)
+
+def desenhar_texto_textura(text, font, texture):
+    """
+    text: string
+    font: fonte do pygame
+    texture: pygame.Surface com a textura a ser usada
+
+    Retorna um pygame.Surface onde as letras do texto foram
+    preenchidas com a imagem 'texture'.
+    """
+
+    # Renderiza o texto em branco (para ficar fácil usar alpha)
+    text_surface = font.render(text, True, (255,255,255))
+    text_surface = text_surface.convert_alpha()
+
+    # Criamos uma nova surface do mesmo tamanho do text_surface
+    w, h = text_surface.get_size()
+    final_surf = pygame.Surface((w, h), pygame.SRCALPHA)
+    final_surf = final_surf.convert_alpha()
+
+    texture_scaled = pygame.transform.scale(texture, (w, h))
+
+    final_surf.blit(texture_scaled, (0, 0))
+
+    final_surf.blit(text_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+    return final_surf
 
 def desenhar_botao(
     texto,

@@ -5,6 +5,7 @@ import sys
 pygame.init()
 
 # Importações após inicialização
+from screens.initial_dialogue_screen import TelaDialogoInicial
 from constants import LARGURA_TELA, ALTURA_TELA, TITULO_JOGO
 from screens.initial_screen import tela_inicial
 from screens.port_selection import tela_selecao_porta
@@ -15,6 +16,8 @@ from screens.replay_level import tela_rejogar
 from game.game import JogoLabirinto
 from utils.drawing import TransitionEffect
 from screens.achievements_screen import tela_conquistas
+from utils.user_data import carregar_usuarios, salvar_usuarios
+from screens.game_start_screen import tela_inicio_jogo
 
 def main():
     """Função principal que inicia o jogo."""
@@ -26,17 +29,38 @@ def main():
     # Tela inicial
     TransitionEffect.fade_out(tela, velocidade=30)
     tela_inicial(tela)
-
     
     # Selecionar porta do Arduino
     TransitionEffect.fade_out(tela, velocidade=30)
     porta_escolhida = tela_selecao_porta(tela)
     
     print("PORTA ESCOLHIDA:", porta_escolhida)
-
-    # Selecionar ou criar usuário
+    
+    # Nova tela para escolher entre continuar ou novo jogo
     TransitionEffect.fade_out(tela, velocidade=30)
-    usuario_escolhido = tela_escolha_usuario(tela)
+    escolha, dark_mode = tela_inicio_jogo(tela)
+    
+    # Se o usuário escolher continuar, mostrar tela de seleção de usuário
+    usuario_escolhido = None
+    if escolha == 'CONTINUAR':
+        TransitionEffect.fade_out(tela, velocidade=30)
+        usuario_escolhido = tela_escolha_usuario(tela)
+        dark_mode = False  # Default para usuário existente
+    
+    # Iniciar diálogo e capturar o nome do usuário (apenas para novo jogo)
+    if escolha == 'NOVO' or not usuario_escolhido:
+        TransitionEffect.fade_out(tela, velocidade=30)
+        dialogos = TelaDialogoInicial(tela, dark=dark_mode)
+        usuario_escolhido = dialogos.executar()
+    
+    # Verificar se o usuário já existe ou criar novo
+    usuarios_data = carregar_usuarios()
+    if usuario_escolhido and usuario_escolhido not in usuarios_data:
+        usuarios_data[usuario_escolhido] = {
+            "nivel": 1,
+            "tentativas": []
+        }
+        salvar_usuarios(usuarios_data)
 
     from utils.achievements import SistemaConquistas
     sistema_conquistas = SistemaConquistas()
@@ -62,7 +86,30 @@ def main():
                 TransitionEffect.slide_right(tela, tela.copy(), 30)
         elif acao == "VOLTAR":
             TransitionEffect.fade_out(tela, velocidade=30)
-            usuario_escolhido = tela_escolha_usuario(tela)
+            escolha, dark_mode = tela_inicio_jogo(tela)
+            
+            # Se o usuário escolher continuar, mostrar tela de seleção de usuário
+            usuario_escolhido = None
+            if escolha == 'CONTINUAR':
+                TransitionEffect.fade_out(tela, velocidade=30)
+                usuario_escolhido = tela_escolha_usuario(tela)
+                dark_mode = False  # Default para usuário existente
+            
+                # Iniciar diálogo e capturar o nome do usuário (apenas para novo jogo)
+                if escolha == 'NOVO' or not usuario_escolhido:
+                    TransitionEffect.fade_out(tela, velocidade=30)
+                    dialogos = TelaDialogoInicial(tela, dark=dark_mode)
+                    usuario_escolhido = dialogos.executar()
+                
+                # Verificar se o usuário já existe ou criar novo
+                usuarios_data = carregar_usuarios()
+                if usuario_escolhido and usuario_escolhido not in usuarios_data:
+                    usuarios_data[usuario_escolhido] = {
+                        "nivel": 1,
+                        "tentativas": []
+                    }
+                    salvar_usuarios(usuarios_data)
+
         elif acao == "CONQUISTAS":
             TransitionEffect.fade_out(tela, velocidade=30)
             tela_conquistas(tela, usuario_escolhido)

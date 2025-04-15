@@ -93,7 +93,7 @@ def tela_menu_principal(tela, usuario):
 
         clicou_escala, _ = desenhar_botao(
             texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
-            x=LARGURA_TELA - resize(500, eh_X=True),
+            x=LARGURA_TELA - resize(520, eh_X=True),
             y=ALTURA_TELA-resize(100),
             largura=resize(500, eh_X=True),
             altura=resize(80),
@@ -111,7 +111,7 @@ def tela_menu_principal(tela, usuario):
         
         clicou_som, _ = desenhar_botao(
             texto="Ativar Som" if not SOM_LIGADO else "Desativar Som",
-            x=LARGURA_TELA - resize(500, eh_X=True),
+            x=LARGURA_TELA - resize(520, eh_X=True),
             y=ALTURA_TELA-resize(200),
             largura=resize(500, eh_X=True),
             altura=resize(80),

@@ -2,7 +2,7 @@ import pygame
 import sys
 import math
 from constants import LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
-from utils.drawing import resize
+from utils.drawing import resize, desenhar_texto_textura
 
 def tela_inicial(tela):
     """Tela inicial do jogo com texto animado."""
@@ -10,17 +10,19 @@ def tela_inicial(tela):
     rodando = True
 
     # Texto e fonte
-    mensagem = "Pressione qualquer botão para iniciar!"
-    fonte = pygame.font.SysFont("comicsansms", resize(80, eh_X=True), bold=True)
+    mensagem = "A FURIA DO MINOTAURO"
+    mensagem2 = "Aperte qualquer tecla para continuar"
+    fonte = pygame.font.Font("Labirinto_game/assets/fonts/Odyssey.otf", resize(140, eh_X=True))
+    fonte2 = pygame.font.Font("Labirinto_game/assets/fonts/Odyssey.otf", resize(50, eh_X=True))
 
     # Posição base (fixa) e parâmetros de movimento
     base_x = LARGURA_TELA // 2
-    base_y = ALTURA_TELA // 2 - resize(80)
-    amplitude = resize(40)   # até onde o texto "sobe e desce"
-    frequencia = 0.5   # quantas "oscilações" por segundo
+    base_y = ALTURA_TELA // 2 - resize(20)
+    amplitude = resize(20)   # até onde o texto "sobe e desce"
+    frequencia = 0.4   # quantas "oscilações" por segundo
 
     tempo_acumulado = 0.0
-
+    texture_image = pygame.image.load("Labirinto_game/assets/images/marmore2.jpg").convert_alpha()
     while rodando:
         dt = clock.tick(FPS)  # tempo em ms desde o último frame
         tempo_acumulado += dt / 1000.0  # converte para segundos
@@ -53,8 +55,15 @@ def tela_inicial(tela):
         pos_y = base_y + offset_y
 
         # Renderiza e desenha
-        text_surface = fonte.render(mensagem, True, AZUL_CLARO)
+        
+        
+        # text_surface = fonte.render(mensagem, True, AZUL_CLARO)
+        
+        text_surface = desenhar_texto_textura(mensagem, fonte, texture_image)
+        text_surface2 = desenhar_texto_textura(mensagem2, fonte2, texture_image)
         text_rect = text_surface.get_rect(center=(pos_x, pos_y))
+        text_rect2 = text_surface2.get_rect(center=(pos_x, pos_y + resize(80)))
         tela.blit(text_surface, text_rect)
+        tela.blit(text_surface2, text_rect2)
 
         pygame.display.update()

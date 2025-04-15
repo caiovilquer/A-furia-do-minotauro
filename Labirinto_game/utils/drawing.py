@@ -1,6 +1,6 @@
 import pygame
 import os
-from constants import COR_BOTAO_TEXTO
+
 from utils.colors import cor_com_escala_cinza
 
 def desenhar_texto(texto, fonte, cor, superficie, x, y):
@@ -47,7 +47,7 @@ def desenhar_botao(
             botao_surf.blit(highlight_surf, (0, 0))
     else:
         pygame.draw.rect(botao_surf, cor_fundo, (0, 0, largura, altura), border_radius=border_radius)
-
+    from constants import COR_BOTAO_TEXTO
     texto_render = fonte.render(texto, True, COR_BOTAO_TEXTO)
     texto_rect = texto_render.get_rect(center=(largura//2, altura//2))
     botao_surf.blit(texto_render, texto_rect)
@@ -169,3 +169,11 @@ class TransitionEffect:
             tela.blit(nova_tela, (-largura+i, 0))
             pygame.display.update()
             pygame.time.delay(5)
+            
+def resize(valor, eh_X = False):
+    """Redimensiona o valor baseado na proporção da tela."""
+    from constants import LARGURA_TELA, ALTURA_TELA
+    if eh_X:
+        return int(valor * LARGURA_TELA / 1920)
+    else:
+        return int(valor * ALTURA_TELA / 1080)

@@ -6,7 +6,7 @@ from datetime import datetime
 import serial
 from constants import (LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA)
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_barra_progresso
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_barra_progresso, resize
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios, salvar_usuarios
 from screens.game_over import tela_falhou
@@ -121,10 +121,10 @@ class JogoLabirinto:
 
     def loop_principal(self):
         """Loop principal do jogo."""
-        tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
-        fonte_botao = pygame.font.SysFont("comicsansms", 40) 
-        info_x = 200
-        info_y = 300
+        tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
+        fonte_botao = pygame.font.SysFont("comicsansms", resize(40)) 
+        info_x = resize(200, eh_X=True)
+        info_y = resize(300)
         while self.jogo_ativo:
             events = pygame.event.get()
             self.clock.tick(FPS)
@@ -133,6 +133,10 @@ class JogoLabirinto:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.jogo_ativo = False
+                        return
 
             self.atualizar_labirinto()
             self.verificar_colisao()
@@ -146,17 +150,17 @@ class JogoLabirinto:
             # BOTÃO VOLTAR
             clicou_voltar, _ = desenhar_botao(
                 texto="Voltar",
-                x=200,
-                y=600,
-                largura=200,
-                altura=70,
+                x=resize(200, eh_X=True),
+                y=resize(600),
+                largura=resize(200, eh_X=True),
+                altura=resize(70),
                 cor_normal=cor_com_escala_cinza(255, 200, 0),
                 cor_hover=cor_com_escala_cinza(255, 255, 0),
                 fonte=fonte_botao,
                 tela=self.tela,
                 events=events,
                 imagem_fundo=None,
-                border_radius=15
+                border_radius=resize(15)
             )
             if clicou_voltar:
                 self.jogo_ativo = False
@@ -187,22 +191,22 @@ class JogoLabirinto:
 
             # Mostrar textos (posicionados e espaçados)
             desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
-            desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 60)
-            desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 120)
-            desenhar_texto(f"Tempo: {int(time.time() - self.inicio_tempo)} s", self.fonte, COR_TEXTO, self.tela, info_x, info_y + 180)
+            desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(60))
+            desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(120))
+            desenhar_texto(f"Tempo: {int(time.time() - self.inicio_tempo)} s", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(180))
 
             cor_barra_fundo = cor_com_escala_cinza(50, 50, 50)
             cor_barra_frente = cor_com_escala_cinza(0, 200, 0)
             desenhar_barra_progresso(
                 self.tela,
                 x=info_x,
-                y=info_y + 241,
-                largura=400,
-                altura=40,
+                y=info_y + resize(241),
+                largura=resize(400, eh_X=True),
+                altura=resize(40),
                 progresso=self.progresso,
                 cor_fundo=cor_barra_fundo,
                 cor_barra=cor_barra_frente,
                 cor_outline=cor_com_escala_cinza(255, 255, 255),
-                border_radius=10
+                border_radius=resize(10)
             )
             pygame.display.update()

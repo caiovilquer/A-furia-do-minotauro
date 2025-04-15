@@ -1,9 +1,11 @@
 import pygame
 import os
+from utils.drawing import resize
 
 # === CONFIGURAÇÕES BÁSICAS ===
-LARGURA_TELA = 1920
-ALTURA_TELA = 1080
+display_info = pygame.display.Info()
+LARGURA_TELA = display_info.current_w
+ALTURA_TELA = display_info.current_h
 TITULO_JOGO = "Labirinto Sensorial"
 FPS = 60
 
@@ -19,10 +21,10 @@ COR_BOTAO_TEXTO = (255, 255, 255)
 
 # Fontes
 pygame.font.init()
-FONTE_TITULO = pygame.font.SysFont("comicsansms", 80, bold=True)
-FONTE_BOTAO = pygame.font.SysFont("comicsansms", 40)
-FONTE_BARRA = pygame.font.SysFont("comicsansms", 30)
-FONTE_TEXTO = pygame.font.SysFont("comicsansms", 40)
+FONTE_TITULO = pygame.font.SysFont("comicsansms", resize(80), bold=True)
+FONTE_BOTAO = pygame.font.SysFont("comicsansms", resize(40))
+FONTE_BARRA = pygame.font.SysFont("comicsansms", resize(30))
+FONTE_TEXTO = pygame.font.SysFont("comicsansms", resize(40))
 
 # Demais cores
 BRANCO = (255, 255, 255)

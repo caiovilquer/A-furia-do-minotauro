@@ -2,6 +2,7 @@ import pygame
 import sys
 import math
 from constants import LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
+from utils.drawing import resize
 
 def tela_inicial(tela):
     """Tela inicial do jogo com texto animado."""
@@ -10,12 +11,12 @@ def tela_inicial(tela):
 
     # Texto e fonte
     mensagem = "Pressione qualquer botão para iniciar!"
-    fonte = pygame.font.SysFont("comicsansms", 80, bold=True)
+    fonte = pygame.font.SysFont("comicsansms", resize(80), bold=True)
 
     # Posição base (fixa) e parâmetros de movimento
     base_x = LARGURA_TELA // 2
-    base_y = ALTURA_TELA // 2 - 80
-    amplitude = 40.0   # até onde o texto "sobe e desce"
+    base_y = ALTURA_TELA // 2 - resize(80)
+    amplitude = resize(40)   # até onde o texto "sobe e desce"
     frequencia = 0.5   # quantas "oscilações" por segundo
 
     tempo_acumulado = 0.0
@@ -29,7 +30,13 @@ def tela_inicial(tela):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+                else:
+                    rodando = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 # Ao apertar qualquer tecla ou clicar, sai desta tela
                 rodando = False
 

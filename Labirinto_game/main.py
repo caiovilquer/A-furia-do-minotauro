@@ -19,7 +19,8 @@ from screens.achievements_screen import tela_conquistas
 def main():
     """Função principal que inicia o jogo."""
     # Configuração da tela
-    tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA))
+    tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
+    print("LARGURA_TELA:", LARGURA_TELA, "ALTURA_TELA:", ALTURA_TELA)
     pygame.display.set_caption(TITULO_JOGO)
     
     # Tela inicial

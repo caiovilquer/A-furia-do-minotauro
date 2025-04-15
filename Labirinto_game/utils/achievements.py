@@ -3,6 +3,7 @@ import time
 import math
 import os
 from utils.user_data import carregar_usuarios, salvar_usuarios
+from utils.drawing import resize
 
 class SistemaConquistas:
     """Sistema de gerenciamento de conquistas do jogo"""
@@ -42,7 +43,7 @@ class SistemaConquistas:
         self.notificacao_duracao = 5  # segundos
         
         # Fonte para notificação
-        self.fonte_notificacao = pygame.font.SysFont("comicsansms", 30)
+        self.fonte_notificacao = pygame.font.SysFont("comicsansms", resize(30))
         
         self.conquistas_recentes = []
     
@@ -140,16 +141,16 @@ class SistemaConquistas:
         
         # Configurações visuais
         largura_tela, altura_tela = tela.get_size()
-        altura_notificacao = 100
-        largura_notificacao = 700
+        altura_notificacao = resize(100)
+        largura_notificacao = resize(700, eh_X=True)
         
         # Efeitos de animação baseados no tempo
         progresso = min(1.0, tempo_decorrido / 0.5)  # 0.5s para entrada completa
         progresso_saida = max(0.0, min(1.0, (tempo_decorrido - (self.notificacao_duracao - 0.8)) / 0.8)) if tempo_decorrido > (self.notificacao_duracao - 0.8) else 0
         
         # Efeito de entrada/saída
-        deslocamento_y = int((1.0 - progresso) * -150)  # Vem de cima
-        deslocamento_y += int(progresso_saida * 150)  # Sai para cima
+        deslocamento_y = int((1.0 - progresso) * resize(-150))  # Vem de cima
+        deslocamento_y += int(progresso_saida * resize(150))  # Sai para cima
         
         # Efeito de opacidade
         opacidade = int(255 * progresso * (1.0 - progresso_saida))
@@ -168,7 +169,7 @@ class SistemaConquistas:
             
             # Posição base da notificação
             x = (largura_tela - largura_notificacao) // 2
-            y = 80 + y_offset + deslocamento_y
+            y = resize(80) + y_offset + deslocamento_y
             
             # Superfície para a notificação
             notificacao_surface = pygame.Surface((largura_notificacao, altura_notificacao), pygame.SRCALPHA)
@@ -181,19 +182,19 @@ class SistemaConquistas:
             # Borda
             pygame.draw.rect(notificacao_surface, (255, 215, 0, opacidade), 
                              (0, 0, largura_notificacao, altura_notificacao), 
-                             width=3, border_radius=15)
+                             width=resize(3), border_radius=resize(15))
             
             # Desenha fundo principal
             pygame.draw.rect(notificacao_surface, (20, 20, 40, min(230, opacidade)), 
-                             (3, 3, largura_notificacao-6, altura_notificacao-6), 
-                             border_radius=13)
+                             (resize(3, eh_X=True), resize(3), largura_notificacao-resize(6, eh_X=True), altura_notificacao-resize(6)), 
+                             border_radius=resize(13))
             
             # Adiciona brilho na borda (efeito pulsante)
             pulso = 0.5 + 0.5 * math.sin(time.time() * 5)
             cor_brilho = (255, 215, 0, int(120 * pulso * (1.0 - progresso_saida)))
             pygame.draw.rect(notificacao_surface, cor_brilho, 
                              (0, 0, largura_notificacao, altura_notificacao), 
-                             width=3, border_radius=15)
+                             width=resize(3), border_radius=resize(15))
             
             # Desenha ícone da conquista, se disponível
             if chave_conquista and chave_conquista in self.conquistas:
@@ -201,40 +202,40 @@ class SistemaConquistas:
                 if icone_path and os.path.exists(icone_path):
                     try:
                         icone = pygame.image.load(icone_path).convert_alpha()
-                        icone = pygame.transform.scale(icone, (80, 80))
+                        icone = pygame.transform.scale(icone, (resize(80, eh_X=True), resize(80)))
                         # Aplicar efeito de brilho ao redor do ícone
-                        glow_surface = pygame.Surface((96, 96), pygame.SRCALPHA)
-                        for raio in range(8, 0, -2):
-                            pygame.draw.circle(glow_surface, (255, 215, 0, 15), (48, 48), 40 + raio)
-                        notificacao_surface.blit(glow_surface, (10, altura_notificacao//2 - 48))
-                        notificacao_surface.blit(icone, (18, altura_notificacao//2 - 40))
+                        glow_surface = pygame.Surface((resize(96, eh_X=True), resize(96)), pygame.SRCALPHA)
+                        for raio in range(resize(8), 0, -resize(2)):
+                            pygame.draw.circle(glow_surface, (255, 215, 0, 15), (resize(48, eh_X=True), resize(48)), resize(40) + raio)
+                        notificacao_surface.blit(glow_surface, (resize(10, eh_X=True), altura_notificacao//2 - resize(48)))
+                        notificacao_surface.blit(icone, (resize(18, eh_X=True), altura_notificacao//2 - resize(40)))
                     except Exception as e:
                         print(f"Erro ao carregar ícone: {e}")
             
             # Texto "CONQUISTA DESBLOQUEADA!"
-            fonte_titulo = pygame.font.SysFont("comicsansms", 22, bold=True)
+            fonte_titulo = pygame.font.SysFont("comicsansms", resize(22), bold=True)
             texto_titulo = fonte_titulo.render("CONQUISTA DESBLOQUEADA!", True, (255, 215, 0))
-            notificacao_surface.blit(texto_titulo, (120, 15))
+            notificacao_surface.blit(texto_titulo, (resize(120, eh_X=True), resize(15)))
             
             # Texto da conquista
             nome_conquista = texto.replace("Conquista desbloqueada: ", "")
-            fonte_conquista = pygame.font.SysFont("comicsansms", 28)
+            fonte_conquista = pygame.font.SysFont("comicsansms", resize(28))
             texto_conquista = fonte_conquista.render(nome_conquista, True, (255, 255, 255))
-            notificacao_surface.blit(texto_conquista, (120, 45))
+            notificacao_surface.blit(texto_conquista, (resize(120, eh_X=True), resize(45)))
             
             # Renderiza os brilhos e partículas
             tempo_atual = pygame.time.get_ticks() / 1000.0
             for i in range(10):
-                pos_x = 120 + int(300 * math.sin(tempo_atual * 2 + i * 0.5))
-                pos_y = 45 + int(10 * math.cos(tempo_atual * 3 + i * 0.7))
-                raio = 2 + int(2 * math.sin(tempo_atual * 4 + i))
+                pos_x = resize(120, eh_X=True) + int(resize(300, eh_X=True) * math.sin(tempo_atual * 2 + i * 0.5))
+                pos_y = resize(45) + int(resize(10) * math.cos(tempo_atual * 3 + i * 0.7))
+                raio = resize(2) + int(resize(2) * math.sin(tempo_atual * 4 + i))
                 pygame.draw.circle(notificacao_surface, (255, 255, 200, int(100 * pulso)), 
                                   (pos_x % largura_notificacao, pos_y), raio)
             
             # Aplica a notificação na tela
             tela.blit(notificacao_surface, (x, y))
             
-            y_offset += altura_notificacao + 10
+            y_offset += altura_notificacao + resize(10)
                 
     def limpar_notificacoes(self):
         """Limpa todas as notificações pendentes e desativa a notificação atual"""

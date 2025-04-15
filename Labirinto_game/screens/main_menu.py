@@ -2,7 +2,7 @@ import pygame
 import sys
 from constants import (LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TITULO, FONTE_BOTAO, COR_TITULO)
-from utils.drawing import desenhar_texto, desenhar_botao
+from utils.drawing import desenhar_texto, desenhar_botao, resize
 from utils.colors import cor_com_escala_cinza
 
 def tela_menu_principal(tela, usuario):
@@ -16,8 +16,8 @@ def tela_menu_principal(tela, usuario):
     ESCALA_CINZA = constants.ESCALA_CINZA
     SOM_LIGADO = constants.SOM_LIGADO
 
-    titulo_x = LARGURA_TELA//2 - 350
-    titulo_y = 100
+    titulo_x = LARGURA_TELA//2 - resize(350, eh_X=True)
+    titulo_y = resize(100)
 
     while True:
         events = pygame.event.get()
@@ -26,6 +26,9 @@ def tela_menu_principal(tela, usuario):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return "VOLTAR"
 
         if background_img:
             tela.blit(background_img, (0, 0))
@@ -34,73 +37,73 @@ def tela_menu_principal(tela, usuario):
 
         desenhar_texto(f"Bem-vindo, {usuario}!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
-        y_inicial = 300
-        espacamento_botoes = 120
+        y_inicial = resize(300)
+        espacamento_botoes = resize(120)
 
         clicou_jogar, _ = desenhar_botao(
             texto="Iniciar Jogo",
-            x=LARGURA_TELA//2 - 200,
+            x=LARGURA_TELA//2 - resize(200, eh_X=True),
             y=y_inicial,
-            largura=400,
-            altura=80,
+            largura=resize(400, eh_X=True),
+            altura=resize(80),
             cor_normal=cor_com_escala_cinza(180, 100, 50),
             cor_hover=cor_com_escala_cinza(220, 150, 100),
             fonte=fonte_botao,
             tela=tela,
             events=events,
             imagem_fundo=None,
-            border_radius=15
+            border_radius=resize(15)
         )
         if clicou_jogar:
             return "JOGAR"
 
         clicou_desempenho, _ = desenhar_botao(
             texto="Ver Desempenho",
-            x=LARGURA_TELA//2 - 200,
+            x=LARGURA_TELA//2 - resize(200, eh_X=True),
             y=y_inicial + espacamento_botoes,
-            largura=400,
-            altura=80,
+            largura=resize(400, eh_X=True),
+            altura=resize(80),
             cor_normal=cor_com_escala_cinza(50, 50, 200),
             cor_hover=cor_com_escala_cinza(50, 50, 255),
             fonte=fonte_botao,
             tela=tela,
             events=events,
             imagem_fundo=None,
-            border_radius=15
+            border_radius=resize(15)
         )
         if clicou_desempenho:
             return "DESEMPENHO"
 
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
-            x=LARGURA_TELA//2 - 200,
+            x=LARGURA_TELA//2 - resize(200, eh_X=True),
             y=y_inicial + espacamento_botoes*2,
-            largura=400,
-            altura=80,
+            largura=resize(400, eh_X=True),
+            altura=resize(80),
             cor_normal=cor_com_escala_cinza(0, 200, 0),
             cor_hover=cor_com_escala_cinza(0, 255, 0),
             fonte=fonte_botao,
             tela=tela,
             events=events,
             imagem_fundo=None,
-            border_radius=15
+            border_radius=resize(15)
         )
         if clicou_rejogar:
             return "REJOGAR"
 
         clicou_escala, _ = desenhar_botao(
             texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
-            x=LARGURA_TELA - 500,
-            y= ALTURA_TELA-100,
-            largura=500,
-            altura=80,
+            x=LARGURA_TELA - resize(500, eh_X=True),
+            y=ALTURA_TELA-resize(100),
+            largura=resize(500, eh_X=True),
+            altura=resize(80),
             cor_normal=cor_com_escala_cinza(100, 100, 100),
             cor_hover=cor_com_escala_cinza(150, 150, 150),
             fonte=fonte_botao,
             tela=tela,
             events=events,
             imagem_fundo=None,
-            border_radius=15
+            border_radius=resize(15)
         )
         if clicou_escala:
             constants.ESCALA_CINZA = not constants.ESCALA_CINZA
@@ -108,17 +111,17 @@ def tela_menu_principal(tela, usuario):
         
         clicou_som, _ = desenhar_botao(
             texto="Ativar Som" if not SOM_LIGADO else "Desativar Som",
-            x=LARGURA_TELA - 500,
-            y= ALTURA_TELA-200,
-            largura=500,
-            altura=80,
+            x=LARGURA_TELA - resize(500, eh_X=True),
+            y=ALTURA_TELA-resize(200),
+            largura=resize(500, eh_X=True),
+            altura=resize(80),
             cor_normal=cor_com_escala_cinza(100, 100, 100),
             cor_hover=cor_com_escala_cinza(150, 150, 150),
             fonte=fonte_botao,
             tela=tela,
             events=events,
             imagem_fundo=None,
-            border_radius=15
+            border_radius=resize(15)
         )
         if clicou_som:
             constants.SOM_LIGADO = not constants.SOM_LIGADO
@@ -131,51 +134,51 @@ def tela_menu_principal(tela, usuario):
         
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=LARGURA_TELA//2 - 200,
+            x=LARGURA_TELA//2 - resize(200, eh_X=True),
             y=y_inicial + espacamento_botoes*4,
-            largura=400,
-            altura=80,
+            largura=resize(400, eh_X=True),
+            altura=resize(80),
             cor_normal=cor_com_escala_cinza(255, 200, 0),
             cor_hover=cor_com_escala_cinza(255, 255, 0),
             fonte=fonte_botao,
             tela=tela,
             events=events,
             imagem_fundo=None,
-            border_radius=15
+            border_radius=resize(15)
         )
         if clicou_voltar:
             return "VOLTAR"
         
         clicou_conquistas, _ = desenhar_botao(
         texto="Conquistas",
-        x=LARGURA_TELA//2 - 200,
+        x=LARGURA_TELA//2 - resize(200, eh_X=True),
         y=y_inicial + espacamento_botoes*3,  # Ajuste este valor conforme necessário
-        largura=400,
-        altura=80,
+        largura=resize(400, eh_X=True),
+        altura=resize(80),
         cor_normal=cor_com_escala_cinza(200, 100, 200),
         cor_hover=cor_com_escala_cinza(255, 100, 255),
         fonte=fonte_botao,
         tela=tela,
         events=events,
         imagem_fundo=None,
-        border_radius=15
+        border_radius=resize(15)
     )
         if clicou_conquistas:
             return "CONQUISTAS"
         
         clicou_sair, _ = desenhar_botao(
             texto="Sair",
-            x=LARGURA_TELA//2 - 200,
+            x=LARGURA_TELA//2 - resize(200, eh_X=True),
             y=y_inicial + espacamento_botoes*5,
-            largura=400,
-            altura=80,
+            largura=resize(400, eh_X=True),
+            altura=resize(80),
             cor_normal=cor_com_escala_cinza(200, 50, 50),
             cor_hover=cor_com_escala_cinza(255, 50, 50),
             fonte=fonte_botao,
             tela=tela,
             events=events,
             imagem_fundo=None,
-            border_radius=15
+            border_radius=resize(15)
         )
         if clicou_sair:
             pygame.quit()

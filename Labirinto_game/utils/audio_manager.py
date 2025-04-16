@@ -30,6 +30,7 @@ class AudioManager:
             "failure": os.path.join(SOUND_PATH, "failure.wav"),
             "collision": os.path.join(SOUND_PATH, "collision.wav"),
             "achievement": os.path.join(SOUND_PATH, "achievement.wav"),
+            "earthquake": os.path.join(SOUND_PATH, "earthquake.wav"),
         }
         
         # Verificar se os arquivos existem antes de carregar

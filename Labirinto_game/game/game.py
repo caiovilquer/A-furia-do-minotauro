@@ -12,6 +12,7 @@ from utils.user_data import carregar_usuarios, salvar_usuarios
 from screens.game_over import tela_falhou
 from screens.level_complete import tela_conclusao_nivel
 from screens.game_complete import tela_conclusao
+from screens.between_levels_dialogue import TelaDialogoEntreNiveis
 from utils.achievements import SistemaConquistas
 
 class JogoLabirinto:
@@ -30,10 +31,16 @@ class JogoLabirinto:
         self.colisoes = 0 
         self.usuarios_data = carregar_usuarios()
         
+        # Carrega a preferência de modo dark do usuário
+        self.dark_mode = self.usuarios_data[usuario].get("dark_mode", False)
+        
         if nivel_inicial is not None:
             self.nivel_atual = nivel_inicial
         else:
             self.nivel_atual = self.usuarios_data[usuario]["nivel"]
+
+        # Flag para controlar se o diálogo entre níveis já foi mostrado
+        self.mostrou_dialogo_nivel1 = self.usuarios_data[usuario].get("mostrou_dialogo_nivel1", False)
 
         self.vidas = 3
         self.inicio_tempo = time.time()
@@ -89,10 +96,16 @@ class JogoLabirinto:
         # Adicionar a nova tentativa à lista
         usuario_data.setdefault("tentativas", []).append(tentativa_info)
         
+        # Marca que o diálogo do nível 1 já foi mostrado, se necessário
+        if self.nivel_atual == 1 and not falhou:
+            usuario_data["mostrou_dialogo_nivel1"] = True
+        
         # Atualizar o nível máximo desbloqueado
         if self.nivel_atual >= self.usuarios_data[self.usuario]["nivel"] and not falhou and self.nivel_atual < 8:
             usuario_data["nivel"] = self.nivel_atual + 1
         
+        
+            
         salvar_usuarios(self.usuarios_data)
         
         # Preparar dados para verificação de conquistas (APÓS atualizar tentativas)
@@ -185,11 +198,30 @@ class JogoLabirinto:
             # Se concluiu o nível
             if self.verifica_conclusao_nivel():
                 tempo_total = time.time() - self.inicio_tempo
+                
+                # Verifica se precisa mostrar o diálogo entre níveis (após nível 1)
+                if self.nivel_atual == 1 and not self.usuarios_data[self.usuario].get("mostrou_dialogo_nivel1", False):
+                    from utils.drawing import TransitionEffect
+                    # Adiciona efeito sonoro de tremor/balançar
+                    from utils.audio_manager import audio_manager
+                    audio_manager.play_sound("earthquake")
+                    TransitionEffect.fade_out(self.tela, velocidade=1)
+                    
+                    # Determina se usa o modo escuro com base na configuração do usuário 
+                    dark_mode = self.dark_mode
+                    dialogos = TelaDialogoEntreNiveis(self.tela, dark=dark_mode)
+                    dialogos.executar()
+                    
+                    # Marca que o diálogo foi exibido
+                    self.usuarios_data[self.usuario]["mostrou_dialogo_nivel1"] = True
+                    salvar_usuarios(self.usuarios_data)
                 self.salvar_progresso(tempo_total)
                 
                 # Garantir que as conquistas sejam salvas explicitamente
                 self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
                 
+                
+                    
                 if self.nivel_atual >= 8:
                     tela_conclusao(tela, self.sistema_conquistas)
                     self.resetar_nivel()

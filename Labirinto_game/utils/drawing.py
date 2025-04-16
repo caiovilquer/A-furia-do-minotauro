@@ -110,12 +110,12 @@ def desenhar_botao(
         botao_surf.blit(img, (0, 0))
         
         # Para imagens,um leve brilho ao passar o mouse
-        if mouse_sobre:
-            glow = pygame.Surface((largura, altura), pygame.SRCALPHA)
-            glow.fill((255, 255, 255, 30))  # Brilho sutil
-            botao_surf.blit(glow, (0, 0))
-    else:
-        pygame.draw.rect(botao_surf, cor_fundo, (0, 0, largura, altura), border_radius=border_radius)
+    #     if mouse_sobre:
+    #         glow = pygame.Surface((largura, altura), pygame.SRCALPHA)
+    #         glow.fill((255, 255, 255, 30))  # Brilho sutil
+    #         botao_surf.blit(glow, (0, 0))
+    # else:
+    #     pygame.draw.rect(botao_surf, cor_fundo, (0, 0, largura, altura), border_radius=border_radius)
     
     # Adiciona o texto ao botão com estilo mitológico
     from constants import COR_BOTAO_TEXTO

@@ -2,7 +2,7 @@ import pygame
 import sys
 from constants import (BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                       FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO)
-from utils.drawing import desenhar_texto, desenhar_botao, resize, TransitionEffect
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, TransitionEffect
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios
 
@@ -43,7 +43,7 @@ def tela_inicio_jogo(tela):
             tela.fill(AZUL_CLARO)
             
         # Desenhar título
-        desenhar_texto("Escolha uma opção", fonte_titulo, COR_TITULO, tela, LARGURA_TELA // 2 - resize(350, eh_X=True), resize(100))
+        desenhar_texto_sombra("Escolha uma opção", fonte_titulo, COR_TITULO, tela, LARGURA_TELA // 2 - resize(350, eh_X=True), resize(100))
         
         # Botões
         y_inicial = resize(300)

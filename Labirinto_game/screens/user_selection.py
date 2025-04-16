@@ -2,7 +2,7 @@ import pygame
 import sys
 from constants import (BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO, PRETO)
-from utils.drawing import desenhar_texto, desenhar_botao, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios, salvar_usuarios
 
@@ -48,7 +48,7 @@ def tela_escolha_usuario(tela):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto("Selecione um Usuário", fonte_titulo, COR_TITULO, tela, titulo_x-resize(100, eh_X=True), titulo_y)
+        desenhar_texto_sombra("Selecione um Usuário", fonte_titulo, COR_TITULO, tela, titulo_x-resize(100, eh_X=True), titulo_y)
 
         # Lista de usuários
         y_offset = y_inicial_botoes

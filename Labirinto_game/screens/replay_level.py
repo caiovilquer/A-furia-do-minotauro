@@ -2,7 +2,7 @@ import pygame
 import sys
 from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
-from utils.drawing import desenhar_texto, desenhar_botao, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios
 
@@ -37,7 +37,7 @@ def tela_rejogar(tela, usuario):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto("Rejogar Níveis", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        desenhar_texto_sombra("Rejogar Níveis", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
         y_offset = y_inicial_botoes
         for lvl in niveis_disponiveis:

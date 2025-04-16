@@ -2,7 +2,7 @@ import pygame
 import sys
 from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
-from utils.drawing import desenhar_texto, desenhar_botao, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
 from utils.colors import cor_com_escala_cinza
 
 def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
@@ -30,7 +30,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        desenhar_texto_sombra(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",

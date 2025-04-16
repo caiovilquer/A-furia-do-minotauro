@@ -3,7 +3,7 @@ import sys
 import os
 from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO
-from utils.drawing import desenhar_texto, desenhar_botao, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
 from utils.colors import cor_com_escala_cinza
 from utils.achievements import SistemaConquistas
 
@@ -58,7 +58,7 @@ def tela_conquistas(tela, usuario):
             tela.fill(AZUL_CLARO)
         
         # Título da tela
-        desenhar_texto(f"Conquistas de {usuario}", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        desenhar_texto_sombra(f"Conquistas de {usuario}", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
         
         # Lista de conquistas
         y_offset = resize(180)

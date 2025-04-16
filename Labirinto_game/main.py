@@ -18,7 +18,7 @@ from utils.drawing import TransitionEffect
 from screens.achievements_screen import tela_conquistas
 from utils.user_data import carregar_usuarios, salvar_usuarios
 from screens.game_start_screen import tela_inicio_jogo
-from utils.audio_manager import audio_manager  # Importando o gerenciador de áudio
+from utils.audio_manager import audio_manager
 
 def main():
     """Função principal que inicia o jogo."""
@@ -58,8 +58,10 @@ def main():
             if usuario_escolhido is None:
                 TransitionEffect.fade_out(tela, velocidade=30)
                 continue
-                
-            dark_mode = False  # Default para usuário existente
+            
+            # Carrega a preferência dark_mode do usuário existente    
+            usuarios_data = carregar_usuarios()
+            dark_mode = usuarios_data[usuario_escolhido].get("dark_mode", False)
         
         # Iniciar diálogo e capturar o nome do usuário (apenas para novo jogo)
         if escolha == 'NOVO' or not usuario_escolhido:
@@ -76,9 +78,16 @@ def main():
     if usuario_escolhido and usuario_escolhido not in usuarios_data:
         usuarios_data[usuario_escolhido] = {
             "nivel": 1,
-            "tentativas": []
+            "tentativas": [],
+            "dark_mode": dark_mode,
+            "mostrou_dialogo_nivel1": False
         }
         salvar_usuarios(usuarios_data)
+    elif usuario_escolhido:
+        # Garante que usuários existentes tenham o campo dark_mode
+        if "dark_mode" not in usuarios_data[usuario_escolhido]:
+            usuarios_data[usuario_escolhido]["dark_mode"] = dark_mode
+            salvar_usuarios(usuarios_data)
 
     from utils.achievements import SistemaConquistas
     sistema_conquistas = SistemaConquistas()

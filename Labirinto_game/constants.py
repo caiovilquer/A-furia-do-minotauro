@@ -7,7 +7,7 @@ display_info = pygame.display.Info()
 LARGURA_TELA = display_info.current_w
 ALTURA_TELA = display_info.current_h
 TITULO_JOGO = "A Fúria do Minotauro"
-FPS = 60
+FPS = 120
 
 # FLAGS GLOBAIS
 ESCALA_CINZA = False  # Ajuste para True se quiser todos os botões em escala de cinza
@@ -21,10 +21,15 @@ COR_BOTAO_TEXTO = (255, 255, 255)
 
 # Fontes
 pygame.font.init()
-FONTE_TITULO = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Bold.ttf", resize(80, eh_X=True))
+# FONTE_TITULO = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Bold.ttf", resize(80, eh_X=True))
+# FONTE_BOTAO = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(50, eh_X=True))
+# FONTE_BARRA = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Regular.ttf", resize(30, eh_X=True))
+# FONTE_TEXTO = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Regular.ttf", resize(40, eh_X=True))
+
+FONTE_TITULO = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(100, eh_X=True))
 FONTE_BOTAO = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(50, eh_X=True))
-FONTE_BARRA = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Regular.ttf", resize(30, eh_X=True))
-FONTE_TEXTO = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Regular.ttf", resize(40, eh_X=True))
+FONTE_BARRA = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(30, eh_X=True))
+FONTE_TEXTO = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(40, eh_X=True))
 
 
 # Demais cores

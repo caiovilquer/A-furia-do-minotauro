@@ -2,7 +2,7 @@ import pygame
 import sys
 from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO
-from utils.drawing import desenhar_texto, desenhar_botao, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios
 
@@ -46,8 +46,8 @@ def tela_desempenho(tela, usuario):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto(f"Desempenho de {usuario}", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
-        desenhar_texto(f"Nível atual: {nivel}", fonte_texto, COR_TEXTO, tela, resize(100, eh_X=True), resize(180))
+        desenhar_texto_sombra(f"Desempenho de {usuario}", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        desenhar_texto_sombra(f"Nível atual: {nivel}", fonte_texto, COR_TEXTO, tela, resize(100, eh_X=True), resize(180))
         
         clicou_ant, _ = desenhar_botao(
             texto="<",

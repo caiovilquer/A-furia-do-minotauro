@@ -43,9 +43,9 @@ AZUL_CLARO = (173, 216, 230)
 
 # Arquivo de background
 IMAGES_PATH = "Labirinto_game/assets/images/"
-BACKGROUND_PATH = IMAGES_PATH + "tela_inicial.png"
+BACKGROUND_PATH = IMAGES_PATH + "backgrounds/tela_inicial.png"
 BUTTON_PATH = IMAGES_PATH + "button1.png"
-DIALOGO_PATH = IMAGES_PATH + "fundo_dialogo.png"
+DIALOGO_PATH = IMAGES_PATH + "backgrounds/fundo_dialogo.png"
 SOUND_PATH = "Labirinto_game/assets/sounds"
 USUARIOS_JSON = "Labirinto_game/data/usuarios.json"
 

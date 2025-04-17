@@ -3,3 +3,4 @@ build
 dist
 labirinto.spec
 __pycache__
+main.exe

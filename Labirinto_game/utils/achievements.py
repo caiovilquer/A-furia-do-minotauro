@@ -10,28 +10,58 @@ class SistemaConquistas:
     
     def __init__(self):
         self.conquistas = {
-            'velocista': {
-                'nome': 'Velocista', 
-                'descricao': 'Complete um nível em menos de 10 segundos',
-                'icone': 'Labirinto_game/assets/images/velocista.png',  # Pode criar ícones depois
+            'fio_de_ariadne': {
+                'nome': 'Fio de Ariadne', 
+                'descricao': 'Complete seu primeiro nível com sucesso',
+                'icone': 'Labirinto_game/assets/images/achievements/Fio_de_Ariadne.png',
                 'desbloqueada': False
             },
-            'sem_colisoes': {
-                'nome': 'Precisão Máxima', 
-                'descricao': 'Complete um nível sem colidir',
-                'icone': 'Labirinto_game/assets/images/precision.png',
+            'coragem_de_teseu': {
+                'nome': 'Coragem de Teseu', 
+                'descricao': 'Complete um nível sem perder nenhuma vida',
+                'icone': 'Labirinto_game/assets/images/achievements/Coragem_de_Teseu.png',
                 'desbloqueada': False
             },
-            'persistente': {
-                'nome': 'Persistente', 
-                'descricao': 'Tente o mesmo nível 5 vezes',
-                'icone': 'Labirinto_game/assets/images/persistente.png',
+            'despertar_da_furia': {
+                'nome': 'Despertar da Fúria', 
+                'descricao': 'Complete um nível após perder 2 vidas',
+                'icone': 'Labirinto_game/assets/images/achievements/Despertar_da_Furia.png',
                 'desbloqueada': False
             },
-            'mestre': {
-                'nome': 'Mestre do Labirinto', 
-                'descricao': 'Complete todos os níveis',
-                'icone': 'Labirinto_game/assets/images/mestre.png',
+            'domador_do_labirinto': {
+                'nome': 'Domador do Labirinto', 
+                'descricao': 'Complete 5 fases diferentes',
+                'icone': 'Labirinto_game/assets/images/achievements/Domador_do_Labirinto.png',
+                'desbloqueada': False
+            },
+            'renascido': {
+                'nome': 'Renascido', 
+                'descricao': 'Tente a mesma fase 7 vezes consecutivas',
+                'icone': 'Labirinto_game/assets/images/achievements/Renascido.png',
+                'desbloqueada': False
+            },
+            'heroi_de_atenas': {
+                'nome': 'Herói de Atenas', 
+                'descricao': 'Complete todas as fases do jogo',
+                'icone': 'Labirinto_game/assets/images/achievements/Heroi_de_Atenas.png',
+                'desbloqueada': False
+            },
+            'velocista_olimpico': {
+                'nome': 'Velocista Olímpico', 
+                'descricao': 'Completar um nível em menos de 10 segundos',
+                'icone': 'Labirinto_game/assets/images/achievements/Velocista_Olimpico.png',  
+                'desbloqueada': False
+            },
+            'mestre_dos_servos': {
+                'nome': 'Mestre dos Servos', 
+                'descricao': 'Vencer uma fase com movimentação aleatória dos motores ativada',
+                'icone': 'Labirinto_game/assets/images/achievements/Mestre_dos_Servos.png',
+                'desbloqueada': False
+            },
+            'pegadas_de_bronze': {
+                'nome': 'Pegadas de Bronze', 
+                'descricao': 'Jogue o jogo 50 vezes',
+                'icone': 'Labirinto_game/assets/images/achievements/Pegadas_de_Bronze.png',
                 'desbloqueada': False
             }
         }
@@ -76,43 +106,78 @@ class SistemaConquistas:
     def verificar_conquistas(self, usuario, dados_jogo):
         """Verifica se alguma conquista foi desbloqueada"""
         
-    
         # Carrega conquistas atuais
         self.carregar_conquistas_usuario(usuario)
         
         # Verificações
         conquistas_desbloqueadas = []
         
-        # Conquista "Velocista"
-        if not self.conquistas['velocista']['desbloqueada'] and dados_jogo.get('tempo_gasto', 999) < 10:
-            self.conquistas['velocista']['desbloqueada'] = True
-            conquistas_desbloqueadas.append('velocista')
-            print("Conquista VELOCISTA desbloqueada!")
+        # Fio de Ariadne - Complete seu primeiro nível com sucesso
+        niveis_completados = [t for t in dados_jogo.get('tentativas', []) if t.get('vidas', 0) > 0]
+        if not self.conquistas['fio_de_ariadne']['desbloqueada'] and len(niveis_completados) >= 1:
+            self.conquistas['fio_de_ariadne']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('fio_de_ariadne')
+            print("Conquista FIO DE ARIADNE desbloqueada!")
         
-        # Conquista "Sem Colisões"
-        if not self.conquistas['sem_colisoes']['desbloqueada'] and dados_jogo.get('colisoes', 999) == 0:
-            self.conquistas['sem_colisoes']['desbloqueada'] = True
-            conquistas_desbloqueadas.append('sem_colisoes')
-            print("Conquista SEM COLISÕES desbloqueada!")
+        # Coragem de Teseu - Complete um nível sem perder nenhuma vida
+        nivel_atual = dados_jogo.get('nivel_atual', 1)
+        vidas_atuais = dados_jogo.get('vidas_restantes', 0)
+        vidas_iniciais = dados_jogo.get('vidas_iniciais', 3)
+        if not self.conquistas['coragem_de_teseu']['desbloqueada'] and dados_jogo.get('concluido') and vidas_atuais == vidas_iniciais:
+            self.conquistas['coragem_de_teseu']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('coragem_de_teseu')
+            print("Conquista CORAGEM DE TESEU desbloqueada!")
         
-        # Conquista "Persistente"
+        # Despertar da Fúria - Complete um nível após perder 2 vidas
+        if not self.conquistas['despertar_da_furia']['desbloqueada'] and dados_jogo.get('concluido') and vidas_iniciais - vidas_atuais >= 2:
+            self.conquistas['despertar_da_furia']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('despertar_da_furia')
+            print("Conquista DESPERTAR DA FÚRIA desbloqueada!")
+        
+        # Domador do Labirinto - Complete 5 fases diferentes
+        niveis_diferentes_completados = set(t.get('nivel') for t in dados_jogo.get('tentativas', []) if t.get('vidas', 0) > 0)
+        if not self.conquistas['domador_do_labirinto']['desbloqueada'] and len(niveis_diferentes_completados) >= 5:
+            self.conquistas['domador_do_labirinto']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('domador_do_labirinto')
+            print("Conquista DOMADOR DO LABIRINTO desbloqueada!")
+        
+        # Renascido - Tente a mesma fase 7 vezes consecutivas
         nivel_atual = dados_jogo.get('nivel_atual', 1)
         tentativas_nivel = [t for t in dados_jogo.get('tentativas', []) if t.get('nivel') == nivel_atual]
-        if not self.conquistas['persistente']['desbloqueada'] and len(tentativas_nivel) >= 5:
-            self.conquistas['persistente']['desbloqueada'] = True
-            conquistas_desbloqueadas.append('persistente')
-            print("Conquista PERSISTENTE desbloqueada!")
+        if not self.conquistas['renascido']['desbloqueada'] and len(tentativas_nivel) >= 7:
+            self.conquistas['renascido']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('renascido')
+            print("Conquista RENASCIDO desbloqueada!")
         
-        # Conquista "Mestre"
-        niveis_completados = set(t.get('nivel') for t in dados_jogo.get('tentativas', []) 
-                                if t.get('vidas', 0) > 0)
-        if not self.conquistas['mestre']['desbloqueada'] and len(niveis_completados) >= 8:
-            self.conquistas['mestre']['desbloqueada'] = True
-            conquistas_desbloqueadas.append('mestre')
-            print("Conquista MESTRE desbloqueada!")
+        # Herói de Atenas - Complete todas as fases do jogo
+        total_niveis = dados_jogo.get('total_niveis', 8)  # Assumindo que há 8 níveis no jogo
+        if not self.conquistas['heroi_de_atenas']['desbloqueada'] and len(niveis_diferentes_completados) >= total_niveis:
+            self.conquistas['heroi_de_atenas']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('heroi_de_atenas')
+            print("Conquista HERÓI DE ATENAS desbloqueada!")
+        
+        # Velocista Olímpico - Completar um nível em menos de 10 segundos
+        if not self.conquistas['velocista_olimpico']['desbloqueada'] and dados_jogo.get('tempo_gasto', 999) < 10 and dados_jogo.get('concluido'):
+            self.conquistas['velocista_olimpico']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('velocista_olimpico')
+            print("Conquista VELOCISTA OLÍMPICO desbloqueada!")
+        
+        # Mestre dos Servos - Vencer uma fase com movimentação aleatória dos motores ativada
+        if not self.conquistas['mestre_dos_servos']['desbloqueada'] and dados_jogo.get('concluido') and dados_jogo.get('motores_aleatorios'):
+            self.conquistas['mestre_dos_servos']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('mestre_dos_servos')
+            print("Conquista MESTRE DOS SERVOS desbloqueada!")
+        
+        # Pegadas de Bronze - Jogue o jogo 50 vezes
+        total_jogos = len(dados_jogo.get('tentativas', []))
+        if not self.conquistas['pegadas_de_bronze']['desbloqueada'] and total_jogos >= 50:
+            self.conquistas['pegadas_de_bronze']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('pegadas_de_bronze')
+            print("Conquista PEGADAS DE BRONZE desbloqueada!")
         
         # Salva conquistas atualizadas
         self.salvar_conquistas_usuario(usuario)
+        
         # Se desbloqueou alguma, ativa notificação
         if conquistas_desbloqueadas:
             for chave in conquistas_desbloqueadas:
@@ -176,10 +241,25 @@ class SistemaConquistas:
             # Superfície para a notificação
             notificacao_surface = pygame.Surface((largura_notificacao, altura_notificacao), pygame.SRCALPHA)
             
-            # Fundo gradiente
+            # Fundo gradiente com cantos arredondados
+            gradiente_surface = pygame.Surface((largura_notificacao, altura_notificacao), pygame.SRCALPHA)
             for i in range(altura_notificacao):
                 cor = (40, 40, 60, min(200, opacidade) * (i / altura_notificacao))
-                pygame.draw.line(notificacao_surface, cor, (0, i), (largura_notificacao, i))
+                pygame.draw.line(gradiente_surface, cor, (0, i), (largura_notificacao, i))
+            
+            # Criar uma máscara com cantos arredondados
+            mascara = pygame.Surface((largura_notificacao, altura_notificacao), pygame.SRCALPHA)
+            pygame.draw.rect(mascara, (255, 255, 255, 255), 
+                            pygame.Rect(0, 0, largura_notificacao, altura_notificacao), 
+                            border_radius=resize(15))
+            
+            # Aplicar a máscara ao gradiente para criar o gradiente com cantos arredondados
+            gradiente_final = pygame.Surface((largura_notificacao, altura_notificacao), pygame.SRCALPHA)
+            gradiente_final.blit(mascara, (0, 0))
+            gradiente_final.blit(gradiente_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+            
+            # Aplicar o gradiente com cantos arredondados à notificação
+            notificacao_surface.blit(gradiente_final, (0, 0))
             
             # Borda
             pygame.draw.rect(notificacao_surface, (255, 215, 0, opacidade), 

@@ -12,10 +12,10 @@ class TelaDialogoInicial:
         self.altura_tela = tela.get_height()
         
         # Carrega imagens
-        self.fundo = pygame.image.load("Labirinto_game/assets/images/fundo_dialogo.png").convert_alpha()
+        self.fundo = pygame.image.load("Labirinto_game/assets/images/backgrounds/fundo_dialogo.png").convert_alpha()
         self.fundo = pygame.transform.scale(self.fundo, (LARGURA_TELA, ALTURA_TELA))
         
-        self.personagem = pygame.image.load("Labirinto_game/assets/images/teseu.png").convert_alpha()
+        self.personagem = pygame.image.load("Labirinto_game/assets/images/characters/teseu.png").convert_alpha()
         self.personagem = pygame.transform.scale(self.personagem, (resize(800, eh_X=True), resize(800)))
         
         # Posiciona personagem no meio da tela

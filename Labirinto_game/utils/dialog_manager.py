@@ -80,7 +80,7 @@ class GerenciadorDialogos:
         """Carrega imagens de fundo."""
         # Carrega o fundo
         try:
-            fundo_path = "Labirinto_game/assets/images/fundo_dialogo_labirinto_dark.png"
+            fundo_path = "Labirinto_game/assets/images/backgrounds/fundo_dialogo_labirinto_dark.png"
             self.fundo = pygame.image.load(fundo_path).convert_alpha()
             self.fundo = pygame.transform.scale(self.fundo, (LARGURA_TELA, ALTURA_TELA))
         except Exception as e:
@@ -92,7 +92,7 @@ class GerenciadorDialogos:
         if nome not in self.personagens:
             try:
                 # Tenta carregar a imagem do personagem
-                imagem = pygame.image.load(os.path.join("Labirinto_game/assets/images", imagem_path)).convert_alpha()
+                imagem = pygame.image.load(os.path.join("Labirinto_game/assets/images/characters", imagem_path)).convert_alpha()
                 
                 # Define o tamanho padrão para personagens
                 tamanho = (resize(800, eh_X=True), resize(800))

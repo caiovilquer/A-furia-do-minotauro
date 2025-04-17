@@ -113,7 +113,8 @@ class JogoLabirinto:
             'tempo_gasto': tempo_gasto,
             'colisoes': self.colisoes,
             'tentativas': usuario_data.get('tentativas', []),
-            'vidas': self.vidas,
+            'vidas_restantes': self.vidas,
+            'vidas_iniciais': 3,
             'concluido': not falhou
         }
         

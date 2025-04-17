@@ -7,12 +7,28 @@ from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra,
 from utils.colors import cor_com_escala_cinza
 from utils.achievements import SistemaConquistas
 
+def aplicar_borda_arredondada(imagem, raio=10):
+    """Aplica uma máscara com cantos arredondados a uma imagem."""
+    tamanho = imagem.get_size()
+    mascara = pygame.Surface(tamanho, pygame.SRCALPHA)
+    pygame.draw.rect(mascara, (255, 255, 255, 255), 
+                    pygame.Rect(0, 0, tamanho[0], tamanho[1]), 
+                    border_radius=resize(raio))
+    
+    resultado = pygame.Surface(tamanho, pygame.SRCALPHA)
+    resultado.blit(mascara, (0, 0))
+    resultado.blit(imagem, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+    return resultado
+
 def carregar_e_redimensionar_icone(caminho, tamanho=(resize(80, eh_X=True), resize(80))):
-    """Carrega uma imagem de ícone e redimensiona para o tamanho especificado."""
+    """Carrega uma imagem de ícone, redimensiona e aplica cantos arredondados."""
     try:
         if os.path.exists(caminho):
             icone = pygame.image.load(caminho).convert_alpha()
-            return pygame.transform.scale(icone, tamanho)
+            icone = pygame.transform.scale(icone, tamanho)
+            # Aplica cantos arredondados a todos os ícones no momento do carregamento
+            icone = aplicar_borda_arredondada(icone, raio=10)
+            return icone
         else:
             print(f"Caminho do ícone não encontrado: {caminho}")
             return None
@@ -80,7 +96,12 @@ def tela_conquistas(tela, usuario):
                     icone_cinza = icones[chave].copy()
                     # Cria uma superfície para aplicar o efeito de escala de cinza
                     cinza_surface = pygame.Surface((resize(80, eh_X=True), resize(80)), pygame.SRCALPHA)
-                    cinza_surface.fill((100, 100, 100, 150))
+                    
+                    # Desenha um retângulo com cantos arredondados em vez de preencher toda a superfície
+                    pygame.draw.rect(cinza_surface, (100, 100, 100, 150), 
+                                    pygame.Rect(0, 0, resize(80, eh_X=True), resize(80)),
+                                    border_radius=resize(10))
+                    
                     # Aplica o efeito
                     icone_cinza.blit(cinza_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
                     tela.blit(icone_cinza, icone_rect)
@@ -107,8 +128,8 @@ def tela_conquistas(tela, usuario):
         # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
-            x=resize(100, eh_X=True),
-            y=ALTURA_TELA - resize(150),
+            x=LARGURA_TELA - resize(450, eh_X=True),
+            y=resize(75),
             largura=resize(400, eh_X=True),
             altura=resize(70),
             cor_normal=cor_com_escala_cinza(255, 200, 0),

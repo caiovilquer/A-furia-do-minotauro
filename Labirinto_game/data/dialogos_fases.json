@@ -1,0 +1,390 @@
+{
+    "fase_1": [
+        {
+            "personagem": "Ariadne",
+            "texto": "Teseu confiou em mim, e agora confio em você.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Ariadne",
+            "texto": "Este fio não mostra saídas. Ele mostra esperanças.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Ariadne",
+            "texto": "Se o perder, perderá mais que o caminho: perderá a si mesmo.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Ariadne",
+            "texto": "Siga-o como quem segue a última luz em um mundo de sombras.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Segure firme. Cada curva deste labirinto já tragou heróis.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Mas você não está sozinho. Estamos conectados.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Cada batida do seu coração ecoa com a minha vontade.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Prove que você é digno do fio.",
+            "imagem": "teseu.png"
+        }
+    ],
+    "fase_2": [
+        {
+            "personagem": "Teseu",
+            "texto": "Conseguimos! O primeiro desafio foi superado, mas sinto que as coisas vão ficar mais difíceis... Senti o chão tremer!",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Parece que o Minotauro percebeu nossa presença e está furioso! Ele deve estar balançando o labirinto inteiro para nos dificultar.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Dédalo me alertou sobre isso quando cheguei à ilha. O labirinto foi construído sobre um mecanismo que o Minotauro consegue controlar quando irritado.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Seus mecanismos são poesia cruel, beleza letal.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Dédalo",
+            "texto": "Toda saída é uma armadilha em direção ao centro.",
+            "imagem": "dedalo.png"
+        },
+        {
+            "personagem": "Dédalo",
+            "texto": "Todo mapa é falso até que se prove verdadeiro.",
+            "imagem": "dedalo.png"
+        },
+        {
+            "personagem": "Dédalo",
+            "texto": "Você não joga contra o labirinto. Você joga dentro dele.",
+            "imagem": "dedalo.png"
+        },
+        {
+            "personagem": "Dédalo",
+            "texto": "E ele sempre joga primeiro.",
+            "imagem": "dedalo.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Vamos precisar de ainda mais concentração agora. O labirinto vai começar a se mover, tornando nossa jornada muito mais desafiadora.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Não desanime! Com sua ajuda, tenho certeza que vamos conseguir chegar até o Minotauro e acabar com essa ameaça a Creta!",
+            "imagem": "teseu.png"
+        }
+    ],
+    "fase_3": [
+        {
+            "personagem": "Teseu",
+            "texto": "Você ouve? São os ecos dos que erraram.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Alguns chamam por ajuda, outros por vingança.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Há quem ainda se mova entre as paredes... sem saber que nunca sairão.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Escutar demais é permitir que o medo fale mais alto.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Ignore. Eles não falam com você. Eles falam com o medo dentro de você.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Olhe adiante. Um passo de cada vez.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "A coragem é o que fazemos mesmo tremendo.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "E você, mesmo tremendo, está indo.",
+            "imagem": "teseu.png"
+        }
+    ],
+    "fase_4": [
+        {
+            "personagem": "Teseu",
+            "texto": "Sinta o ar. Ele pesa. Ele pulsa.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Estamos perto demais. O coração da criatura está próximo.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "O solo respira. As paredes se contraem.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Estamos andando dentro de um monstro.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Cada passo aqui pode acordar a fúria do monstro.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Então pise como se a lenda dependesse disso. Porque depende.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Não há mais volta. Apenas adiante.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "E cada instante adiante vale mais que mil atrás.",
+            "imagem": "teseu.png"
+        }
+    ],
+    "fase_5": [
+        {
+            "personagem": "Minos",
+            "texto": "Atenas ousa desafiar minha vontade mais uma vez?",
+            "imagem": "minos.png"
+        },
+        {
+            "personagem": "Minos",
+            "texto": "Creta não se curva. Apenas devora a fragilidade alheia.",
+            "imagem": "minos.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Você não é sacrifício, é salvação.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Mostre ao rei que nossa força não está no medo.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Minos",
+            "texto": "Suas palavras ecoam em minhas muralhas.",
+            "imagem": "minos.png"
+        },
+        {
+            "personagem": "Minos",
+            "texto": "Complete as 8 fases do labirinto e então falaremos em reverência.",
+            "imagem": "minos.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Oito passos firmes, e o trono sentirá seu pulso.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Que a sua determinação ecoe nos salões de Creta.",
+            "imagem": "teseu.png"
+        }
+    ],
+    "fase_6": [
+        {
+            "personagem": "Ariadne",
+            "texto": "Esta é a uma das últimas luzes antes do coração do labirinto.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Ariadne",
+            "texto": "Cada erro trouxe você até aqui, mas agora depende só de você.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Não hesite. A hesitação é o passo que separa herois de lendas.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "O labirinto tremerá com o rugido que você despertará.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Ariadne",
+            "texto": "Confie no fio, confie em si mesmo.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Ariadne",
+            "texto": "Em breve, a escuridão dará lugar à lembrança de seu nome.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Mais um passo para ser a mudança nesta lenda.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "O destino aguarda quem não cede ao desespero.",
+            "imagem": "teseu.png"
+        }
+    ],
+    "fase_7": [
+        {
+            "personagem": "Minotauro",
+            "texto": "Quem ousa manter a calma diante do meu rugido?",
+            "imagem": "minotauro.png"
+        },
+        {
+            "personagem": "Minotauro",
+            "texto": "O chão estremece com meu fôlego.",
+            "imagem": "minotauro.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Rugido não amedronta quem já enfrenta o impossível.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Sua fúria só me lembra o valor de cada vida.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Minotauro",
+            "texto": "Prepare-se para sentir minha força real.",
+            "imagem": "minotauro.png"
+        },
+        {
+            "personagem": "Minotauro",
+            "texto": "Não há abrigo no labirinto para quem me desafia.",
+            "imagem": "minotauro.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "A força é barulho. A precisão é vitória.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Está quase terminando, seu legado começa agora.",
+            "imagem": "teseu.png"
+        }
+    ],
+    "fase_8": [
+        {
+            "personagem": "Teseu",
+            "texto": "Olhe ao redor. Você chegou até aqui.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Não pelos deuses, não por glória, mas por necessidade.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Minotauro",
+            "texto": "Este é o seu teste final, humano.",
+            "imagem": "minotauro.png"
+        },
+        {
+            "personagem": "Minotauro",
+            "texto": "Coragem não salva, apenas rende mais sangue.",
+            "imagem": "minotauro.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Sua lenda está por um fio: o mesmo que percorre este labirinto.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Este último passo é seu maior ato.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Minotauro",
+            "texto": "Se falhar, este será seu túmulo.",
+            "imagem": "minotauro.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Se vencer, este será seu legado.",
+            "imagem": "teseu.png"
+        }
+    ],
+    "vitoria": [
+        {
+            "personagem": "Ariadne",
+            "texto": "Você voltou triunfante, eu sabia que conseguiria.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Não somos apenas parte da lenda, somos a própria lenda.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "O labirinto ficou para trás, mas seu nome ecoará para sempre.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Ariadne",
+            "texto": "O mundo saberá o que significa coragem e precisão.",
+            "imagem": "ariadne.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Obrigado por escrever nossa história com bravura.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "Minos",
+            "texto": "Creta reconhece seu poder e concede a você meu respeito.",
+            "imagem": "minos.png"
+        },
+        {
+            "personagem": "Teseu",
+            "texto": "Agora, nossa jornada se torna uma lenda viva.",
+            "imagem": "teseu.png"
+        },
+        {
+            "personagem": "",
+            "texto": "FIM",
+            "imagem": ""
+        }
+    ]
+}

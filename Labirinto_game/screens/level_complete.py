@@ -6,7 +6,15 @@ from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra,
 from utils.colors import cor_com_escala_cinza
 
 def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
-    """Tela quando o jogador conclui um nível."""
+    """
+    Tela quando o jogador conclui um nível.
+    
+    Returns:
+        tuple: (continuar_jogando, repetir_nivel, pular_dialogo)
+            continuar_jogando (bool): True se deve continuar jogando, False para sair
+            repetir_nivel (bool): True para repetir o nível, False para avançar
+            pular_dialogo (bool): True para pular diálogo ao repetir o nível
+    """
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
@@ -23,7 +31,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return nivel, False
+                    return False, False, False  # Não continuar, não repetir, não pular diálogo
 
         if background_img:
             tela.blit(background_img, (0, 0))
@@ -47,8 +55,8 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             border_radius=resize(15)
         )
         if clicou_rejogar:
-            return nivel, True
-        
+            return True, True, True  # Continuar jogando, repetir nível, pular diálogo
+
         clicou_avancar, _ = desenhar_botao(
             texto="Avançar Nível",
             x=LARGURA_TELA//2-resize(200, eh_X=True),
@@ -64,7 +72,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             border_radius=resize(15)
         )
         if clicou_avancar:
-            return nivel + 1, True
+            return True, False, False  # Continuar jogando, avançar para próximo nível, não pular diálogo
         
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
@@ -81,7 +89,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             border_radius=resize(15)
         )
         if clicou_voltar:
-            return nivel, False
+            return False, False, False  # Não continuar, não repetir, não pular diálogo
         
         # Garantir que as notificações de conquistas sejam exibidas
         if sistema_conquistas and sistema_conquistas.notificacao_ativa:

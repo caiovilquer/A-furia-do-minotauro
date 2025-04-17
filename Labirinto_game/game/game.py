@@ -6,13 +6,13 @@ from datetime import datetime
 import serial
 from constants import (BUTTON_PATH, FONTE_BOTAO, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA)
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_barra_progresso, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_barra_progresso, resize, TransitionEffect
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios, salvar_usuarios
 from screens.game_over import tela_falhou
 from screens.level_complete import tela_conclusao_nivel
 from screens.game_complete import tela_conclusao
-from screens.between_levels_dialogue import TelaDialogoEntreNiveis
+from utils.dialog_manager import GerenciadorDialogos
 from utils.achievements import SistemaConquistas
 
 class JogoLabirinto:
@@ -31,16 +31,21 @@ class JogoLabirinto:
         self.colisoes = 0 
         self.usuarios_data = carregar_usuarios()
         
-        # Carrega a preferência de modo dark do usuário
-        self.dark_mode = self.usuarios_data[usuario].get("dark_mode", False)
-        
         if nivel_inicial is not None:
             self.nivel_atual = nivel_inicial
         else:
             self.nivel_atual = self.usuarios_data[usuario]["nivel"]
 
-        # Flag para controlar se o diálogo entre níveis já foi mostrado
-        self.mostrou_dialogo_nivel1 = self.usuarios_data[usuario].get("mostrou_dialogo_nivel1", False)
+        # Criação do gerenciador de diálogos
+        self.gerenciador_dialogos = GerenciadorDialogos(
+            tela, 
+            "Labirinto_game/data/dialogos_fases.json"
+        )
+
+        # Flag para controlar se o diálogo inicial da fase já foi mostrado
+        # Quando o jogo inicia, não mostramos o diálogo ainda
+        self.mostrou_dialogo_fase_atual = False
+
 
         self.vidas = 3
         self.inicio_tempo = time.time()
@@ -96,16 +101,10 @@ class JogoLabirinto:
         # Adicionar a nova tentativa à lista
         usuario_data.setdefault("tentativas", []).append(tentativa_info)
         
-        # Marca que o diálogo do nível 1 já foi mostrado, se necessário
-        if self.nivel_atual == 1 and not falhou:
-            usuario_data["mostrou_dialogo_nivel1"] = True
-        
         # Atualizar o nível máximo desbloqueado
         if self.nivel_atual >= self.usuarios_data[self.usuario]["nivel"] and not falhou and self.nivel_atual < 8:
             usuario_data["nivel"] = self.nivel_atual + 1
-        
-        
-            
+              
         salvar_usuarios(self.usuarios_data)
         
         # Preparar dados para verificação de conquistas (APÓS atualizar tentativas)
@@ -138,15 +137,48 @@ class JogoLabirinto:
         # Recarga explícita das conquistas para garantir estado atualizado
         self.sistema_conquistas.limpar_notificacoes()
         self.sistema_conquistas.carregar_conquistas_usuario(self.usuario)
-        self.colisoes = 0 
         self.usuarios_data = carregar_usuarios()
+        # Reset da flag de diálogo de fase
+        self.mostrou_dialogo_fase_atual = False
         print(f"Estado do jogo resetado.")
 
-    def loop_principal(self):
+    def mostrar_dialogo_fase(self):
+        """Mostra o diálogo correspondente à fase atual."""
+        if not self.mostrou_dialogo_fase_atual:
+            if self.nivel_atual == 2:
+                from utils.audio_manager import audio_manager
+                audio_manager.play_sound("earthquake")
+            TransitionEffect.fade_out(self.tela, velocidade=10)
+            
+            # Nome da fase para buscar no arquivo de diálogos
+            fase_dialogo = f"fase_{self.nivel_atual}"
+            
+            # Executar o diálogo
+            self.gerenciador_dialogos.executar(fase_dialogo, efeito_sonoro=None)
+            
+            # Marca que o diálogo já foi mostrado para esta sessão de jogo
+            self.mostrou_dialogo_fase_atual = True
+
+    def loop_principal(self, pular_dialogo=False):
         """Loop principal do jogo."""
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
         info_x = resize(200, eh_X=True)
         info_y = resize(300)
+        
+        # Antes de iniciar o loop principal, mostramos o diálogo da fase
+        nome_cena = f"fase_{self.nivel_atual}"
+        if not pular_dialogo:
+            # Exiba o diálogo e marque como visto
+            self.gerenciador_dialogos.executar(nome_cena)
+            from utils.user_data import marcar_dialogo_como_visto
+            marcar_dialogo_como_visto(self.usuario, nome_cena)
+        else:
+            # Pula o diálogo pois estamos repetindo o nível
+            pass
+        
+        # Reinicia o timer após o diálogo (importante!)
+        self.inicio_tempo = time.time()
+        
         while self.jogo_ativo:
             events = pygame.event.get()
             self.clock.tick(FPS)
@@ -191,44 +223,52 @@ class JogoLabirinto:
             # Se acabou as vidas
             if self.vidas <= 0:
                 tempo_total = time.time() - self.inicio_tempo
-                self.salvar_progresso(tempo_total, falhou=True,)
+                self.salvar_progresso(tempo_total, falhou=True)
                 self.jogo_ativo = tela_falhou(tela, self.sistema_conquistas)
-                self.resetar_nivel()
+                
+                # Se decidiu continuar, reseta o nível e mostra o diálogo novamente
+                if self.jogo_ativo:
+                    self.resetar_nivel()
+                    # Reinicia o loop para mostrar o diálogo novamente
+                    return self.loop_principal()
 
             # Se concluiu o nível
             if self.verifica_conclusao_nivel():
                 tempo_total = time.time() - self.inicio_tempo
-                
-                # Verifica se precisa mostrar o diálogo entre níveis (após nível 1)
-                if self.nivel_atual == 1 and not self.usuarios_data[self.usuario].get("mostrou_dialogo_nivel1", False):
-                    from utils.drawing import TransitionEffect
-                    # Adiciona efeito sonoro de tremor/balançar
-                    from utils.audio_manager import audio_manager
-                    audio_manager.play_sound("earthquake")
-                    TransitionEffect.fade_out(self.tela, velocidade=1)
-                    
-                    # Determina se usa o modo escuro com base na configuração do usuário 
-                    dark_mode = self.dark_mode
-                    dialogos = TelaDialogoEntreNiveis(self.tela, dark=dark_mode)
-                    dialogos.executar()
-                    
-                    # Marca que o diálogo foi exibido
-                    self.usuarios_data[self.usuario]["mostrou_dialogo_nivel1"] = True
-                    salvar_usuarios(self.usuarios_data)
-                self.salvar_progresso(tempo_total)
-                
-                # Garantir que as conquistas sejam salvas explicitamente
-                self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
-                
-                
                     
                 if self.nivel_atual >= 8:
+                    # Mostrar diálogo de conclusão (vitória)
+                    self.gerenciador_dialogos.executar("vitoria", efeito_sonoro="success")
+                    self.salvar_progresso(tempo_total)
+                    # Garantir que as conquistas sejam salvas explicitamente
+                    self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
+                    # Mostrar tela de conclusão do jogo
                     tela_conclusao(tela, self.sistema_conquistas)
                     self.resetar_nivel()
                     return
                 else:
-                    self.nivel_atual, self.jogo_ativo = tela_conclusao_nivel(tela, self.nivel_atual, tempo_total, self.sistema_conquistas)
+                    self.salvar_progresso(tempo_total)
+                    # Garantir que as conquistas sejam salvas explicitamente
+                    self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
+                    # Avança para o próximo nível
+                    proximo_nivel = self.nivel_atual + 1
+                    
+                    # Mostra tela de conclusão do nível atual
+                    continuar_jogando, repetir_nivel, pular_dialogo = tela_conclusao_nivel(tela, self.nivel_atual, tempo_total, self.sistema_conquistas)
+                    
+                    if not continuar_jogando:
+                        # Jogador optou por sair
+                        self.jogo_ativo = False
+                        return
+                    
+                    # Define o próximo nível (continuar ou repetir)
+                    self.nivel_atual = self.nivel_atual if repetir_nivel else proximo_nivel
+                    
+                    # Reseta o estado do jogo para o próximo nível
                     self.resetar_nivel()
+                    
+                    # Reinicia o loop para mostrar o diálogo do próximo nível
+                    return self.loop_principal(pular_dialogo=pular_dialogo)
 
             # Mostrar textos (posicionados e espaçados)
             desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)

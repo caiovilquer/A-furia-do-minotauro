@@ -5,25 +5,19 @@ from utils.drawing import resize
 from constants import LARGURA_TELA, ALTURA_TELA
 
 class TelaDialogoInicial:
-    def __init__(self, tela, dark =False):
+    def __init__(self, tela):
         # Inicialização
         self.tela = tela
         self.largura_tela = tela.get_width()
         self.altura_tela = tela.get_height()
         
         # Carrega imagens
-        if not dark:
-            self.fundo = pygame.image.load("Labirinto_game/assets/images/fundo_dialogo.png").convert_alpha()
-        else :
-            self.fundo = pygame.image.load("Labirinto_game/assets/images/fundo_dialogo_dark.png").convert_alpha()
+        self.fundo = pygame.image.load("Labirinto_game/assets/images/fundo_dialogo.png").convert_alpha()
         self.fundo = pygame.transform.scale(self.fundo, (LARGURA_TELA, ALTURA_TELA))
         
-        if not dark:
-            self.personagem = pygame.image.load("Labirinto_game/assets/images/teseu.png").convert_alpha()
-            self.personagem = pygame.transform.scale(self.personagem, (resize(800, eh_X=True), resize(800)))
-        else:
-            self.personagem = pygame.image.load("Labirinto_game/assets/images/teseu_old.png").convert_alpha()
-            self.personagem = pygame.transform.scale(self.personagem, (resize(540, eh_X=True), resize(800)))
+        self.personagem = pygame.image.load("Labirinto_game/assets/images/teseu.png").convert_alpha()
+        self.personagem = pygame.transform.scale(self.personagem, (resize(800, eh_X=True), resize(800)))
+        
         # Posiciona personagem no meio da tela
         self.personagem_rect = self.personagem.get_rect(center=(LARGURA_TELA - resize(500, eh_X=True), ALTURA_TELA - resize(400)))
         
@@ -38,21 +32,12 @@ class TelaDialogoInicial:
         # Configurações do texto de diálogo
         self.fonte = pygame.font.Font(None, resize(36))
         self.cor_texto = (255, 255, 255)
-        if not dark:
-            self.linhas_dialogo = [
+        self.linhas_dialogo = [
             "Oi! Que bom que você está aqui! Eu sou Teseu, um viajante que veio até Creta para explorar este labirinto enorme. Dizem que foi construído há muitos e muitos anos pelo inventor Dédalo, e que lá no fim vive um monstro assustador chamado Minotauro.",
             "Você parece corajoso. Poderia me ajudar a atravessar esses caminhos que se mexem e mudam o tempo todo? Qual o seu nome?",
             "Temos conosco um anel mágico, este que você segura: com ele, precisamos desviar das paredes de metal sem encostar. Se encostar, perdemos uma vida... mas não faz mal: se acontecer, podemos tentar de novo!",
             "Enquanto avançamos, luzes e sons vão avisar se estamos fazendo certo. A ilha de Creta é cheia de histórias e segredos, então fique de olho em cada detalhe!",
             "Vamos juntos? Quero muito chegar ao fim do labirinto. Quem sabe possamos evitar que o Minotauro cause problemas. Você topa?"
-        ]
-        else:
-            self.linhas_dialogo = [
-            "Está se perguntando onde veio parar, não é? Bem-vindo(a) a Creta. Este é o Labirinto que todos temem: passagens que mudam de forma, metal que vibra, e algo mais sombrio esperando no coração dele.",
-            "Eu sou Teseu, mas eu sozinho não basto. Dizem que um monstro chamado Minotauro vaga por aí, e só a união de coragem e foco pode nos levar até ele. Se você acha que tem isso então me diga o seu nome e juntos triunfaremos.",
-            "Nosso instrumento é este anel, que deslizará por fios metálicos sem encostar. Parece simples, mas as paredes são imprevisíveis. Cada colisão custa uma vida, e você só tem três chances por etapa para não fracassar.",
-            "Enquanto avançamos, fique atento(a) aos sinais de luz e som. Eles podem salvar nossa pele. Se falhar, aprenda com o erro; se triunfar, avance mais fundo no Labirinto. Dizem que o próprio Minotauro vigia suas presas…",
-            "Então faremos parte da lenda de Creta. E talvez a própria ilha nos reconheça como libertadores."
         ]
         self.linha_atual = 0
         self.indice_animacao_texto = 0

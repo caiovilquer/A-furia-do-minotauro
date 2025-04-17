@@ -192,7 +192,6 @@ def desenhar_botao(
             # Cada iteração dilata ligeiramente a sombra e reduz a opacidade
             blur_alpha = shadow_alpha * (blur_iterations - i) // (blur_iterations * 2)
             blur_color = (0, 0, 0, blur_alpha)
-            blur_expand = i * 2 + shadow_expand
             
             blur_rect = pygame.Rect(
                 shadow_expand - i, 
@@ -255,7 +254,7 @@ def desenhar_barra_progresso(
     from constants import FONTE_BARRA
     percent_txt = f"Progresso: {int(progresso * 100)}%"
     text_render = FONTE_BARRA.render(percent_txt, True, (255,255,255))
-    text_rect = text_render.get_rect(center=(x + largura//2, y + altura//2 - 3))
+    text_rect = text_render.get_rect(center=(x + largura//2, y + altura//2 + resize(2)))
 
     tela.blit(bar_surface, (x, y))
     tela.blit(text_render, text_rect)

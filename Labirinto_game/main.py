@@ -46,7 +46,7 @@ def main():
     
     # Loop para permitir voltar à tela inicial se necessário
     while True:
-        escolha, dark_mode = tela_inicio_jogo(tela)
+        escolha = tela_inicio_jogo(tela)
         
         # Se o usuário escolher continuar, mostrar tela de seleção de usuário
         usuario_escolhido = None
@@ -58,15 +58,11 @@ def main():
             if usuario_escolhido is None:
                 TransitionEffect.fade_out(tela, velocidade=30)
                 continue
-            
-            # Carrega a preferência dark_mode do usuário existente    
-            usuarios_data = carregar_usuarios()
-            dark_mode = usuarios_data[usuario_escolhido].get("dark_mode", False)
         
         # Iniciar diálogo e capturar o nome do usuário (apenas para novo jogo)
         if escolha == 'NOVO' or not usuario_escolhido:
             TransitionEffect.fade_out(tela, velocidade=30)
-            dialogos = TelaDialogoInicial(tela, dark=dark_mode)
+            dialogos = TelaDialogoInicial(tela)
             usuario_escolhido = dialogos.executar()
         
         # Se temos um usuário válido, podemos prosseguir com o jogo
@@ -79,15 +75,8 @@ def main():
         usuarios_data[usuario_escolhido] = {
             "nivel": 1,
             "tentativas": [],
-            "dark_mode": dark_mode,
-            "mostrou_dialogo_nivel1": False
         }
         salvar_usuarios(usuarios_data)
-    elif usuario_escolhido:
-        # Garante que usuários existentes tenham o campo dark_mode
-        if "dark_mode" not in usuarios_data[usuario_escolhido]:
-            usuarios_data[usuario_escolhido]["dark_mode"] = dark_mode
-            salvar_usuarios(usuarios_data)
 
     from utils.achievements import SistemaConquistas
     sistema_conquistas = SistemaConquistas()
@@ -99,7 +88,7 @@ def main():
             TransitionEffect.slide_left(tela, tela.copy(), 30)
             audio_manager.set_bg_volume(0.01) 
             jogo = JogoLabirinto(tela, usuario_escolhido, sistema_conquistas=sistema_conquistas)
-            jogo.loop_principal()
+            jogo.loop_principal(pular_dialogo=False)  # Sempre exibe diálogos ao iniciar o jogo normalmente
             TransitionEffect.slide_right(tela, tela.copy(), 30)
         elif acao == "DESEMPENHO":
             TransitionEffect.fade_out(tela, velocidade=30)
@@ -110,8 +99,9 @@ def main():
             nivel_escolhido = tela_rejogar(tela, usuario_escolhido)
             if nivel_escolhido is not None:
                 TransitionEffect.fade_out(tela, velocidade=30)
+                # Ao rejogar manualmente, não pulamos o diálogo para dar a experiência completa
                 jogo = JogoLabirinto(tela, usuario_escolhido, nivel_inicial=nivel_escolhido, sistema_conquistas=sistema_conquistas)
-                jogo.loop_principal()
+                jogo.loop_principal(pular_dialogo=False)
                 TransitionEffect.slide_right(tela, tela.copy(), 30)
         elif acao == "VOLTAR":
             return main()

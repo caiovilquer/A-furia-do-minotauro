@@ -1,0 +1,27 @@
+{
+    "teseu": {
+        "nome": "Teseu",
+        "descricao": "Teseu é o jovem príncipe de Atenas que sonhava em ser um grande herói, como Héracles. Quando descobriu que todo ano seus amigos eram enviados a Creta para serem devorados por um monstro, ele decidiu embarcar junto para acabar com essa injustiça. Chegando lá, recebeu de Ariadne um fio mágico que o ajudou a encontrar a saída do enorme labirinto construído por Dédalo. No centro, lutou com coragem contra o Minotauro e venceu! Ao voltar, levou seus companheiros em segurança para casa e se tornou um símbolo de inteligência e bravura, mostrando que ninguém é pequeno demais para mudar o destino de um povo.",
+        "imagem": "teseu.png"
+    },
+    "minotauro": {
+        "nome": "Minotauro",
+        "descricao": "Metade homem, metade touro, o Minotauro nasceu de um feitiço que envolveu a rainha Pasífae e um touro branco enviado pelo deus do mar, Poseidon. Por ser forte demais para viver no palácio, foi trancado em um labirinto tão confuso que ninguém conseguia sair. Ali, ele devorava os jovens que chegavam de Atenas todos os anos. Quando Teseu entrou no labirinto, o Minotauro acreditou que seria mais uma refeição fácil, mas acabou derrotado, provando que a força bruta pode perder para a coragem e a esperteza.",
+        "imagem": "minotauro.png"
+    },
+    "ariadne": {
+        "nome": "Ariadne",
+        "descricao": "Ariadne é a princesa de Creta, filha do rei Minos. Ela adorava ouvir histórias de aventuras e ficou triste ao saber do destino dos jovens atenienses. Por isso, decidiu ajudar Teseu, entregando‑lhe um novelo de fio dourado para marcar o caminho no labirinto. Depois da vitória, Teseu e Ariadne fugiram juntos, mas em uma ilha chamada Naxos eles se separaram. Lá, Ariadne foi consolada pelo deus Dioniso, que a transformou em uma constelação no céu, a Coroa do Norte, para que todos se lembrassem de sua coragem e bondade.",
+        "imagem": "ariadne.png"
+    },
+    "dedalo": {
+        "nome": "Dédalo",
+        "descricao": "Dédalo era considerado o maior inventor da Grécia Antiga. Foi ele quem criou o labirinto gigantesco para esconder o Minotauro, usando toda a sua criatividade em túneis que pareciam nunca ter fim. Mais tarde, quando o rei Minos o prendeu na ilha, Dédalo construiu asas de cera e penas para escapar voando com seu filho Ícaro. A aventura ensinou ao mundo a importância de usar a cabeça para resolver problemas — mas também que é preciso ter cuidado com ideias arriscadas demais.",
+        "imagem": "dedalo.png"
+    },
+    "minos": {
+        "nome": "Minos",
+        "descricao": "Minos era o poderoso rei de Creta, filho do deus Zeus e famoso por sua frota de navios que dominava o mar. Depois que seu filho Andrógio morreu em Atenas, ele obrigou a cidade a enviar jovens como tributo ao Minotauro. Para esconder o monstro, mandou Dédalo construir o labirinto mais complicado do mundo. Diz a lenda que, após sua morte, Minos virou juiz no reino de Hades, decidindo o destino das almas — uma prova de como seu senso de justiça (às vezes bem severo!) era respeitado até pelos deuses.",
+        "imagem": "minos.png"
+    }
+}

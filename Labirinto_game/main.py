@@ -109,6 +109,10 @@ def main():
         elif acao == "CONQUISTAS":
             TransitionEffect.fade_out(tela, velocidade=30)
             tela_conquistas(tela, usuario_escolhido)
+        elif acao == "PERSONAGENS":
+            TransitionEffect.fade_out(tela, velocidade=30)
+            from screens.characters_screen import tela_personagens
+            tela_personagens(tela)
         else:
             pygame.quit()
             sys.exit()

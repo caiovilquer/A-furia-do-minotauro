@@ -4,7 +4,7 @@ import json
 import os
 from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, TransitionEffect
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, TransitionEffect, aplicar_filtro_cinza_superficie
 from utils.colors import cor_com_escala_cinza
 
 def carregar_dados_personagens():
@@ -58,7 +58,7 @@ def tela_personagens(tela):
     """Tela que mostra informações sobre os personagens do jogo."""
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
-    fonte_texto = pygame.font.Font(None, resize(36))
+    fonte_texto = pygame.font.Font("Labirinto_game/assets/fonts/Montserrat-Bold.ttf", resize(30))
     fonte_botao = FONTE_BOTAO
     
     # Carrega os dados dos personagens
@@ -102,7 +102,14 @@ def tela_personagens(tela):
         # Título da tela com o nome do personagem
         titulo_x = resize(100, eh_X=True)
         titulo_y = resize(50)
-        desenhar_texto_sombra(personagem["nome"], fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        desenhar_texto_sombra(
+            personagem["nome"],
+            fonte_titulo,
+            COR_TITULO,
+            tela,
+            (LARGURA_TELA - fonte_titulo.size(personagem["nome"])[0]) // 2,
+            titulo_y
+        )
         
         # Carrega e exibe a imagem do personagem
         imagem = carregar_imagem_personagem(personagem["imagem"])
@@ -193,4 +200,8 @@ def tela_personagens(tela):
         if clicou_voltar:
             return
         
+        import constants
+        if constants.ESCALA_CINZA:
+            aplicar_filtro_cinza_superficie(tela)
+            
         pygame.display.update()

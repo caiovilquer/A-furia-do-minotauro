@@ -1,9 +1,9 @@
 import pygame
 import sys
 import os
-from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
+from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img, ESCALA_CINZA
 from constants import FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, aplicar_filtro_cinza_superficie
 from utils.colors import cor_com_escala_cinza
 from utils.achievements import SistemaConquistas
 
@@ -83,7 +83,7 @@ def tela_conquistas(tela, usuario):
         for chave, conquista in conquistas.items():
             # Status da conquista
             status = "Desbloqueada" if conquista['desbloqueada'] else "Bloqueada"
-            cor_status = cor_com_escala_cinza(0, 200, 0) if conquista['desbloqueada'] else cor_com_escala_cinza(200, 0, 0)
+            cor_status = (0, 255, 0) if conquista['desbloqueada'] else (255, 0, 0)
             
             # Prepara o retângulo para o ícone
             icone_rect = pygame.Rect(titulo_x, y_offset, resize(80, eh_X=True), resize(80))
@@ -143,4 +143,8 @@ def tela_conquistas(tela, usuario):
         if clicou_voltar:
             return
         
+        import constants
+        if constants.ESCALA_CINZA:
+            aplicar_filtro_cinza_superficie(tela)
+            
         pygame.display.update()

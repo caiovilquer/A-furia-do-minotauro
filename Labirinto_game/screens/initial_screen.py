@@ -2,7 +2,7 @@ import pygame
 import sys
 import math
 from constants import LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
-from utils.drawing import resize, desenhar_texto_textura
+from utils.drawing import resize, desenhar_texto_textura, centralizar_texto, aplicar_filtro_cinza_superficie
 
 def tela_inicial(tela):
     """Tela inicial do jogo com texto animado."""
@@ -50,20 +50,19 @@ def tela_inicial(tela):
 
         # Cálculo do offset em Y usando sin
         offset_y = amplitude * math.sin(2 * math.pi * frequencia * tempo_acumulado)
-        # Posição final do texto
         pos_x = base_x
         pos_y = base_y + offset_y
 
-        # Renderiza e desenha
-        
-        
-        # text_surface = fonte.render(mensagem, True, AZUL_CLARO)
-        
         text_surface = desenhar_texto_textura(mensagem, fonte, texture_image)
         text_surface2 = desenhar_texto_textura(mensagem2, fonte2, texture_image)
-        text_rect = text_surface.get_rect(center=(pos_x, pos_y))
-        text_rect2 = text_surface2.get_rect(center=(pos_x, pos_y + resize(80)))
+        # Centraliza horizontalmente
+        text_rect = text_surface.get_rect(center=(LARGURA_TELA // 2, pos_y))
+        text_rect2 = text_surface2.get_rect(center=(LARGURA_TELA // 2, pos_y + resize(80)))
         tela.blit(text_surface, text_rect)
         tela.blit(text_surface2, text_rect2)
 
+        import constants
+        if constants.ESCALA_CINZA:
+            aplicar_filtro_cinza_superficie(tela)
+            
         pygame.display.update()

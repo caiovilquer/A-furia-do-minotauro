@@ -2,7 +2,7 @@ import pygame
 import sys
 from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, FONTE_TEXTO, COR_TITULO, COR_TEXTO
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, aplicar_filtro_cinza_superficie
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios
 
@@ -127,4 +127,8 @@ def tela_desempenho(tela, usuario):
         if clicou_voltar:
             return
 
+        import constants
+        if constants.ESCALA_CINZA:
+            aplicar_filtro_cinza_superficie(tela)
+            
         pygame.display.update()

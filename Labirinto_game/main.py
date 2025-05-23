@@ -104,6 +104,7 @@ def main():
                 jogo.loop_principal(pular_dialogo=False)
                 TransitionEffect.slide_right(tela, tela.copy(), 30)
         elif acao == "VOLTAR":
+            print("Voltando para a tela inicial...")
             return main()
 
         elif acao == "CONQUISTAS":

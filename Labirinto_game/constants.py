@@ -28,6 +28,7 @@ pygame.font.init()
 
 FONTE_TITULO = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(100, eh_X=True))
 FONTE_BOTAO = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(50, eh_X=True))
+FONTE_BOTAO_REDUZIDA = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(45, eh_X=True))
 FONTE_BARRA = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(30, eh_X=True))
 FONTE_TEXTO = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(40, eh_X=True))
 

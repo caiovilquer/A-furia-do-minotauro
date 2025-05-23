@@ -3,7 +3,7 @@ import sys
 import serial.tools.list_ports
 from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, aplicar_filtro_cinza_superficie
 from utils.colors import cor_com_escala_cinza
 
 def tela_selecao_porta(tela):
@@ -82,5 +82,9 @@ def tela_selecao_porta(tela):
             from constants import PORTA_SELECIONADA
             globals()['PORTA_SELECIONADA'] = None
             return None
+            
+        import constants
+        if constants.ESCALA_CINZA:
+            aplicar_filtro_cinza_superficie(tela)
 
         pygame.display.update()

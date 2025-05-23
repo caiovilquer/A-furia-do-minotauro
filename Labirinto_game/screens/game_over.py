@@ -2,7 +2,7 @@ import pygame
 import sys
 from constants import BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img
 from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, TransitionEffect, aplicar_filtro_cinza_superficie
 from utils.colors import cor_com_escala_cinza
 
 def tela_falhou(tela, sistema_conquistas):
@@ -66,5 +66,9 @@ def tela_falhou(tela, sistema_conquistas):
             return False
         
         sistema_conquistas.desenhar_notificacao(tela)
-
+        
+        import constants
+        if constants.ESCALA_CINZA:
+            aplicar_filtro_cinza_superficie(tela)
+            
         pygame.display.update()

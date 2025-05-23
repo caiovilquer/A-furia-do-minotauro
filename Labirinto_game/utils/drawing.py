@@ -1,12 +1,34 @@
 import pygame
 import os
+import numpy as np
 
 
 
-def desenhar_texto(texto, fonte, cor, superficie, x, y):
-    """Desenha texto na superfície especificada."""
+def centralizar_texto(fonte, texto, superficie, y, largura=None, x0=0):
+    """
+    Retorna a posição X para centralizar o texto na superfície.
+    - fonte: pygame.font.Font
+    - texto: str
+    - superficie: pygame.Surface
+    - y: posição Y desejada
+    - largura: largura do retângulo de centralização (opcional, padrão: largura da superfície)
+    - x0: início do retângulo (opcional)
+    """
+    text_obj = fonte.render(texto, True, (0,0,0))
+    rect = text_obj.get_rect()
+    if largura is None:
+        largura = superficie.get_width()
+    x = x0 + (largura - rect.width) // 2
+    return x, y
+
+def desenhar_texto(texto, fonte, cor, superficie, x, y, centralizado=False, largura=None):
+    """Desenha texto na superfície especificada. Se centralizado=True, centraliza horizontalmente."""
     from utils.colors import cor_com_escala_cinza
     text_obj = fonte.render(texto, True, cor_com_escala_cinza(cor[0], cor[1], cor[2]))
+    if centralizado:
+        if largura is None:
+            largura = superficie.get_width()
+        x = (largura - text_obj.get_width()) // 2
     text_rect = text_obj.get_rect()
     text_rect.topleft = (x, y)
     superficie.blit(text_obj, text_rect)
@@ -332,6 +354,39 @@ def resize(valor, eh_X = False):
     """Redimensiona o valor baseado na proporção da tela."""
     from constants import LARGURA_TELA, ALTURA_TELA
     if eh_X:
-        return int(valor * LARGURA_TELA / 1920)
+        return min(int(valor * LARGURA_TELA / 1920), int(1.1*valor))
     else:
-        return int(valor * ALTURA_TELA / 1080)
+        return min(int(valor * ALTURA_TELA / 1080),int(1.1*valor))
+
+
+
+def aplicar_filtro_cinza_superficie(surface, alpha=180):
+    """
+    Aplica um filtro de escala de cinza sobre a superfície fornecida.
+    alpha: transparência do filtro (0-255). Use 255 para filtro total.
+    """
+    # Cria uma superfície temporária do mesmo tamanho
+    gray_surface = pygame.Surface(surface.get_size())
+    
+    # Copia o conteúdo da superfície original
+    gray_surface.blit(surface, (0, 0))
+    
+    # Usa array3d para obter um array NumPy da superfície
+    arr = pygame.surfarray.array3d(gray_surface)
+    
+    # Calcula a média ponderada para escala de cinza
+    gray = 0.299 * arr[:,:,0] + 0.587 * arr[:,:,1] + 0.114 * arr[:,:,2]
+    
+    # Aplica o valor de cinza a todos os canais
+    arr[:,:,0] = gray
+    arr[:,:,1] = gray
+    arr[:,:,2] = gray
+    
+    # Atualiza a superfície com o array modificado
+    pygame.surfarray.blit_array(gray_surface, arr)
+    
+    # Define a transparência
+    gray_surface.set_alpha(alpha)
+    
+    # Aplica a superfície em escala de cinza sobre a original
+    surface.blit(gray_surface, (0, 0))

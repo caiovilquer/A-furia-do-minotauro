@@ -1,8 +1,8 @@
 import pygame
 import sys
 from constants import (BUTTON_PATH, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
-                     FONTE_TITULO, FONTE_BOTAO, COR_TITULO)
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize
+                     FONTE_TITULO, FONTE_BOTAO, COR_TITULO, FONTE_BOTAO_REDUZIDA)
+from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, aplicar_filtro_cinza_superficie
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios, salvar_usuarios
 
@@ -43,7 +43,15 @@ def tela_menu_principal(tela, usuario):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto_sombra(f"Bem-vindo, {usuario}!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        # Centraliza o título
+        desenhar_texto_sombra(
+            f"Bem-vindo, {usuario}!",
+            fonte_titulo,
+            COR_TITULO,
+            tela,
+            (LARGURA_TELA - fonte_titulo.size(f"Bem-vindo, {usuario}!")[0]) // 2,
+            titulo_y
+        )
 
         y_inicial = resize(250)
         espacamento_botoes = resize(120)
@@ -99,23 +107,23 @@ def tela_menu_principal(tela, usuario):
         if clicou_rejogar:
             return "REJOGAR"
 
-        # clicou_escala, _ = desenhar_botao(
-        #     texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
-        #     x=LARGURA_TELA - resize(520, eh_X=True),
-        #     y=ALTURA_TELA-resize(100),
-        #     largura=resize(500, eh_X=True),
-        #     altura=resize(80),
-        #     cor_normal=cor_com_escala_cinza(100, 100, 100),
-        #     cor_hover=cor_com_escala_cinza(150, 150, 150),
-        #     fonte=fonte_botao,
-        #     tela=tela,
-        #     events=events,
-        #     imagem_fundo=BUTTON_PATH,
-        #     border_radius=resize(15)
-        # )
-        # if clicou_escala:
-        #     constants.ESCALA_CINZA = not constants.ESCALA_CINZA
-        #     ESCALA_CINZA = constants.ESCALA_CINZA
+        clicou_escala, _ = desenhar_botao(
+            texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
+            x=LARGURA_TELA - resize(520, eh_X=True),
+            y=ALTURA_TELA-resize(100),
+            largura=resize(500, eh_X=True),
+            altura=resize(80),
+            cor_normal=cor_com_escala_cinza(100, 100, 100),
+            cor_hover=cor_com_escala_cinza(150, 150, 150),
+            fonte=FONTE_BOTAO_REDUZIDA,
+            tela=tela,
+            events=events,
+            imagem_fundo=BUTTON_PATH,
+            border_radius=resize(15)
+        )
+        if clicou_escala:
+            constants.ESCALA_CINZA = not constants.ESCALA_CINZA
+            ESCALA_CINZA = constants.ESCALA_CINZA
         
         clicou_som, _ = desenhar_botao(
             texto="Ativar Som" if not SOM_LIGADO else "Desativar Som",
@@ -125,7 +133,7 @@ def tela_menu_principal(tela, usuario):
             altura=resize(80),
             cor_normal=cor_com_escala_cinza(100, 100, 100),
             cor_hover=cor_com_escala_cinza(150, 150, 150),
-            fonte=fonte_botao,
+            fonte=FONTE_BOTAO_REDUZIDA,
             tela=tela,
             events=events,
             imagem_fundo=BUTTON_PATH,
@@ -185,6 +193,8 @@ def tela_menu_principal(tela, usuario):
             imagem_fundo=BUTTON_PATH,
             border_radius=resize(15)
         )
+        if clicou_voltar:
+            return "VOLTAR"
         
         clicou_sair, _ = desenhar_botao(
             texto="Sair",
@@ -224,5 +234,7 @@ def tela_menu_principal(tela, usuario):
         #     usuario_data["dark_mode"] = not dark_mode
         #     dark_mode = not dark_mode
         #     salvar_usuarios(usuarios_data)
+        if constants.ESCALA_CINZA:
+            aplicar_filtro_cinza_superficie(tela)
 
         pygame.display.update()

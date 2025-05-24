@@ -6,7 +6,7 @@ from datetime import datetime
 import serial
 from constants import (BUTTON_PATH, FONTE_BOTAO, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA)
-from utils.drawing import desenhar_texto, desenhar_botao, desenhar_barra_progresso, resize, TransitionEffect
+from utils.drawing import aplicar_filtro_cinza_superficie, desenhar_texto, desenhar_botao, desenhar_barra_progresso, resize, TransitionEffect
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios, salvar_usuarios
 from screens.game_over import tela_falhou
@@ -66,7 +66,7 @@ class JogoLabirinto:
     def verificar_colisao(self):
         """Verifica se houve colisão."""
         # Exemplo local. Caso real, leríamos da serial.
-        if random.random() < 0.00:
+        if random.random() < 0.001:
             self.progresso = random.random()
             self.vidas -= 1
             self.colisoes += 1
@@ -81,7 +81,7 @@ class JogoLabirinto:
     def verifica_conclusao_nivel(self):
         """Verifica se o nível foi concluído."""
         # Simulação de conclusão de nível (após 10s)
-        if (time.time() - self.inicio_tempo) > 3:
+        if (time.time() - self.inicio_tempo) > 10:
             return True
         return False
 
@@ -291,4 +291,9 @@ class JogoLabirinto:
                 cor_outline=cor_com_escala_cinza(255, 255, 255),
                 border_radius=resize(10)
             )
+            
+            import constants
+            if constants.ESCALA_CINZA:
+                aplicar_filtro_cinza_superficie(tela)
+                
             pygame.display.update()

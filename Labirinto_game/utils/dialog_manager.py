@@ -3,7 +3,7 @@ import sys
 import json
 import os
 from pygame.locals import *
-from utils.drawing import resize
+from utils.drawing import aplicar_filtro_cinza_superficie, resize
 from constants import LARGURA_TELA, ALTURA_TELA
 
 class GerenciadorDialogos:
@@ -282,6 +282,10 @@ class GerenciadorDialogos:
             superficie_despertar.fill((0, 0, 0))
             superficie_despertar.set_alpha(self.alpha_despertar)
             self.tela.blit(superficie_despertar, (0, 0))
+        
+        import constants
+        if constants.ESCALA_CINZA:
+            aplicar_filtro_cinza_superficie(self.tela)
     
     def executar(self, nome_cena=None, efeito_sonoro=None, pular_dialogo=False):
         """Executa a cena de diálogo."""
@@ -310,6 +314,5 @@ class GerenciadorDialogos:
             
             pygame.display.flip()
             relogio.tick(60)
-        
         # Retorna True para indicar que o diálogo foi concluído com sucesso
         return True

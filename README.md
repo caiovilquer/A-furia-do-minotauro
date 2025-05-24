@@ -1,180 +1,182 @@
-## Labirinto Sensorial Tecnológico
+# A Fúria do Minotauro
 
-Este projeto consiste em um **jogo sério** que tem como objetivo **facilitar a melhoria da coordenação motora fina** de pessoas com Transtorno do Espectro Autista (TEA) por meio de um **labirinto sensorial** controlado por Arduino e integrado a uma **interface digital** desenvolvida em Python (Pygame). A proposta une conceitos de **jogos educacionais**, **feedback sensorial** e **movimentação motora**, seguindo princípios indicados em literaturas especializadas.
+**A Fúria do Minotauro** é um **jogo sério** que integra um labirinto metálico físico controlado por Arduino a uma **interface digital em Python/Pygame**. Inspirado na lenda de Teseu e do Minotauro, o projeto foi concebido para **estimular a coordenação motora fina, foco e perseverança** de crianças e adolescentes, com ênfase em usuários com Transtorno do Espectro Autista (TEA).
+O sistema fornece feedback auditivo, visual e tátil em tempo real, registra todo o desempenho em JSON e inclui opções de acessibilidade, narrativa temática e sistema de conquistas motivacionais.
 
 ---
 
 ## Sumário
+
 1. [Contexto e Motivação](#contexto-e-motivação)
 2. [Objetivos](#objetivos)
 3. [Arquitetura do Projeto](#arquitetura-do-projeto)
 4. [Funcionalidades Principais](#funcionalidades-principais)
-5. [Hardware (Arduino)](#hardware-arduino)
+5. [Hardware e Firmware](#hardware-e-firmware)
 6. [Software (Python / Pygame)](#software-python--pygame)
 7. [Instalação e Execução](#instalação-e-execução)
 8. [Estrutura de Arquivos](#estrutura-de-arquivos)
-9. [Contribuições e Créditos](#contribuições-e-créditos)
+9. [Equipe](#equipe)
 10. [Referências](#referências)
 
 ---
 
 ## Contexto e Motivação
 
-A coordenação motora fina é uma habilidade fundamental para a autonomia e a qualidade de vida de pessoas com TEA, auxiliando em atividades cotidianas como escrever, usar talheres e manipular objetos com precisão. Pesquisas e trabalhos acadêmicos sobre **jogos sérios** e **jogos baseados em gestos** têm demonstrado resultados promissores na melhora dessas habilidades de maneira lúdica e motivadora.  
-   
-Foi nesse contexto que surgiu o **Labirinto Sensorial Tecnológico**: um jogo que desafia o usuário a conduzir um anel condutor por um labirinto metálico, com feedbacks sensoriais (sonoros, visuais) em tempo real e dados de desempenho registrados no software.
+Pesquisas recentes demonstram que **jogos baseados em gestos** e recursos lúdicos podem acelerar o desenvolvimento motor de crianças com TEA. A coordenação motora fina é crucial para atividades diárias — escrever, abotoar roupas, usar talheres — mas costuma ser um ponto de dificuldade frequente.
+“A Fúria do Minotauro” parte desse cenário e insere o treino motor numa narrativa mitológica: o usuário, ajudando Teseu, deve conduzir um anel pelo labirinto sem tocar nas paredes metálicas, enquanto o labirinto “ganha vida” com movimentos de servos. A história, as conquistas e a estética grega foram escolhidas para **tornar o treino mais imersivo e recompensador**.
 
 ---
 
 ## Objetivos
 
-- **Melhorar a coordenação motora fina** de pessoas com TEA, a partir de um treinamento lúdico e interativo.  
-- **Fornecer feedback sensorial** (sonoros, LEDs, buzzer) em tempo real para aumentar o engajamento e a correção de movimentos.  
-- **Monitorar e gravar o progresso** do jogador (vidas, colisões, tempo de conclusão, nível atual etc.), possibilitando avaliar a evolução ao longo do uso.  
-- **Tornar o projeto acessível** e de fácil customização, permitindo que profissionais e educadores possam adaptá-lo às necessidades de cada pessoa.
+* Desenvolver **precisão motora fina** por meio de desafios progressivos.
+* Oferecer **feedback sensorial multimodal** (som, luz, buzzer, HUD) em tempo real.
+* **Registrar e visualizar** estatísticas de desempenho (colisões, tempo, vidas) para acompanhamento de evolução.
+* Prover **acessibilidade** (modo escala de cinza, som mudo) e **narrativa motivadora**.
+* Garantir estrutura **modular e extensível** em hardware, firmware e software.
 
 ---
 
 ## Arquitetura do Projeto
 
-1. **Arduino** cuida da leitura de sensores e do controle de atuadores:
-   - Estrutura metálica do labirinto.
-   - Anel condutor.
-   - Servomotores (para movimentos do labirinto).
-   - Buzzer e LED RGB (feedback sensorial).
-   - Sensores de efeito Hall e medições de tensão no anel para detectar contato.
+1. **Camada Física (Labirinto + Sensores + Atuadores)**
 
-2. **Computador (Python/Pygame)**:
-   - Interface gráfica (menu, seleção de usuário, jogo, desempenho).
-   - Lógica principal do jogo (níveis, colisões, contagem de vidas).
-   - Registra tentativas e evolução do usuário (JSON).
+   * Labirinto metálico conectado a 5 V.
+   * Anel condutor ligado ao Arduino (ADC).
+   * Sensores de efeito Hall para “início” e “fim” do percurso.
+   * Dois micro‑servos que movem seções do labirinto.
+   * LED RGB para feedback local.
+
+2. **Camada de Firmware (Arduino)**
+
+   * ISR de colisão em pino digital com INPUT\_PULLUP.
+   * Protocolo Serial simples (C,val  F  S) a 115 200 bps.
+   * Controle de servos (Servo.h) e LED RGB (PWM).
+   * Lógica de debounce e sinalização imediata sem depender do PC.
+
+3. **Camada de Software (Python/Pygame)**
+
+   * Pacotes `screens`, `game`, `utils`, `hw`.
+   * `main.py` faz seleção de porta serial, pilha de telas e loop principal.
+   * `utils.audio_manager`, `utils.drawing`, `utils.achievements`, `utils.graphics`.
+   * Persistência em JSON por usuário.
+   * Modularidade permite adicionar níveis, conquistas e modos de jogo sem alterar o núcleo.
 
 ---
 
 ## Funcionalidades Principais
 
-1. **Seleção de Usuário / Criação e Exclusão**  
-   - Permite escolher usuários existentes ou criar um novo.  
-   - É possível **excluir** um usuário e todo o seu histórico de progresso.
-
-2. **Jogo (Labirinto Sensorial)**  
-   - O labirinto metálico é controlado por servomotores que fazem movimentos para aumentar ou reduzir a dificuldade.  
-   - O anel condutor deve ser guiado sem tocar nas bordas do labirinto.  
-   - Cada colisão reduz vidas e gera feedback (sonoro e LED via Arduino, e mensagem no Pygame).  
-   - Caso as vidas acabem, o jogador precisa reiniciar o nível.
-
-3. **Progressão de Níveis**  
-   - A dificuldade aumenta a cada nível, com diferentes padrões de movimentação do labirinto e limite de tempo.  
-   - Ao concluir cada nível, o usuário pode optar por repetir o nível para melhorar o tempo, ir para o próximo nível ou voltar ao menu.
-
-4. **Estatísticas e Desempenho**  
-   - Todos os dados (tempo de conclusão, vidas restantes, nível e data/hora) são salvos em um arquivo JSON.  
-   - Um menu dedicado exibe o **histórico** (últimas tentativas) para o nível selecionado.  
-   - Permite acompanhar a evolução do jogador ao longo do tempo.
-
-5. **Rejogar Níveis**  
-   - O jogador pode revisitar níveis anteriores para treinar mais e buscar melhores resultados.
+* **Seleção de Porta Serial**: tela inicial lista portas COM/tty; inclui modo simulação.
+* **Gerenciamento de Usuários**: criar, selecionar ou excluir perfis (dados salvos em JSON).
+* **Níveis Progressivos**: padrões de movimento dos servos, limite de tempo e vidas crescentes.
+* **Barra de Progresso Analógica**: cada colisão envia valor proporcional ao avanço e atualiza HUD.
+* **Quick‑Time Events**: botões na manopla disparam minijogos de sequência de cores para ganhar bônus (vida extra, pausa do servo etc.).
+* **Sistema de Conquistas**: nove troféus (Fio de Ariadne, Coragem de Teseu, Domador do Labirinto, etc.) com notificações animadas.
+* **Modos de Acessibilidade**:
+  • Escala de cinza — converte todas as cores para tons de cinza.
+  • Mudo — silencia músicas e efeitos sem desligar  ou LED.
+* **Tela de Desempenho**: gráfico de linhas e barras (utils.graphics) com evolução de tempos, vidas e porcentagem de colisões por nível.
+* **Narrativa Mitológica**: diálogos infantis/teen com Teseu; tela “Inicie o jogo” em estilo 16‑bits com efeito bounce.
+* **Interface Responsiva**: redimensiona fontes, botões e imagens para qualquer resolução em modo fullscreen.
 
 ---
 
-## Hardware (Arduino)
+## Hardware e Firmware
 
-### Componentes Principais
-- **Arduino UNO** ou similar.
-- **Estrutura metálica** do labirinto.
-- **Anel condutor** conectado a um cabo (ADC do Arduino).
-- **Sensores de efeito Hall lineares** para detecção de início/fim de curso.
-- **Servomotores** para movimentar partes do labirinto.
-- **Buzzer** passivo para saída de áudio.
-- **LED RGB** para indicar estados (vidas restantes, vitória etc.).
+### Principais Componentes
 
-### Principais Funções no Arduino
-- **Detecção de colisão**: ao perceber o contato do anel com o labirinto (queda de tensão no ADC).  
-- **Geração de sinais de feedback**:  
-  - **Buzzer** para sons de alerta (ex.: número de vidas restantes).  
-  - **LED RGB** indicando cores diferentes conforme o status (amarelo para perda de vida, vermelho para reinício, verde para conclusão etc.).  
-- **Movimentação do labirinto**: o Arduino recebe comandos via serial do software para acionar os servomotores, gerando padrões de movimento.
+* Arduino UNO ou Nano
 
-### Esquemático Simplificado
-```
-[ Labirinto Metalico ] --(5V)--> [ Arduino ADC ] --(GND)
-[ Sensores Hall ] ----> [ Arduino Entradas Digitais ]
-[ Servomotor ] <-- [ Arduino PWM ]
-[ Buzzer, LED RGB ] --> [ Arduino Saídas Digitais ]
-[ Comunicação Serial ] <-> [ Computador (Pygame) ]
-```
+* Labirinto em fio resistivo ou segmentado
+
+* Anel condutor com ímã neodímio
+
+* 2 × Micro‑servos SG90
+
+* LED RGB cátodo comum
+
+* Capacitor 100 µF (servos)
+
+* Resistores pull‑down 1 MΩ (A0) e limitadores 220 Ω (LED)
+
+### Fluxo de Dados no Firmware
+
+1. Anel toca labirinto → interrupção FALLING em D2 → flag colisão.
+2. Loop principal lê sensores Hall (A1/A2), ADC do anel (A0) e estado de colisão; transmite eventos.
+3. Recebe comandos “M” (servo)  do Pygame conforme cada nível.
+4. Ações críticas (piscar LED, beep curto) são executadas localmente para latência zero.
 
 ---
 
 ## Software (Python / Pygame)
 
-O **código Python** está dividido em telas principais:  
+* **Estrutura Modular**
+  • `screens/` – funções de cada tela.
+  • `game/` – classe JogoLabirinto e regras.
+  • `utils/` – áudio, cores, conquistas, gráficos, desenho AA, serial utils.
+  • `hw/arduino_bridge.py` – leitura/escrita Serial.
 
-1. **Seleção de Usuário** (com criação e deleção de usuários).  
-2. **Menu Principal** (iniciar jogo, ver desempenho, rejogar nível ou sair).  
-3. **Tela do Jogo** (loop principal, leitura de colisões e controle de níveis).  
-4. **Tela de Desempenho** (para exibir histórico de tentativas por nível).  
-5. **Tela de Rejogar** (seleciona qual nível já concluído deve ser re-executado).
+* **Fluxo Geral**
 
-As telas usam botões e texto via Pygame, com um background temático. Os dados de progresso são salvos em um **arquivo JSON** (nomeado `usuarios.json`).
+  1. `main.py` → tela portas → tela usuários → menu principal.
+  2. “Jogar” instancia JogoLabirinto, lê eventos do Arduino a cada frame.
+  3. No fim do nível, verifica conquistas e exibe telas de conclusão ou falha.
+  4. Menu oferece Desempenho, Conquistas, Rejogar e Configurações.
 
 ---
 
 ## Instalação e Execução
 
-1. **Clonar ou baixar** este repositório:
-   ```bash
-   git clone https://github.com/caiovilquer/labirinto-sensorial-PCS.git
-   ```
-2. **Instalar dependências** do Python:
-   ```bash
-   pip install pygame
-   pip install pyserial
-   ```
-3. **Conectar o Arduino**:
-   - Carregue o firmware para o Arduino que faz a leitura do anel e sensores, e se comunica com o Pygame via porta serial.  
-   - Ajuste a porta serial correspondente (ex.: `COM3` no Windows ou `/dev/ttyACM0` no Linux) no código Python, se necessário.
+```bash
+# clone
+$ git clone https://github.com/caiovilquer/A-furia-do-minotauro.git
+$ cd A-furia-do-minotauro/Labirinto_game
 
-4. **Executar o jogo**:
-   ```bash
-   python labirinto.py
-   ```
-   - Caso o arquivo principal possua outro nome, substitua o `labirinto.py` adequadamente.  
+# ambiente virtual
+$ python -m venv .venv
+$ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-5. **Navegação**:
-   - Na tela inicial, selecione ou crie um usuário.  
-   - Em seguida, navegue pelo menu para iniciar o jogo, visualizar desempenho ou rejogar algum nível.
+# dependências
+(.venv) $ pip install -r requirements.txt
+
+# carregar firmware no Arduino (pasta firmware_arduino)
+
+# executar
+(.venv) $ python main.py
+```
 
 ---
 
 ## Estrutura de Arquivos
 
 ```
-labirinto-sensorial/
-│
-├─ background_labirinto.png   # Imagem de fundo (opcional)
-├─ usuarios.json              # Banco de dados local em formato JSON
-├─ labirinto.py                    # Arquivo principal que executa o jogo
-├─ <outros_arquivos>.py       # Módulos (caso tenha separado telas em diferentes arquivos)
-├─ README.md                  # Este arquivo de documentação
-└─ firmware_arduino/          # Exemplo de firmware .ino para ler sensores e acionar servos
+A-furia-do-minotauro/
+├─ Labirinto_game/
+│  ├─ main.py
+│  ├─ screens/
+│  ├─ game/
+│  ├─ utils/
+│  ├─ assets/
+│  │  ├─ images/
+│  │  ├─ sounds/
+│  │  └─ fonts/
+│  └─ data/
+├─ firmware_arduino/
+│  └─ firmware.ino
+└─ Documentação/
+   └─ Documentacao_projeto.pdf
 ```
 
 ---
 
-## Contribuições e Créditos
-
-- **Equipe**:
+## Equipe:
   - Caio Vilquer Carvalho
   - Samuel Damasceno Pereira Caldeira
   - Marcello Braga de Oliveira
-- **Referências Acadêmicas**:
-  - [AUTIBOTS: Jogo Digital Educativo para Desenvolvimento Cognitivo e Motor de Crianças com TEA](https://journals-sol.sbc.org.br/index.php/rbie/article/view/3300)
-  - [Gesture-based Video Games to Support Fine-Motor Coordination Skills of Children with Autism](https://dl.acm.org/doi/10.1145/3311927.3325310)
-  - [A case study of gesture-based games in enhancing the fine motor skills of children with autism spectrum disorders](https://www.researchgate.net/publication/323214177_A_case_study_of_gesture-based_games_in_enhancing_the_fine_motor_skills_and_recognition_of_children_with_autism)
-
 ---
 
 ## Referências
-
+- [AUTIBOTS: Jogo Digital Educativo para Desenvolvimento Cognitivo e Motor de Crianças com TEA](https://journals-sol.sbc.org.br/index.php/rbie/article/view/3300)
+- [Gesture-based Video Games to Support Fine-Motor Coordination Skills of Children with Autism](https://dl.acm.org/doi/10.1145/3311927.3325310)
+- [A case study of gesture-based games in enhancing the fine motor skills of children with autism spectrum disorders](https://www.researchgate.net/publication/323214177_A_case_study_of_gesture-based_games_in_enhancing_the_fine_motor_skills_and_recognition_of_children_with_autism)
 Este projeto se apoia no **PDF de documentação** compartilhado (com introdução, especificações e referenciais teóricos) e nos artigos citados acima. Para mais detalhes sobre o funcionamento físico do labirinto e esquemas de ligação elétrica, consulte o documento intitulado **“Documetação_projeto.pdf”**.

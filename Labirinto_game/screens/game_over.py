@@ -5,8 +5,20 @@ from constants import FONTE_TITULO, FONTE_BOTAO, COR_TITULO
 from utils.drawing import desenhar_texto, desenhar_botao, desenhar_texto_sombra, resize, TransitionEffect, aplicar_filtro_cinza_superficie
 from utils.colors import cor_com_escala_cinza
 
-def tela_falhou(tela, sistema_conquistas):
-    """Tela quando o jogador perde todas as vidas."""
+def tela_falhou(tela, sistema_conquistas=None):
+    """
+    Tela exibida quando o jogador perde todas as vidas.
+    
+    Returns:
+        tuple: (continuar_jogando, pular_dialogo)
+            continuar_jogando (bool): True se o jogador quer tentar novamente, False para sair
+            pular_dialogo (bool): True para pular diálogo ao recomeçar o nível
+    """
+    from utils.audio_manager import audio_manager
+    
+    # Reproduz um áudio dublado de derrota quando a tela é exibida
+    audio_manager.play_voiced_dialogue("perdeu")
+    
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
@@ -63,7 +75,7 @@ def tela_falhou(tela, sistema_conquistas):
             border_radius=resize(15)
         )
         if clicou_voltar:
-            return False
+            return False, False
         
         sistema_conquistas.desenhar_notificacao(tela)
         

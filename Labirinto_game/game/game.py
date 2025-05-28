@@ -146,7 +146,16 @@ class JogoLabirinto:
     def feedback_colisao(self):
         """Fornece feedback visual/sonoro para colisão."""
         from utils.audio_manager import audio_manager
+        
+        # Reproduz o efeito sonoro padrão de colisão
         audio_manager.play_sound("collision")
+        
+        # Escolhe o áudio dublado correto baseado no número de vidas restantes
+        if self.vidas == 1:
+            audio_manager.play_voiced_dialogue("colisao_1vida")
+        elif self.vidas == 2:
+            audio_manager.play_voiced_dialogue("colisao_2vidas")
+            
         print(f"Colisão! Progresso atual: {self.progresso:.2f}")
 
     def verifica_conclusao_nivel(self):
@@ -272,7 +281,6 @@ class JogoLabirinto:
                         return
 
             self.atualizar_labirinto()
-            self.verificar_colisao()
 
             # Desenho de fundo
             if background_img:

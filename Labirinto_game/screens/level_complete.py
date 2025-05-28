@@ -15,6 +15,11 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             repetir_nivel (bool): True para repetir o nível, False para avançar
             pular_dialogo (bool): True para pular diálogo ao repetir o nível
     """
+    from utils.audio_manager import audio_manager
+    
+    # Reproduz um áudio dublado de vitória quando a tela é exibida
+    audio_manager.play_voiced_dialogue("ganhou")
+    
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO

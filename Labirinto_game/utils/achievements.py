@@ -192,6 +192,7 @@ class SistemaConquistas:
         self.notificacao_ativa = True
         self.notificacao_texto.append(texto)
         self.notificacao_inicio = time.time()
+        audio_manager.set_sound_volume("achievement", 0.3)  # Ajusta o volume do som de conquista
         audio_manager.play_sound("achievement")
     
     def desenhar_notificacao(self, tela):

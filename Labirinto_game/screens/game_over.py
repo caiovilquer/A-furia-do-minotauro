@@ -58,6 +58,7 @@ def tela_falhou(tela, sistema_conquistas=None):
             border_radius=resize(15)
         )
         if clicou_rejogar:
+            audio_manager.stop_voiced_dialogue();
             return True, True
         
         clicou_voltar, _ = desenhar_botao(
@@ -75,6 +76,7 @@ def tela_falhou(tela, sistema_conquistas=None):
             border_radius=resize(15)
         )
         if clicou_voltar:
+            audio_manager.stop_voiced_dialogue();
             return False, False
         
         sistema_conquistas.desenhar_notificacao(tela)

@@ -60,6 +60,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             border_radius=resize(15)
         )
         if clicou_rejogar:
+            audio_manager.stop_voiced_dialogue();
             return True, True, True  # Continuar jogando, repetir nível, pular diálogo
 
         clicou_avancar, _ = desenhar_botao(
@@ -77,6 +78,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             border_radius=resize(15)
         )
         if clicou_avancar:
+            audio_manager.stop_voiced_dialogue();
             return True, False, False  # Continuar jogando, avançar para próximo nível, não pular diálogo
         
         clicou_voltar, _ = desenhar_botao(
@@ -94,6 +96,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             border_radius=resize(15)
         )
         if clicou_voltar:
+            audio_manager.stop_voiced_dialogue();
             return False, False, False  # Não continuar, não repetir, não pular diálogo
         
         # Garantir que as notificações de conquistas sejam exibidas

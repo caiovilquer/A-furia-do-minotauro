@@ -64,10 +64,14 @@ class AudioManager:
             
         # Eventos e suas variações
         eventos = {
-            "colisao_1vida":["uma_vida_1", "uma_vida_2", "uma_vida_3"],
-            "colisao_2vidas": ["duas_vidas_1", "duas_vidas_2", "duas_vidas_3"] ,
-            "perdeu": ["perdeu_1", "perdeu_2", "perdeu_3"],
-            "ganhou": ["ganhou_1", "ganhou_2", "ganhou_3"]
+            "colisao_1vida": ["uma_vida_1", "uma_vida_2", "uma_vida_3", "uma_vida_4", "uma_vida_5", 
+                     "uma_vida_6", "uma_vida_7", "uma_vida_8", "uma_vida_9", "uma_vida_10"],
+            "colisao_2vidas": ["duas_vidas_1", "duas_vidas_2", "duas_vidas_3", "duas_vidas_4", "duas_vidas_5", 
+                      "duas_vidas_6", "duas_vidas_7", "duas_vidas_8", "duas_vidas_9", "duas_vidas_10"],
+            "perdeu": ["perdeu_1", "perdeu_2", "perdeu_3", "perdeu_4", "perdeu_5", 
+                  "perdeu_6", "perdeu_7", "perdeu_8", "perdeu_9", "perdeu_10"],
+            "ganhou": ["ganhou_1", "ganhou_2", "ganhou_3", "ganhou_4", "ganhou_5", 
+                  "ganhou_6", "ganhou_7", "ganhou_8", "ganhou_9", "ganhou_10"]
         }
         
         # Carregar cada variação de áudio

@@ -305,6 +305,8 @@ class JogoLabirinto:
             )
             if clicou_voltar:
                 self.jogo_ativo = False
+                from utils.audio_manager import audio_manager
+                audio_manager.stop_voiced_dialogue();
                 return
 
             # Se acabou as vidas

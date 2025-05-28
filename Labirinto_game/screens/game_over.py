@@ -46,7 +46,7 @@ def tela_falhou(tela, sistema_conquistas):
             border_radius=resize(15)
         )
         if clicou_rejogar:
-            return True
+            return True, True
         
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",

@@ -3,7 +3,6 @@ import sys
 import time
 import random
 from datetime import datetime
-import serial
 from constants import (BUTTON_PATH, FONTE_BOTAO, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
                      FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA)
 from utils.drawing import aplicar_filtro_cinza_superficie, desenhar_texto, desenhar_botao, desenhar_barra_progresso, resize, TransitionEffect
@@ -18,11 +17,13 @@ from utils.achievements import SistemaConquistas
 class JogoLabirinto:
     """Classe principal do jogo que gerencia o estado e a lógica do jogo."""
     
-    def __init__(self, tela, usuario, nivel_inicial=None, sistema_conquistas=None):
+    def __init__(self, tela, usuario, nivel_inicial=None, sistema_conquistas=None, conexao_serial=None):
         self.tela = tela
         self.usuario = usuario
         self.clock = pygame.time.Clock()
         self.fonte = FONTE_TEXTO
+        self.conexao_serial = conexao_serial  # Objeto de conexão serial
+        
         if sistema_conquistas:
             self.sistema_conquistas = sistema_conquistas
         else:
@@ -30,6 +31,11 @@ class JogoLabirinto:
         self.sistema_conquistas.carregar_conquistas_usuario(usuario)
         self.colisoes = 0 
         self.usuarios_data = carregar_usuarios()
+        
+        # Configurações para comunicação serial
+        self.buffer_serial = ""
+        self.ultima_verificacao = time.time()
+        self.intervalo_verificacao = 0.05  # 50ms entre leituras
         
         if nivel_inicial is not None:
             self.nivel_atual = nivel_inicial
@@ -46,31 +52,96 @@ class JogoLabirinto:
         # Quando o jogo inicia, não mostramos o diálogo ainda
         self.mostrou_dialogo_fase_atual = False
 
-
         self.vidas = 3
         self.inicio_tempo = time.time()
         self.jogo_ativo = True
 
         # Progresso do jogador (de 0.0 a 1.0)
         self.progresso = 0.0
+        
+        # Enviar nível atual para o Arduino se necessário
+        if self.conexao_serial:
+            self.enviar_nivel_arduino()
 
-        if PORTA_SELECIONADA:
-             self.arduino = serial.Serial(PORTA_SELECIONADA, 9600)
-        else:
-             self.arduino = None
+    def enviar_nivel_arduino(self):
+        """Envia o nível atual para o Arduino."""
+        try:
+            # Formato da mensagem: "NIVEL:X\n" onde X é o número do nível
+            mensagem = f"NIVEL:{self.nivel_atual}\n".encode()
+            self.conexao_serial.write(mensagem)
+            self.conexao_serial.flush()
+            print(f"Enviado nível {self.nivel_atual} para o Arduino")
+        except Exception as e:
+            print(f"Erro ao enviar nível para Arduino: {e}")
 
     def atualizar_labirinto(self):
         """Atualiza o estado do labirinto."""
-        pass
+        if self.conexao_serial:
+            self.ler_dados_serial()
+        else:
+            # Simulação quando não há comunicação com Arduino
+            self.simular_progresso()
 
-    def verificar_colisao(self):
-        """Verifica se houve colisão."""
-        # Exemplo local. Caso real, leríamos da serial.
+    def simular_progresso(self):
+        """Simular progresso para modo de demonstração."""
+        # Incrementa gradualmente o progresso para simular movimento
+        incremento = random.uniform(0.001, 0.005)
+        self.progresso = min(1.0, self.progresso + incremento)
+        
+        # Simula colisões ocasionalmente
         if random.random() < 0.001:
-            self.progresso = random.random()
             self.vidas -= 1
             self.colisoes += 1
             self.feedback_colisao()
+            
+        # Simular conclusão se alcançar progresso completo
+        if self.progresso >= 1.0:
+            # Termina o nível após 10 segundos ou quando atingir 100%
+            if (time.time() - self.inicio_tempo) > 10:
+                return True
+
+    def ler_dados_serial(self):
+        """Lê dados da porta serial para atualizar estado do jogo."""
+        agora = time.time()
+        
+        # Verifica a cada intervalo para não sobrecarregar a CPU
+        if (agora - self.ultima_verificacao) >= self.intervalo_verificacao:
+            self.ultima_verificacao = agora
+            
+            try:
+                if self.conexao_serial and self.conexao_serial.in_waiting > 0:
+                    dados = self.conexao_serial.readline().decode('utf-8').strip()
+                    self.processar_dados_serial(dados)
+            except Exception as e:
+                print(f"Erro na leitura serial: {e}")
+
+    def processar_dados_serial(self, dados):
+        """Processa os dados recebidos do Arduino."""
+        print(f"Dados recebidos: {dados}")
+        
+        # Formato esperado dos dados: COMANDO:VALOR
+        # Exemplos: PROGRESSO:0.75, COLISAO:1, CONCLUIDO:1
+        try:
+            if ':' in dados:
+                comando, valor = dados.split(':', 1)
+                
+                if comando == "PROGRESSO":
+                    self.progresso = float(valor)
+                    
+                elif comando == "COLISAO":
+                    if int(valor) == 1:
+                        self.vidas -= 1
+                        self.colisoes += 1
+                        self.feedback_colisao()
+                        
+                elif comando == "CONCLUIDO":
+                    if int(valor) == 1:
+                        # Marca o nível como concluído
+                        self.progresso = 1.0
+                
+        except Exception as e:
+            print(f"Erro ao processar dados: {e}")
+
 
     def feedback_colisao(self):
         """Fornece feedback visual/sonoro para colisão."""
@@ -80,10 +151,12 @@ class JogoLabirinto:
 
     def verifica_conclusao_nivel(self):
         """Verifica se o nível foi concluído."""
-        # Simulação de conclusão de nível (após 10s)
-        if (time.time() - self.inicio_tempo) > 10:
-            return True
-        return False
+        # Se estiver usando comunicação serial, o Arduino já enviará o sinal de conclusão
+        # Caso contrário, usamos a simulação
+        if self.conexao_serial:
+            return self.progresso >= 1.0
+        else:
+            return (time.time() - self.inicio_tempo) > 10 or self.progresso >= 1.0
 
     def salvar_progresso(self, tempo_gasto, falhou=False):
         """Salva o progresso do jogador."""
@@ -141,6 +214,11 @@ class JogoLabirinto:
         self.usuarios_data = carregar_usuarios()
         # Reset da flag de diálogo de fase
         self.mostrou_dialogo_fase_atual = False
+        
+        # Enviar novo nível para o Arduino se necessário
+        if self.conexao_serial:
+            self.enviar_nivel_arduino()
+            
         print(f"Estado do jogo resetado.")
 
     def mostrar_dialogo_fase(self):
@@ -225,13 +303,13 @@ class JogoLabirinto:
             if self.vidas <= 0:
                 tempo_total = time.time() - self.inicio_tempo
                 self.salvar_progresso(tempo_total, falhou=True)
-                self.jogo_ativo = tela_falhou(tela, self.sistema_conquistas)
+                self.jogo_ativo, pular_dialogo = tela_falhou(tela, self.sistema_conquistas)
                 
                 # Se decidiu continuar, reseta o nível e mostra o diálogo novamente
                 if self.jogo_ativo:
                     self.resetar_nivel()
                     # Reinicia o loop para mostrar o diálogo novamente
-                    return self.loop_principal()
+                    return self.loop_principal(pular_dialogo=pular_dialogo)
 
             # Se concluiu o nível
             if self.verifica_conclusao_nivel():

@@ -37,9 +37,9 @@ def main():
     
     # Selecionar porta do Arduino
     TransitionEffect.fade_out(tela, velocidade=30)
-    porta_escolhida = tela_selecao_porta(tela)
+    conexao_serial = tela_selecao_porta(tela)
     
-    print("PORTA ESCOLHIDA:", porta_escolhida)
+    print("CONEXÃO SERIAL:", "Simulação" if conexao_serial is None else "Estabelecida")
     
     # Nova tela para escolher entre continuar ou novo jogo
     TransitionEffect.fade_out(tela, velocidade=30)
@@ -87,7 +87,7 @@ def main():
         if acao == "JOGAR":
             TransitionEffect.slide_left(tela, tela.copy(), 30)
             audio_manager.set_bg_volume(0.01) 
-            jogo = JogoLabirinto(tela, usuario_escolhido, sistema_conquistas=sistema_conquistas)
+            jogo = JogoLabirinto(tela, usuario_escolhido, sistema_conquistas=sistema_conquistas, conexao_serial=conexao_serial)
             jogo.loop_principal(pular_dialogo=False)  # Sempre exibe diálogos ao iniciar o jogo normalmente
             TransitionEffect.slide_right(tela, tela.copy(), 30)
         elif acao == "DESEMPENHO":
@@ -100,7 +100,8 @@ def main():
             if nivel_escolhido is not None:
                 TransitionEffect.fade_out(tela, velocidade=30)
                 # Ao rejogar manualmente, não pulamos o diálogo para dar a experiência completa
-                jogo = JogoLabirinto(tela, usuario_escolhido, nivel_inicial=nivel_escolhido, sistema_conquistas=sistema_conquistas)
+                jogo = JogoLabirinto(tela, usuario_escolhido, nivel_inicial=nivel_escolhido, 
+                                     sistema_conquistas=sistema_conquistas, conexao_serial=conexao_serial)
                 jogo.loop_principal(pular_dialogo=False)
                 TransitionEffect.slide_right(tela, tela.copy(), 30)
         elif acao == "VOLTAR":

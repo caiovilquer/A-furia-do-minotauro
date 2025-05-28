@@ -47,6 +47,7 @@ IMAGES_PATH = "Labirinto_game/assets/images/"
 BACKGROUND_PATH = IMAGES_PATH + "backgrounds/tela_inicial.png"
 BUTTON_PATH = IMAGES_PATH + "button1.png"
 DIALOGO_PATH = IMAGES_PATH + "backgrounds/fundo_dialogo.png"
+DIALOGO_DENTRO_PATH = IMAGES_PATH + "backgrounds/fundo_dialogo_labirinto_dark.png"
 SOUND_PATH = "Labirinto_game/assets/sounds"
 USUARIOS_JSON = "Labirinto_game/data/usuarios.json"
 
@@ -62,3 +63,9 @@ if os.path.exists(DIALOGO_PATH):
     dialogo_img = pygame.transform.scale(dialogo_img, (LARGURA_TELA, ALTURA_TELA))
 else:
     dialogo_img = None
+    
+if os.path.exists(DIALOGO_DENTRO_PATH):
+    dialogo_dentro_img = pygame.image.load(DIALOGO_DENTRO_PATH)
+    dialogo_dentro_img = pygame.transform.scale(dialogo_dentro_img, (LARGURA_TELA, ALTURA_TELA))
+else:
+    dialogo_dentro_img = None

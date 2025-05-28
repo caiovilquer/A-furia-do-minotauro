@@ -1,11 +1,13 @@
 import pygame
 import sys
+import os
 import time
 import random
+import math
 from datetime import datetime
 from constants import (BUTTON_PATH, FONTE_BOTAO, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
-                     FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA)
-from utils.drawing import aplicar_filtro_cinza_superficie, desenhar_texto, desenhar_botao, desenhar_barra_progresso, resize, TransitionEffect
+                     FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA, SOUND_PATH, dialogo_dentro_img)
+from utils.drawing import aplicar_filtro_cinza_superficie, desenhar_texto, desenhar_botao, resize, TransitionEffect
 from utils.colors import cor_com_escala_cinza
 from utils.user_data import carregar_usuarios, salvar_usuarios
 from screens.game_over import tela_falhou
@@ -23,6 +25,25 @@ class JogoLabirinto:
         self.clock = pygame.time.Clock()
         self.fonte = FONTE_TEXTO
         self.conexao_serial = conexao_serial  # Objeto de conexão serial
+        
+        # Para o timer visual
+        self.timer_raio = resize(50)
+        self.timer_centro = (LARGURA_TELA - resize(100, eh_X=True), resize(100))
+        self.timer_espessura = resize(8)
+        self.timer_cor_fundo = (80, 80, 80)
+        self.timer_cor = (0, 200, 200)
+        
+        # Para efeitos de colisão
+        self.flash_ativo = False
+        self.flash_inicio = 0
+        self.flash_duracao = 0.3  # segundos
+        self.flash_cor = (255, 0, 0, 150)  # Vermelho semi-transparente
+        
+        # Para controles de áudio
+        self.icone_som_ligado = None
+        self.icone_som_desligado = None
+        self.som_ligado = True
+        self.carregar_icones_audio()
         
         if sistema_conquistas:
             self.sistema_conquistas = sistema_conquistas
@@ -42,6 +63,24 @@ class JogoLabirinto:
         else:
             self.nivel_atual = self.usuarios_data[usuario]["nivel"]
 
+        # Obter melhor tempo do jogador para este nível
+        self.melhor_tempo = self.obter_melhor_tempo()
+        
+        # Configurações para nomes e temas dos níveis
+        self.nomes_niveis = {
+            1: "O Labirinto Inicial",
+            2: "Corredores Sinuosos",
+            3: "Caminho das Sombras",
+            4: "Jardim do Minotauro",
+            5: "Passagem Secreta",
+            6: "Caverna dos Ecos",
+            7: "Salão dos Heróis",
+            8: "Confronto Final"
+        }
+        
+        # Elementos temáticos para cada nível (posição na tela, imagem)
+        self.carregar_elementos_tematicos()
+
         # Criação do gerenciador de diálogos
         self.gerenciador_dialogos = GerenciadorDialogos(
             tela, 
@@ -55,13 +94,229 @@ class JogoLabirinto:
         self.vidas = 3
         self.inicio_tempo = time.time()
         self.jogo_ativo = True
+        
+        # Para transições mais suaves
+        self.transicao_ativa = False
+        self.transicao_tipo = None
+        self.transicao_progresso = 0
 
         # Progresso do jogador (de 0.0 a 1.0)
         self.progresso = 0.0
         
+        # Para indicadores de conquistas próximas
+        self.conquistas_proximas = self.verificar_conquistas_proximas()
+        
         # Enviar nível atual para o Arduino se necessário
         if self.conexao_serial:
             self.enviar_nivel_arduino()
+            
+    def carregar_icones_audio(self):
+        """Carrega os ícones de controle de áudio"""
+        try:
+            self.icone_som_ligado = pygame.image.load(f"{SOUND_PATH}/icons/sound_on.png").convert_alpha()
+            self.icone_som_desligado = pygame.image.load(f"{SOUND_PATH}/icons/sound_off.png").convert_alpha()
+            
+            # Redimensionar ícones
+            tamanho = resize(40)
+            self.icone_som_ligado = pygame.transform.scale(self.icone_som_ligado, (tamanho, tamanho))
+            self.icone_som_desligado = pygame.transform.scale(self.icone_som_desligado, (tamanho, tamanho))
+        except Exception as e:
+            print(f"Erro ao carregar ícones de áudio: {e}")
+            # Criar ícones de fallback
+            self.icone_som_ligado = self.criar_icone_som(True)
+            self.icone_som_desligado = self.criar_icone_som(False)
+    
+    def criar_icone_som(self, ligado):
+        """Cria um ícone de som básico usando primitivas do pygame"""
+        tamanho = resize(40)
+        icone = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
+        
+        if ligado:
+            # Desenha um alto-falante com ondas sonoras
+            pygame.draw.rect(icone, (200, 200, 200), (5, 12, 10, 16))
+            pygame.draw.polygon(icone, (200, 200, 200), [(15, 12), (25, 5), (25, 35), (15, 28)])
+            for i in range(3):
+                offset = (i+1) * 5
+                pygame.draw.arc(icone, (200, 200, 200), 
+                                (25, 12 - offset, offset * 2, offset * 4),
+                                math.pi * 0.25, math.pi * 0.75, 2)
+        else:
+            # Desenha um alto-falante com X
+            pygame.draw.rect(icone, (200, 200, 200), (5, 12, 10, 16))
+            pygame.draw.polygon(icone, (200, 200, 200), [(15, 12), (25, 5), (25, 35), (15, 28)])
+            pygame.draw.line(icone, (255, 0, 0), (28, 10), (35, 30), 3)
+            pygame.draw.line(icone, (255, 0, 0), (35, 10), (28, 30), 3)
+            
+        return icone
+            
+    def carregar_elementos_tematicos(self):
+        """Carrega os elementos temáticos para cada nível"""
+        self.elementos_tematicos = {}
+        
+        try:
+            # Define os caminhos para os elementos de cada nível
+            elementos_niveis = {
+                1: ["column_greek.png", "greek_vase.png"],
+                2: ["statue_small.png", "torch.png"],
+                3: ["spider_web.png", "skull.png"],
+                4: ["plant_vine.png", "fountain.png"],
+                5: ["old_key.png", "ancient_rune.png"],
+                6: ["stalactite.png", "crystal_blue.png"],
+                7: ["shield_gold.png", "sword_bronze.png"],
+                8: ["minotaur_shadow.png", "broken_chain.png"]
+            }
+            
+            # Para cada nível, carrega os elementos e define suas posições
+            for nivel, elementos in elementos_niveis.items():
+                self.elementos_tematicos[nivel] = []
+                
+                for i, elem in enumerate(elementos):
+                    try:
+                        caminho = f"Labirinto_game/assets/images/theme_elements/{elem}"
+                        imagem = pygame.image.load(caminho).convert_alpha()
+                        
+                        # Redimensiona a imagem
+                        largura = resize(100, eh_X=True)
+                        altura = int(largura * imagem.get_height() / imagem.get_width())
+                        imagem = pygame.transform.scale(imagem, (largura, altura))
+                        
+                        # Define uma posição para o elemento (personalizar conforme necessário)
+                        if i == 0:
+                            pos = (resize(50, eh_X=True), ALTURA_TELA - altura - resize(50))
+                        else:
+                            pos = (LARGURA_TELA - largura - resize(50, eh_X=True), ALTURA_TELA - altura - resize(50))
+                        
+                        self.elementos_tematicos[nivel].append((imagem, pos))
+                    except Exception as e:
+                        print(f"Erro ao carregar elemento temático {elem}: {e}")
+        except Exception as e:
+            print(f"Erro ao carregar elementos temáticos: {e}")
+
+    def obter_melhor_tempo(self):
+        """Obtém o melhor tempo do jogador para o nível atual"""
+        tentativas = self.usuarios_data.get(self.usuario, {}).get("tentativas", [])
+        # Filtra tentativas bem-sucedidas do nível atual
+        tentativas_nivel = [t for t in tentativas if t.get("nivel") == self.nivel_atual and t.get("vidas", 0) > 0]
+        
+        if tentativas_nivel:
+            # Retorna o melhor tempo
+            return min(t.get("tempo", float('inf')) for t in tentativas_nivel)
+        return None
+
+    def verificar_conquistas_proximas(self):
+        """Verifica quais conquistas estão próximas de serem desbloqueadas"""
+        conquistas_proximas = []
+        
+        # Lista de tentativas do usuário
+        tentativas = self.usuarios_data.get(self.usuario, {}).get("tentativas", [])
+        
+        # Verificar se está próximo de desbloquear "Pegadas de Bronze"
+        if not self.sistema_conquistas.conquistas['pegadas_de_bronze']['desbloqueada']:
+            total_jogos = len(tentativas)
+            if total_jogos >= 25:  # Reduzido para 25 (50% de 50)
+                conquistas_proximas.append({
+                    'chave': 'pegadas_de_bronze',
+                    'nome': self.sistema_conquistas.conquistas['pegadas_de_bronze']['nome'],
+                    'progresso': min(1.0, total_jogos / 50),
+                    'meta': 50,
+                    'atual': total_jogos
+                })
+        
+        # Verificar se está próximo de "Domador do Labirinto"
+        if not self.sistema_conquistas.conquistas['domador_do_labirinto']['desbloqueada']:
+            niveis_completados = set(t.get('nivel') for t in tentativas if t.get('vidas', 0) > 0)
+            if len(niveis_completados) >= 2:  # Reduzido para 2 (40% de 5)
+                conquistas_proximas.append({
+                    'chave': 'domador_do_labirinto',
+                    'nome': self.sistema_conquistas.conquistas['domador_do_labirinto']['nome'],
+                    'progresso': min(1.0, len(niveis_completados) / 5),
+                    'meta': 5,
+                    'atual': len(niveis_completados)
+                })
+                
+        # Verificar se está próximo de "Renascido"
+        if not self.sistema_conquistas.conquistas['renascido']['desbloqueada']:
+            nivel_atual = self.nivel_atual
+            tentativas_nivel = [t for t in tentativas if t.get('nivel') == nivel_atual]
+            if len(tentativas_nivel) >= 3:  # Reduzido para 3 (43% de 7)
+                conquistas_proximas.append({
+                    'chave': 'renascido',
+                    'nome': self.sistema_conquistas.conquistas['renascido']['nome'],
+                    'progresso': min(1.0, len(tentativas_nivel) / 7),
+                    'meta': 7,
+                    'atual': len(tentativas_nivel)
+                })
+        
+        # Verificar se está próximo de "Herói de Atenas" (Complete todas as fases do jogo)
+        if not self.sistema_conquistas.conquistas['heroi_de_atenas']['desbloqueada']:
+            niveis_completados = set(t.get('nivel') for t in tentativas if t.get('vidas', 0) > 0)
+            total_niveis = 8  # Assumimos que há 8 níveis no total
+            if len(niveis_completados) >= 7:  # Se completou pelo menos metade
+                conquistas_proximas.append({
+                    'chave': 'heroi_de_atenas',
+                    'nome': self.sistema_conquistas.conquistas['heroi_de_atenas']['nome'],
+                    'progresso': min(1.0, len(niveis_completados) / total_niveis),
+                    'meta': total_niveis,
+                    'atual': len(niveis_completados)
+                })
+        
+        # Verificar se está próximo de "Velocista Olímpico" (Completar um nível em menos de 10s)
+        if not self.sistema_conquistas.conquistas['velocista_olimpico']['desbloqueada']:
+            # Filtrar tentativas bem-sucedidas
+            tentativas_sucesso = [t for t in tentativas if t.get('vidas', 0) > 0]
+            if tentativas_sucesso:
+                # Encontrar o melhor tempo
+                melhor_tempo = min(t.get('tempo', float('inf')) for t in tentativas_sucesso)
+                # Se o melhor tempo está abaixo de 15s, está próximo (mas acima de 10s)
+                if 10 < melhor_tempo < 15:
+                    # O progresso é inversamente proporcional ao tempo
+                    # 15s = 0% progresso, 10s = 100% progresso
+                    progresso = (15 - melhor_tempo) / 5
+                    conquistas_proximas.append({
+                        'chave': 'velocista_olimpico',
+                        'nome': self.sistema_conquistas.conquistas['velocista_olimpico']['nome'],
+                        'progresso': progresso,
+                        'meta': "10s",
+                        'atual': f"{melhor_tempo:.1f}s"
+                    })
+        
+        # Verificar se está próximo de "Coragem de Teseu" (Complete um nível sem perder vida)
+        if not self.sistema_conquistas.conquistas['coragem_de_teseu']['desbloqueada']:
+            # Procurar tentativas onde o jogador completou perdendo apenas 1 vida
+            tentativas_quase_perfeitas = [
+                t for t in tentativas 
+                if t.get('vidas', 0) == 2  # Completou com 2 vidas (perdeu 1)
+            ]
+            if tentativas_quase_perfeitas:
+                # Se tem pelo menos uma tentativa quase perfeita
+                conquistas_proximas.append({
+                    'chave': 'coragem_de_teseu',
+                    'nome': self.sistema_conquistas.conquistas['coragem_de_teseu']['nome'],
+                    'progresso': 0.7,  # Está bem próximo, só precisa não perder vida
+                    'meta': "3 vidas",
+                    'atual': "2 vidas"
+                })
+        
+        # Verificar se está próximo de "Despertar da Fúria" (Complete um nível após perder 2 vidas)
+        if not self.sistema_conquistas.conquistas['despertar_da_furia']['desbloqueada']:
+            # Ver quantas vezes o jogador completou níveis perdendo 1 vida
+            tentativas_perdendo_uma = [
+                t for t in tentativas 
+                if t.get('vidas', 0) == 2  # Completou com 2 vidas (perdeu 1)
+            ]
+            if tentativas_perdendo_uma:
+                conquistas_proximas.append({
+                    'chave': 'despertar_da_furia',
+                    'nome': self.sistema_conquistas.conquistas['despertar_da_furia']['nome'],
+                    'progresso': 0.5,  # Está na metade do caminho (perdendo 1 vida vs 2 vidas)
+                    'meta': "Perder 2 vidas",
+                    'atual': "Perdeu 1 vida"
+                })
+        
+        # Ordenar conquistas pelo progresso (maiores progressos primeiro)
+        conquistas_proximas.sort(key=lambda c: c['progresso'], reverse=True)
+        
+        return conquistas_proximas[:3]  # Retorna as 3 mais próximas para dar mais variedade
 
     def enviar_nivel_arduino(self):
         """Envia o nível atual para o Arduino."""
@@ -138,7 +393,7 @@ class JogoLabirinto:
                     if int(valor) == 1:
                         # Marca o nível como concluído
                         self.progresso = 1.0
-                
+                        
         except Exception as e:
             print(f"Erro ao processar dados: {e}")
 
@@ -155,6 +410,10 @@ class JogoLabirinto:
             audio_manager.play_voiced_dialogue("colisao_1vida")
         elif self.vidas == 2:
             audio_manager.play_voiced_dialogue("colisao_2vidas")
+        
+        # Ativa o efeito de flash na tela
+        self.flash_ativo = True
+        self.flash_inicio = time.time()
             
         print(f"Colisão! Progresso atual: {self.progresso:.2f}")
 
@@ -224,6 +483,12 @@ class JogoLabirinto:
         # Reset da flag de diálogo de fase
         self.mostrou_dialogo_fase_atual = False
         
+        # Atualiza o melhor tempo para o novo nível
+        self.melhor_tempo = self.obter_melhor_tempo()
+        
+        # Atualiza as conquistas próximas
+        self.conquistas_proximas = self.verificar_conquistas_proximas()
+        
         # Enviar novo nível para o Arduino se necessário
         if self.conexao_serial:
             self.enviar_nivel_arduino()
@@ -247,11 +512,349 @@ class JogoLabirinto:
             # Marca que o diálogo já foi mostrado para esta sessão de jogo
             self.mostrou_dialogo_fase_atual = True
 
+    def desenhar_timer_visual(self, tempo_atual):
+        """Desenha um timer visual animado"""
+        # Convertemos o tempo em segundos para um ângulo (círculo completo = 60 segundos)
+        segundos = int(tempo_atual) % 60
+        angulo_segundos = segundos * 6  # Cada segundo = 6 graus
+        
+        # Desenhamos o círculo de fundo
+        pygame.draw.circle(self.tela, self.timer_cor_fundo, self.timer_centro, self.timer_raio)
+        
+        # Desenhamos o arco que representa o tempo
+        rect_timer = pygame.Rect(
+            self.timer_centro[0] - self.timer_raio, 
+            self.timer_centro[1] - self.timer_raio,
+            self.timer_raio * 2, 
+            self.timer_raio * 2
+        )
+        # Começando em -90 graus (topo) e movendo no sentido horário
+        pygame.draw.arc(self.tela, self.timer_cor, rect_timer, 
+                         math.radians(-90), math.radians(angulo_segundos - 90),
+                         self.timer_espessura)
+        
+        # Desenhamos os marcadores de 15, 30, 45 segundos
+        for i in range(4):
+            angulo = math.radians(i * 90 - 90)  # -90, 0, 90, 180 graus
+            x1 = self.timer_centro[0] + (self.timer_raio - self.timer_espessura) * math.cos(angulo)
+            y1 = self.timer_centro[1] + (self.timer_raio - self.timer_espessura) * math.sin(angulo)
+            x2 = self.timer_centro[0] + (self.timer_raio + self.timer_espessura/2) * math.cos(angulo)
+            y2 = self.timer_centro[1] + (self.timer_raio + self.timer_espessura/2) * math.sin(angulo)
+            pygame.draw.line(self.tela, (200, 200, 200), (x1, y1), (x2, y2), 2)
+        
+        # Desenhamos o ponteiro dos segundos
+        angulo = math.radians(angulo_segundos - 90)
+        x_ponta = self.timer_centro[0] + (self.timer_raio - self.timer_espessura/2) * math.cos(angulo)
+        y_ponta = self.timer_centro[1] + (self.timer_raio - self.timer_espessura/2) * math.sin(angulo)
+        pygame.draw.line(self.tela, (255, 255, 255), self.timer_centro, (x_ponta, y_ponta), 3)
+        
+        # Texto do tempo no centro
+        minutos = int(tempo_atual) // 60
+        segundos = int(tempo_atual) % 60
+        tempo_texto = f"{minutos:02d}:{segundos:02d}"
+        fonte_tempo = pygame.font.SysFont("Arial", resize(24, eh_X=True), bold=True)
+        texto_surface = fonte_tempo.render(tempo_texto, True, (255, 255, 255))
+        texto_rect = texto_surface.get_rect(center=self.timer_centro)
+        self.tela.blit(texto_surface, texto_rect)
+
+    def desenhar_nome_nivel(self):
+        """Desenha o nome/título do nível atual na parte superior da tela"""
+        nome_nivel = self.nomes_niveis.get(self.nivel_atual, f"Nível {self.nivel_atual}")
+        
+        # Fundo para o título
+        titulo_fonte = pygame.font.SysFont("Arial", resize(42, eh_X=True), bold=True)
+        texto_surface = titulo_fonte.render(nome_nivel, True, (255, 255, 255))
+        texto_rect = texto_surface.get_rect(center=(LARGURA_TELA // 2, resize(50)))
+        
+        # Desenha uma faixa semitransparente atrás do texto
+        faixa_rect = texto_rect.copy()
+        faixa_rect.inflate_ip(resize(40, eh_X=True), resize(20))
+        faixa_surface = pygame.Surface((faixa_rect.width, faixa_rect.height), pygame.SRCALPHA)
+        pygame.draw.rect(faixa_surface, (0, 0, 0, 150), 
+                         pygame.Rect(0, 0, faixa_rect.width, faixa_rect.height),
+                         border_radius=resize(15))
+        self.tela.blit(faixa_surface, faixa_rect)
+        
+        # Adiciona borda dourada à faixa
+        pygame.draw.rect(self.tela, cor_com_escala_cinza(255, 215, 0), 
+                         faixa_rect, width=resize(2), border_radius=resize(15))
+        
+        # Desenha o texto do título
+        self.tela.blit(texto_surface, texto_rect)
+        
+        # Adiciona um pequeno ícone ou decoração relacionada ao nível
+        if self.nivel_atual in self.elementos_tematicos and len(self.elementos_tematicos[self.nivel_atual]) > 0:
+            icone, _ = self.elementos_tematicos[self.nivel_atual][0]  # Usa o primeiro elemento como ícone
+            icone_pequeno = pygame.transform.scale(icone, (resize(30, eh_X=True), resize(30)))
+            self.tela.blit(icone_pequeno, (faixa_rect.left + resize(10, eh_X=True), faixa_rect.centery - resize(15)))
+
+    def desenhar_elementos_tematicos(self):
+        """Desenha elementos decorativos temáticos do nível atual"""
+        if self.nivel_atual in self.elementos_tematicos:
+            for elemento, posicao in self.elementos_tematicos[self.nivel_atual]:
+                self.tela.blit(elemento, posicao)
+
+    def desenhar_melhor_tempo(self):
+        """Desenha informação de melhor tempo/recorde do jogador"""
+        if self.melhor_tempo is not None:
+            texto = f"Recorde: {self.melhor_tempo:.2f}s"
+            fonte_recorde = pygame.font.SysFont("Arial", resize(32, eh_X=True), bold=True)
+            texto_surface = fonte_recorde.render(texto, True, (255, 215, 0))  # Cor dourada
+            
+            # Posiciona abaixo do timer visual
+            x = self.timer_centro[0] - texto_surface.get_width()//2 - resize(25, eh_X=True)
+            y = self.timer_centro[1] + self.timer_raio + resize(20)
+            
+            self.tela.blit(texto_surface, (x, y))
+
+    def desenhar_indicadores_conquistas(self):
+        """Desenha indicadores de conquistas próximas de serem desbloqueadas"""
+        if not self.conquistas_proximas:
+            return
+            
+        # Dimensões e posicionamento - AUMENTADO largura para caber textos maiores
+        x = resize(20, eh_X=True)
+        y = ALTURA_TELA - resize(230)  # Um pouco mais alto para acomodar o painel maior
+        largura = resize(500, eh_X=True)  # Aumentado de 350 para 450
+        altura_painel = resize(50)  # Aumentado de 40 para 50
+        espacamento = resize(15)
+        
+        # Cria painel de fundo para os indicadores
+        altura_total = resize(45) + len(self.conquistas_proximas) * (altura_painel + espacamento)
+        painel_rect = pygame.Rect(x - resize(10, eh_X=True), y - resize(40), largura + resize(20, eh_X=True), altura_total)
+        
+        # Desenha painel com gradiente e transparência
+        painel_surf = pygame.Surface((painel_rect.width, painel_rect.height), pygame.SRCALPHA)
+        
+        # Gradiente do painel (da parte de cima até embaixo)
+        for i in range(painel_rect.height):
+            # Gradiente de cor escura a cor menos escura
+            alpha = 180  # Transparência geral do painel
+            fator = i / painel_rect.height
+            r = int(30 + 10 * fator)
+            g = int(30 + 10 * fator)
+            b = int(60 + 20 * fator)
+            pygame.draw.line(painel_surf, (r, g, b, alpha), 
+                            (0, i), (painel_rect.width, i))
+        
+        # Borda arredondada no painel
+        pygame.draw.rect(painel_surf, (0, 0, 0, 0), 
+                        pygame.Rect(0, 0, painel_rect.width, painel_rect.height), 
+                        border_radius=resize(15))
+        
+        # Aplica painel
+        self.tela.blit(painel_surf, painel_rect)
+        
+        # Borda dourada para o painel
+        pygame.draw.rect(self.tela, (255, 215, 0, 150), painel_rect, 
+                        width=resize(2), border_radius=resize(15))
+        
+        # Desenha título estilizado
+        fonte_titulo = pygame.font.SysFont("Arial", resize(26, eh_X=True), bold=True)
+        titulo_texto = "Conquistas Próximas"
+        titulo_surface = fonte_titulo.render(titulo_texto, True, (255, 215, 0))
+        titulo_rect = titulo_surface.get_rect(centerx=painel_rect.centerx, top=y - resize(35))
+        
+        # Adiciona um brilho sutil ao título
+        brilho_surf = pygame.Surface((titulo_surface.get_width() + resize(10, eh_X=True), 
+                                      titulo_surface.get_height() + resize(10)), pygame.SRCALPHA)
+        brilho_rect = brilho_surf.get_rect(center=titulo_rect.center)
+        pygame.draw.rect(brilho_surf, (255, 215, 0, 50), 
+                         pygame.Rect(0, 0, brilho_surf.get_width(), brilho_surf.get_height()), 
+                         border_radius=resize(10))
+        self.tela.blit(brilho_surf, brilho_rect)
+        self.tela.blit(titulo_surface, titulo_rect)
+        
+        # Desenha cada indicador de conquista
+        for i, conquista in enumerate(self.conquistas_proximas):
+            # Y atual para este indicador
+            y_atual = y + i * (altura_painel + espacamento)
+            
+            # Rect para o indicador completo (inclui ícone e barra)
+            indicador_rect = pygame.Rect(x, y_atual, largura, altura_painel)
+            
+            # Efeito pulsante baseado no progresso
+            pulso = math.sin(time.time() * 3) * 0.2 + 0.8
+            intensidade_pulso = int(40 * pulso * conquista['progresso'])
+            
+            # Fundo do indicador com efeito pulsante
+            fundo_cor = (50 + intensidade_pulso, 50 + intensidade_pulso, 70 + intensidade_pulso)
+            pygame.draw.rect(self.tela, fundo_cor, indicador_rect, border_radius=resize(10))
+            
+            # Carrega o ícone da conquista
+            icone = None
+            tamanho_icone = resize(32)
+            chave = conquista['chave']
+            
+            if chave in self.sistema_conquistas.conquistas:
+                caminho_icone = self.sistema_conquistas.conquistas[chave].get('icone')
+                if caminho_icone and os.path.exists(caminho_icone):
+                    try:
+                        # Carrega e redimensiona o ícone
+                        icone_original = pygame.image.load(caminho_icone).convert_alpha()
+                        icone = pygame.transform.scale(icone_original, (tamanho_icone, tamanho_icone))
+                    except Exception as e:
+                        print(f"Erro ao carregar ícone de conquista: {e}")
+            
+            # Desenha o ícone
+            if icone:
+                icone_rect = icone.get_rect(midleft=(x + resize(5, eh_X=True), indicador_rect.centery))
+                self.tela.blit(icone, icone_rect)
+            else:
+                # Círculo como fallback se não conseguir carregar o ícone
+                pygame.draw.circle(self.tela, (150, 150, 150), 
+                                  (x + resize(16, eh_X=True), indicador_rect.centery), 
+                                  tamanho_icone // 2)
+            
+            # Posição inicial da barra (após o ícone)
+            x_barra = x + tamanho_icone + resize(15, eh_X=True)  # Aumentado o espaçamento
+            largura_barra = largura - tamanho_icone - resize(25, eh_X=True)  # Ajustado para o novo tamanho
+  
+            
+            # Barra de fundo
+            pygame.draw.rect(self.tela, (30, 30, 30), 
+                            pygame.Rect(x_barra, y_atual + resize(5), largura_barra, altura_painel - resize(10)), 
+                            border_radius=resize(7))
+            
+            # Barra de progresso preenchida com gradiente
+            largura_preenchida = int(largura_barra * conquista['progresso'])
+            if largura_preenchida > 0:
+                barra_surf = pygame.Surface((largura_preenchida, altura_painel - resize(10)), pygame.SRCALPHA)
+                
+                # Cria um gradiente horizontal
+                for px in range(largura_preenchida):
+                    # Varia de azul para dourado baseado no progresso
+                    fator = px / largura_preenchida
+                    r = int(100 + fator * 155)
+                    g = int(150 + fator * 65)
+                    b = int(255 - fator * 200)
+                    pygame.draw.line(barra_surf, (r, g, b), 
+                                    (px, 0), (px, altura_painel - resize(10)))
+                
+                # Aplica a barra com cantos arredondados
+                self.tela.blit(barra_surf, (x_barra, y_atual + resize(5)))
+            
+            # Borda da barra
+            pygame.draw.rect(self.tela, (200, 200, 200), 
+                            pygame.Rect(x_barra, y_atual + resize(5), largura_barra, altura_painel - resize(10)), 
+                            width=resize(1), border_radius=resize(7))
+            
+            # Texto com nome da conquista e progresso
+                        # Texto com nome da conquista e progresso - Reduzido o tamanho da fonte para caber melhor
+            fonte_conquista = pygame.font.SysFont("Arial", resize(16, eh_X=True), bold=True)  # Reduzido de 18 para 16
+            
+            # Limitando o comprimento do texto para garantir que caiba
+            nome_conquista = conquista['nome']
+            if len(nome_conquista) > 15:  # Se o nome for muito longo
+                texto_conquista = f"{nome_conquista[:15]}... ({conquista['atual']}/{conquista['meta']})"
+            else:
+                texto_conquista = f"{nome_conquista} ({conquista['atual']}/{conquista['meta']})"
+            
+            # Cor do texto varia com o progresso
+            if conquista['progresso'] >= 0.75:  # Próximo de completar
+                cor_texto = (255, 255, 150)  # Amarelo claro
+            else:
+                cor_texto = (255, 255, 255)  # Branco
+                
+            texto_surface = fonte_conquista.render(texto_conquista, True, cor_texto)
+            texto_rect = texto_surface.get_rect(midleft=(x_barra + resize(10, eh_X=True), indicador_rect.centery))
+            self.tela.blit(texto_surface, texto_rect)
+            
+            # Desenha a porcentagem no final da barra
+            porcentagem = f"{int(conquista['progresso']*100)}%"
+            fonte_percent = pygame.font.SysFont("Arial", resize(16, eh_X=True), bold=True)
+            percent_surf = fonte_percent.render(porcentagem, True, (255, 255, 255))
+            percent_rect = percent_surf.get_rect(midright=(x_barra + largura_barra - resize(10, eh_X=True), 
+                                                         indicador_rect.centery))
+            
+            # Garante que a porcentagem não sobreponha o título da conquista
+            if percent_rect.left < texto_rect.right + resize(10, eh_X=True):
+                percent_rect.left = texto_rect.right + resize(10, eh_X=True)
+                
+            self.tela.blit(percent_surf, percent_rect)
+            
+            # Adiciona brilho aos indicadores próximos de completar
+            if conquista['progresso'] >= 0.9:  # Muito próximo de completar
+                tempo = time.time()
+                # Efeito de brilho pulsante
+                intensidade = (math.sin(tempo * 4) + 1) / 2  # Varia de 0 a 1
+                brilho_cor = (255, 255, 100, int(80 * intensidade))
+                
+                # Borda brilhante
+                pygame.draw.rect(self.tela, brilho_cor, indicador_rect, 
+                                width=resize(2), border_radius=resize(10))
+
+    def desenhar_efeito_colisao(self):
+        """Desenha o efeito de flash quando ocorre uma colisão"""
+        if not self.flash_ativo:
+            return
+            
+        tempo_atual = time.time()
+        tempo_passado = tempo_atual - self.flash_inicio
+        
+        if tempo_passado > self.flash_duracao:
+            self.flash_ativo = False
+            return
+            
+        # A opacidade diminui com o tempo
+        opacidade = int(255 * (1 - tempo_passado / self.flash_duracao))
+        cor_flash = (self.flash_cor[0], self.flash_cor[1], self.flash_cor[2], opacidade)
+        
+        # Cria uma superfície para o flash
+        flash_surface = pygame.Surface((LARGURA_TELA, ALTURA_TELA), pygame.SRCALPHA)
+        flash_surface.fill(cor_flash)
+        
+        # Aplica o flash na tela
+        self.tela.blit(flash_surface, (0, 0))
+
+    def desenhar_controle_audio(self):
+        """Desenha o botão de controle de áudio (mute/unmute)"""
+        import constants
+        
+        # Posição do botão de áudio
+        x = resize(20, eh_X=True)
+        y = resize(20)
+        tamanho = resize(40)
+        
+        # Rect para detectar clique
+        rect_audio = pygame.Rect(x, y, tamanho, tamanho)
+        
+        # Decide qual ícone mostrar
+        if constants.SOM_LIGADO:
+            icone = self.icone_som_ligado
+        else:
+            icone = self.icone_som_desligado
+        
+        # Desenha o ícone
+        self.tela.blit(icone, rect_audio)
+        
+        # Verifica clique no botão de áudio
+        pos_mouse = pygame.mouse.get_pos()
+        if rect_audio.collidepoint(pos_mouse):
+            # Destaca o botão quando o mouse está sobre ele
+            pygame.draw.rect(self.tela, (255, 255, 255), rect_audio, width=1, border_radius=resize(5))
+            
+            # Verifica clique
+            for event in pygame.event.get(pygame.MOUSEBUTTONDOWN):
+                if event.button == 1 and rect_audio.collidepoint(event.pos):  # Clique esquerdo
+                    constants.SOM_LIGADO = not constants.SOM_LIGADO
+                    from utils.audio_manager import audio_manager
+                    audio_manager.som_ligado = constants.SOM_LIGADO
+                    
+                    # Reproduz um som para confirmar que o sistema de áudio funciona
+                    if constants.SOM_LIGADO:
+                        audio_manager.play_sound("hover")
+        
+        return rect_audio
+
     def loop_principal(self, pular_dialogo=False):
         """Loop principal do jogo."""
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
         info_x = resize(200, eh_X=True)
         info_y = resize(300)
+        
+        # Efeito de transição ao iniciar
+        TransitionEffect.fade_in(tela, velocidade=8)
         
         # Antes de iniciar o loop principal, mostramos o diálogo da fase
         nome_cena = f"fase_{self.nivel_atual}"
@@ -260,9 +863,6 @@ class JogoLabirinto:
             self.gerenciador_dialogos.executar(nome_cena)
             from utils.user_data import marcar_dialogo_como_visto
             marcar_dialogo_como_visto(self.usuario, nome_cena)
-        else:
-            # Pula o diálogo pois estamos repetindo o nível
-            pass
         
         # Reinicia o timer após o diálogo (importante!)
         self.inicio_tempo = time.time()
@@ -278,15 +878,23 @@ class JogoLabirinto:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.jogo_ativo = False
+                        # Efeito de transição ao sair
+                        TransitionEffect.fade_out(tela, velocidade=8)
                         return
 
             self.atualizar_labirinto()
 
             # Desenho de fundo
-            if background_img:
-                self.tela.blit(background_img, (0, 0))
+            if dialogo_dentro_img:
+                self.tela.blit(dialogo_dentro_img, (0, 0))
             else:
                 self.tela.fill(AZUL_CLARO)
+                
+            # Desenha elementos temáticos (decorações conforme o tema)
+            self.desenhar_elementos_tematicos()
+                
+            # Desenha o nome/título do nível
+            self.desenhar_nome_nivel()
 
             # BOTÃO VOLTAR
             clicou_voltar, _ = desenhar_botao(
@@ -307,12 +915,16 @@ class JogoLabirinto:
                 self.jogo_ativo = False
                 from utils.audio_manager import audio_manager
                 audio_manager.stop_voiced_dialogue();
+                # Efeito de transição ao sair
+                TransitionEffect.fade_out(tela, velocidade=8)
                 return
 
             # Se acabou as vidas
             if self.vidas <= 0:
                 tempo_total = time.time() - self.inicio_tempo
                 self.salvar_progresso(tempo_total, falhou=True)
+                # Efeito de transição antes de mostrar tela de falha
+                TransitionEffect.fade_out(tela, velocidade=10)
                 self.jogo_ativo, pular_dialogo = tela_falhou(tela, self.sistema_conquistas)
                 
                 # Se decidiu continuar, reseta o nível e mostra o diálogo novamente
@@ -326,22 +938,20 @@ class JogoLabirinto:
                 tempo_total = time.time() - self.inicio_tempo
                     
                 if self.nivel_atual >= 8:
-                    # Mostrar diálogo de conclusão (vitória)
+                    TransitionEffect.fade_out(tela, velocidade=10)
                     self.gerenciador_dialogos.executar("vitoria", efeito_sonoro="success")
                     self.salvar_progresso(tempo_total)
-                    # Garantir que as conquistas sejam salvas explicitamente
                     self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
-                    # Mostrar tela de conclusão do jogo
                     tela_conclusao(tela, self.sistema_conquistas)
                     self.resetar_nivel()
                     return
                 else:
                     self.salvar_progresso(tempo_total)
-                    # Garantir que as conquistas sejam salvas explicitamente
                     self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
-                    # Avança para o próximo nível
                     proximo_nivel = self.nivel_atual + 1
                     
+                    # Efeito de transição
+                    TransitionEffect.fade_out(tela, velocidade=10)
                     # Mostra tela de conclusão do nível atual
                     continuar_jogando, repetir_nivel, pular_dialogo = tela_conclusao_nivel(tela, self.nivel_atual, tempo_total, self.sistema_conquistas)
                     
@@ -363,22 +973,19 @@ class JogoLabirinto:
             desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
             desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(60))
             desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(120))
-            desenhar_texto(f"Tempo: {int(time.time() - self.inicio_tempo)} s", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(180))
+            
+            tempo_atual = time.time() - self.inicio_tempo
+            self.desenhar_timer_visual(tempo_atual)
 
-            cor_barra_fundo = cor_com_escala_cinza(50, 50, 50)
-            cor_barra_frente = cor_com_escala_cinza(0, 200, 0)
-            desenhar_barra_progresso(
-                self.tela,
-                x=info_x,
-                y=info_y + resize(241),
-                largura=resize(400, eh_X=True),
-                altura=resize(40),
-                progresso=self.progresso,
-                cor_fundo=cor_barra_fundo,
-                cor_barra=cor_barra_frente,
-                cor_outline=cor_com_escala_cinza(255, 255, 255),
-                border_radius=resize(10)
-            )
+            self.desenhar_melhor_tempo()
+            
+            self.desenhar_indicadores_conquistas()
+            
+            self.desenhar_controle_audio()
+            
+            self.desenhar_efeito_colisao()
+            
+            self.sistema_conquistas.desenhar_notificacao(self.tela)
             
             import constants
             if constants.ESCALA_CINZA:

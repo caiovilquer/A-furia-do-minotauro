@@ -99,7 +99,7 @@ class GerenciadorDialogos:
                 imagem = pygame.transform.scale(imagem, tamanho)
                 
                 # Define a posição do personagem (centralizado à direita da tela)
-                personagem_rect = imagem.get_rect(center=(LARGURA_TELA - resize(500, eh_X=True), ALTURA_TELA - resize(400)))
+                personagem_rect = imagem.get_rect(center=(LARGURA_TELA - resize(300, eh_X=True), ALTURA_TELA - resize(400)))
                 
                 # Armazena o personagem
                 self.personagens[nome] = {

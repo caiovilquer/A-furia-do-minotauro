@@ -14,15 +14,15 @@ def desenhar_colunas_gregas(superficie, rect, cor=(200, 160, 60)):
     """Desenha elementos decorativos no estilo colunas gregas"""
     x, y, largura, altura = rect
     
-    # Desenhar topo da coluna (capitel)
+    # Capitel (topo da coluna)
     pygame.draw.rect(superficie, cor, (x, y, largura, altura * 0.08), 0, 3)
     pygame.draw.rect(superficie, cor, (x, y + altura * 0.08, largura, altura * 0.04), 0)
     
-    # Desenhar base da coluna
+    # Base da coluna
     pygame.draw.rect(superficie, cor, (x, y + altura * 0.92, largura, altura * 0.08), 0)
     pygame.draw.rect(superficie, cor, (x, y + altura * 0.88, largura, altura * 0.04), 0)
     
-    # Desenhar ranhuras verticais
+    # Ranhuras verticais
     num_ranhuras = 5
     ranhura_largura = largura / (num_ranhuras * 2 - 1)
     for i in range(num_ranhuras):
@@ -60,48 +60,33 @@ class GraficoBase:
         self.velocidade_animacao = 0.03
         self.animacao_completa = False
         
-        # Ajustar margens para garantir que os rótulos dos eixos estejam visíveis
-        self.margem_inferior_extra = 20  # Pixels extras para acomodar rótulos do eixo X
-        self.margem_direita_extra = 10   # Pixels extras para acomodar rótulos do eixo Y
+        self.margem_inferior_extra = 20
+        self.margem_direita_extra = 10
         
     def _desenhar_base(self):
         """Desenha a base do gráfico com fundo, borda e título"""
-        # Desenhar fundo com transparência
         pygame.draw.rect(
             self.superficie, 
             self.cor_fundo, 
             (0, 0, self.tamanho[0], self.tamanho[1]), 
             0,
-            10  # Border radius
+            10
         )
-        
-        # Adicionar elementos decorativos nas bordas (estilo colunas gregas)
-        largura_coluna = 20
-        # desenhar_colunas_gregas(
-        #     self.superficie,
-        #     (5, 5, largura_coluna, self.tamanho[1] - 10),
-        #     self.cor_borda
-        # )
-        # desenhar_colunas_gregas(
-        #     self.superficie,
-        #     (self.tamanho[0] - largura_coluna - 5, 5, largura_coluna, self.tamanho[1] - 10),
-        #     self.cor_borda
-        # )
         
         # Desenhar borda
         pygame.draw.rect(
             self.superficie, 
             self.cor_borda, 
             (0, 0, self.tamanho[0], self.tamanho[1]), 
-            3,  # Espessura da borda
-            10  # Border radius
+            3,
+            10
         )
         
-        # Desenhar título com estilo grego
+        # Título com estilo grego
         titulo_surface = self.fonte_titulo.render(self.titulo, True, DOURADO_ANTIGO)
         titulo_rect = titulo_surface.get_rect(midtop=(self.tamanho[0] // 2, 10))
         
-        # Fundo do título no estilo mitológico
+        # Fundo estilizado para o título
         pygame.draw.rect(
             self.superficie,
             PRETO_TAURINO,
@@ -111,7 +96,7 @@ class GraficoBase:
             5
         )
         
-        # Adicionar borda dourada ao título
+        # Borda dourada do título
         pygame.draw.rect(
             self.superficie,
             DOURADO_ANTIGO,
@@ -139,7 +124,7 @@ class GraficoBase:
     
     def desenhar(self, superficie_destino):
         """Método a ser sobrescrito pelas subclasses"""
-        self.superficie.fill((0, 0, 0, 0))  # Limpar com transparência
+        self.superficie.fill((0, 0, 0, 0))
         self._desenhar_base()
         superficie_destino.blit(self.superficie, self.pos)
 
@@ -157,7 +142,7 @@ class GraficoLinha(GraficoBase):
         campo_x: str = "indice",
         campo_y: str = "tempo",
         rotulos_x: Optional[List[str]] = None,
-        is_discrete_y: bool = False,  # Novo parâmetro
+        is_discrete_y: bool = False,
         **kwargs
     ):
         super().__init__(pos, tamanho, titulo, **kwargs)
@@ -167,12 +152,11 @@ class GraficoLinha(GraficoBase):
         self.campo_x = campo_x
         self.campo_y = campo_y
         self.rotulos_x = rotulos_x
-        self.is_discrete_y = is_discrete_y # Armazena o novo parâmetro
+        self.is_discrete_y = is_discrete_y
         
-        # Margens para desenho - aumentando a margem inferior para evitar corte dos rótulos
         self.margem_x = 90
         self.margem_y = 60
-        self.espaco_rotulos_x = 35  # Espaço extra para os rótulos do eixo X
+        self.espaco_rotulos_x = 35
         self.area_grafico = (
             self.margem_x,
             self.margem_y,
@@ -180,7 +164,6 @@ class GraficoLinha(GraficoBase):
             self.tamanho[1] - self.margem_y * 1.5 - self.espaco_rotulos_x
         )
         
-        # Calcular valores máximos e mínimos
         self._calcular_limites()
         
     def _calcular_limites(self):
@@ -196,15 +179,14 @@ class GraficoLinha(GraficoBase):
         if self.is_discrete_y:
             self.min_y = math.floor(self.min_y)
             self.max_y = math.ceil(self.max_y)
-            if self.max_y == self.min_y: # Caso todos os valores sejam iguais
+            if self.max_y == self.min_y:
                 self.max_y = self.min_y + 1 
-            if self.max_y == 0: # Caso todos os valores sejam 0
-                self.max_y = 1 # Mostrar pelo menos até 1
+            if self.max_y == 0:
+                self.max_y = 1
         else:
-            # Ajustar para ter um pouco de espaço nas bordas
             range_y = self.max_y - self.min_y
             if range_y == 0:
-                range_y = 1  # Evitar divisão por zero
+                range_y = 1
             self.min_y = max(0, self.min_y - range_y * 0.1)
             self.max_y = self.max_y + range_y * 0.1
         
@@ -235,7 +217,7 @@ class GraficoLinha(GraficoBase):
             x = self.area_grafico[0] + (self.area_grafico[2] * i / num_linhas_x)
             pygame.draw.line(
                 self.superficie,
-                (100, 100, 100, 50),  # Cinza semi-transparente
+                (100, 100, 100, 50),
                 (x, self.area_grafico[1]),
                 (x, self.area_grafico[1] + self.area_grafico[3]),
                 1
@@ -256,7 +238,7 @@ class GraficoLinha(GraficoBase):
             y = self.area_grafico[1] + (self.area_grafico[3] * i / num_linhas_y)
             pygame.draw.line(
                 self.superficie,
-                (100, 100, 100, 50),  # Cinza semi-transparente
+                (100, 100, 100, 50),
                 (self.area_grafico[0], y),
                 (self.area_grafico[0] + self.area_grafico[2], y),
                 1
@@ -265,13 +247,11 @@ class GraficoLinha(GraficoBase):
         # Rotular eixo Y (valores)
         num_marcas_y = 5
         if self.is_discrete_y:
-            # Ajustar número de marcas para valores discretos para tentar ter rótulos inteiros
             if self.max_y - self.min_y > 0 and self.max_y - self.min_y <= 5:
                 num_marcas_y = int(self.max_y - self.min_y)
-            elif self.max_y - self.min_y == 0: # Caso min_y e max_y sejam iguais (e.g. todos 0)
-                 num_marcas_y = 1 # Mostrar pelo menos uma marca
+            elif self.max_y - self.min_y == 0:
+                 num_marcas_y = 1
             if num_marcas_y == 0: num_marcas_y = 1
-
 
         for i in range(num_marcas_y + 1):
             y_valor_ratio = i / num_marcas_y if num_marcas_y > 0 else 0
@@ -297,12 +277,10 @@ class GraficoLinha(GraficoBase):
         
         # Rotular eixo X (índices ou rótulos personalizados)
         if len(self.dados) > 1:
-            # Limitar número de rótulos baseado no espaço disponível
-            espaco_min_rotulos = 80  # Espaço mínimo entre rótulos em pixels
+            espaco_min_rotulos = 80
             num_rotulos_possiveis = max(2, int(self.area_grafico[2] / espaco_min_rotulos))
             num_indices = min(len(self.dados), num_rotulos_possiveis)
             
-            # Selecionar pontos uniformemente distribuídos para rotular
             indices_para_mostrar = []
             if num_indices <= 2:
                 indices_para_mostrar = [0, len(self.dados) - 1] if len(self.dados) > 1 else [0]
@@ -323,21 +301,19 @@ class GraficoLinha(GraficoBase):
                     2
                 )
                 
-                # Texto do índice ou rótulo
                 if self.rotulos_x and idx < len(self.rotulos_x):
                     texto = str(self.rotulos_x[idx])
-                    # Truncar textos muito longos para evitar sobreposição
                     if len(texto) > 10:
                         texto = texto[:8] + "..."
+
                 else:
-                    texto = str(idx + 1)  # +1 para base 1 (mais natural para usuários)
+                    texto = str(idx + 1)
                 
                 texto_surf = self.fonte_eixos.render(texto, True, self.cor_texto)
                 texto_rect = texto_surf.get_rect(
                     midtop=(x_pos, self.area_grafico[1] + self.area_grafico[3] + 10)
                 )
                 
-                # Garantir que o texto não ultrapasse as bordas do gráfico
                 if texto_rect.left < 0:
                     texto_rect.left = 0
                 if texto_rect.right > self.tamanho[0]:
@@ -347,7 +323,7 @@ class GraficoLinha(GraficoBase):
     
     def desenhar(self, superficie_destino):
         """Desenha o gráfico de linha com animação"""
-        self.superficie.fill((0, 0, 0, 0))  # Limpar com transparência
+        self.superficie.fill((0, 0, 0, 0))
         self._desenhar_base()
         self._desenhar_eixos()
         
@@ -366,17 +342,17 @@ class GraficoLinha(GraficoBase):
             
             # Desenhar linha contínua
             if len(pontos) >= 2:
-                # Desenhar sombra da linha para efeito de profundidade
+                # Sombra da linha
                 pontos_sombra = [(p[0]+3, p[1]+3) for p in pontos]
                 pygame.draw.lines(
                     self.superficie,
-                    (0, 0, 0, 120),  # Sombra semi-transparente
+                    (0, 0, 0, 120),
                     False,
                     pontos_sombra,
                     self.grossura_linha
                 )
                 
-                # Desenhar linha principal
+                # Linha principal
                 pygame.draw.lines(
                     self.superficie,
                     self.cor_linha,
@@ -385,7 +361,7 @@ class GraficoLinha(GraficoBase):
                     self.grossura_linha
                 )
                 
-                # Adicionar pontos de destaque com decoração grega
+                # Pontos de destaque
                 for ponto in pontos:
                     # Círculo externo (dourado)
                     pygame.draw.circle(
@@ -409,9 +385,8 @@ class GraficoLinha(GraficoBase):
                         self.grossura_linha - 1
                     )
         
-        # Desenhar visualização "alvo" se a animação não estiver completa
+        # Linha pontilhada de referência se a animação não estiver completa
         if not self.animacao_completa and len(self.dados) > 1:
-            # Desenhar linha pontilhada para mostrar o destino
             pontos = []
             for i in range(len(self.dados)):
                 x_pixel, y_pixel = self._transformar_ponto(
@@ -419,15 +394,14 @@ class GraficoLinha(GraficoBase):
                 )
                 pontos.append((x_pixel, y_pixel))
             
-            # Desenhar linha pontilhada como referência
             if len(pontos) >= 2:
                 for i in range(1, len(pontos)):
                     pygame.draw.line(
                         self.superficie,
-                        (self.cor_linha[0], self.cor_linha[1], self.cor_linha[2], 50),  # Semi-transparente
+                        (self.cor_linha[0], self.cor_linha[1], self.cor_linha[2], 50),
                         pontos[i-1],
                         pontos[i],
-                        1  # Linha fina
+                        1
                     )
         
         superficie_destino.blit(self.superficie, self.pos)
@@ -444,8 +418,8 @@ class GraficoBarras(GraficoBase):
         cor_barras: List[Tuple[int, int, int]] = None,
         campo_valor: str = "tempo",
         campo_rotulo: str = "nivel",
-        espaco_barras: float = 0.2,  # Espaço entre barras como fração da largura da barra
-        is_discrete_y: bool = False,  # Novo parâmetro
+        espaco_barras: float = 0.2,
+        is_discrete_y: bool = False,
         **kwargs
     ):
         super().__init__(pos, tamanho, titulo, **kwargs)
@@ -453,21 +427,21 @@ class GraficoBarras(GraficoBase):
         self.campo_valor = campo_valor
         self.campo_rotulo = campo_rotulo
         self.espaco_barras = espaco_barras
-        self.is_discrete_y = is_discrete_y # Armazena o novo parâmetro
+        self.is_discrete_y = is_discrete_y
         
-        # Determinar cores para as barras
+        # Cores para as barras
         self.cor_barras = cor_barras or [
-            VERMELHO_MINOTAURO,   # Vermelho temático
-            DOURADO_ANTIGO,       # Dourado antigo
-            TERRACOTA,            # Terracota
-            MARROM_LABIRINTO,     # Marrom temático
-            (150, 30, 30)         # Vermelho escuro
+            VERMELHO_MINOTAURO,
+            DOURADO_ANTIGO,
+            TERRACOTA,
+            MARROM_LABIRINTO,
+            (150, 30, 30)
         ]
         
-        # Margens para desenho
+        # Margens e áreas
         self.margem_x = 90
         self.margem_y = 60
-        self.espaco_rotulos_x = 35  # Espaço extra para os rótulos do eixo X
+        self.espaco_rotulos_x = 35
         self.area_grafico = (
             self.margem_x,
             self.margem_y,
@@ -475,8 +449,6 @@ class GraficoBarras(GraficoBase):
             self.tamanho[1] - self.margem_y * 1.5 - self.espaco_rotulos_x
         )
         
-        
-        # Calcular valores máximos
         self._calcular_limites()
         
     def _calcular_limites(self):
@@ -489,10 +461,9 @@ class GraficoBarras(GraficoBase):
         
         if self.is_discrete_y:
             self.max_y = math.ceil(self.max_y)
-            if self.max_y == 0: # Caso todos os valores sejam 0
-                self.max_y = 1 # Mostrar pelo menos até 1
+            if self.max_y == 0:
+                self.max_y = 1
         else:
-            # Ajustar para ter um pouco de espaço nas bordas
             self.max_y = self.max_y * 1.1
         
     def _calcular_largura_barra(self):
@@ -500,9 +471,8 @@ class GraficoBarras(GraficoBase):
         num_barras = len(self.dados)
         espaco_total = self.area_grafico[2]
         
-        # Ajustar para espaços entre barras
         if num_barras <= 1:
-            return espaco_total * 0.5  # Uma barra única centralizada
+            return espaco_total * 0.5
             
         largura_com_espaco = espaco_total / num_barras
         return largura_com_espaco * (1 - self.espaco_barras)
@@ -527,21 +497,21 @@ class GraficoBarras(GraficoBase):
             2
         )
         
-        # Linhas de grade Y (horizontais)
+        # Linhas de grade Y
         num_linhas_y = 5
         for i in range(1, num_linhas_y):
             y = self.area_grafico[1] + (self.area_grafico[3] * i / num_linhas_y)
             pygame.draw.line(
                 self.superficie,
-                (100, 100, 100, 50),  # Cinza semi-transparente
+                (100, 100, 100, 50),
                 (self.area_grafico[0], y),
                 (self.area_grafico[0] + self.area_grafico[2], y),
                 1
             )
         
-        # Rotular eixo Y (valores)
+        # Rotular eixo Y
         num_marcas_y = 5
-        min_y_display = 0 # Para barras, o mínimo é sempre 0
+        min_y_display = 0
         
         if self.is_discrete_y:
             if self.max_y - min_y_display > 0 and self.max_y - min_y_display <= 5:
@@ -555,7 +525,6 @@ class GraficoBarras(GraficoBase):
             y_valor = min_y_display + (self.max_y - min_y_display) * y_valor_ratio
             y_pos = self.area_grafico[1] + self.area_grafico[3] * (1 - y_valor_ratio)
             
-            # Marca no eixo
             pygame.draw.line(
                 self.superficie,
                 self.cor_borda,
@@ -564,7 +533,6 @@ class GraficoBarras(GraficoBase):
                 2
             )
             
-            # Texto do valor
             texto = f"{y_valor:.0f}" if self.is_discrete_y else f"{y_valor:.1f}"
             texto_surf = self.fonte_eixos.render(texto, True, self.cor_texto)
             texto_rect = texto_surf.get_rect(
@@ -574,7 +542,7 @@ class GraficoBarras(GraficoBase):
     
     def desenhar(self, superficie_destino):
         """Desenha o gráfico de barras com animação"""
-        self.superficie.fill((0, 0, 0, 0))  # Limpar com transparência
+        self.superficie.fill((0, 0, 0, 0))
         self._desenhar_base()
         self._desenhar_eixos()
         
@@ -605,24 +573,23 @@ class GraficoBarras(GraficoBase):
             cor_idx = i % len(self.cor_barras)
             cor = self.cor_barras[cor_idx]
             
-            # Desenhar sombra da barra para efeito 3D
+            # Sombra da barra para efeito 3D
             pygame.draw.rect(
                 self.superficie,
-                (30, 30, 30, 150),  # Sombra semi-transparente
+                (30, 30, 30, 150),
                 (
                     x_barra + 3,
                     self.area_grafico[1] + self.area_grafico[3] - altura_atual + 3,
                     largura_barra,
                     altura_atual
                 ),
-                0,  # Preenchido
-                5   # Border radius
+                0,
+                5
             )
             
-            # Desenhar barra principal com gradiente de cor
+            # Barra principal
             y_topo = self.area_grafico[1] + self.area_grafico[3] - altura_atual
             
-            # Desenhar retângulo principal
             pygame.draw.rect(
                 self.superficie,
                 cor,
@@ -632,39 +599,39 @@ class GraficoBarras(GraficoBase):
                     largura_barra,
                     altura_atual
                 ),
-                0,  # Preenchido
-                5   # Border radius
+                0,
+                5
             )
             
-            # Adicionar detalhes de estilo grego (ranhuras horizontais)
+            # Detalhes de estilo grego (ranhuras horizontais)
             num_ranhuras = min(int(altura_atual / 10), 8)
             if num_ranhuras > 2:
                 for j in range(num_ranhuras):
                     y_ranhura = y_topo + j * (altura_atual / num_ranhuras)
                     pygame.draw.line(
                         self.superficie,
-                        (255, 255, 255, 40),  # Branco semi-transparente
+                        (255, 255, 255, 40),
                         (x_barra + 2, y_ranhura),
                         (x_barra + largura_barra - 2, y_ranhura),
                         1
                     )
             
-            # Desenhar contorno da barra
+            # Contorno da barra
             pygame.draw.rect(
                 self.superficie,
-                DOURADO_ANTIGO,  # Contorno dourado
+                DOURADO_ANTIGO,
                 (
                     x_barra,
                     y_topo,
                     largura_barra,
                     altura_atual
                 ),
-                2,  # Espessura do contorno
-                5   # Border radius
+                2,
+                5
             )
             
-            # Desenhar valor na barra
-            if self.animacao_progresso > 0.5:  # Mostrar valores apenas depois que a barra já cresceu um pouco
+            # Valor na barra
+            if self.animacao_progresso > 0.5:
                 texto = f"{valor:.0f}" if self.is_discrete_y else f"{valor:.1f}"
                 texto_surf = self.fonte_eixos.render(texto, True, (255, 255, 255))
                 texto_rect = texto_surf.get_rect(
@@ -674,7 +641,7 @@ class GraficoBarras(GraficoBase):
                     )
                 )
                 
-                # Desenhar fundo para o texto (para melhorar legibilidade)
+                # Fundo para o texto
                 pygame.draw.rect(
                     self.superficie,
                     (0, 0, 0, 150),
@@ -686,7 +653,7 @@ class GraficoBarras(GraficoBase):
                 
                 self.superficie.blit(texto_surf, texto_rect)
             
-            # Desenhar rótulo abaixo da barra
+            # Rótulo abaixo da barra
             if self.campo_rotulo in dado:
                 rotulo = str(dado[self.campo_rotulo])
                 texto_surf = self.fonte_eixos.render(rotulo, True, self.cor_texto)

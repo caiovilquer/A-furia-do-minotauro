@@ -293,19 +293,12 @@ class TransitionEffect:
         overlay = pygame.Surface((largura, altura))
         overlay.fill((0, 0, 0))
         
-        # Capturamos a tela atual para preservá-la durante a animação
         tela_atual = tela.copy()
         
-        # Para um efeito mais suave, usando mais passos
         for alpha in range(0, 256, velocidade):
             overlay.set_alpha(alpha)
-            
-            # Redesenha a tela original
             tela.blit(tela_atual, (0, 0))
-            
-            # Aplica o efeito de escurecimento
             tela.blit(overlay, (0, 0))
-            
             pygame.display.update()
             pygame.time.delay(10)
             
@@ -316,14 +309,11 @@ class TransitionEffect:
         overlay = pygame.Surface((largura, altura))
         overlay.fill((0, 0, 0))
         
-        # Preparamos a tela base que aparecerá
         tela_base = tela.copy()
         
         for alpha in range(255, -1, -velocidade):
             overlay.set_alpha(alpha)
-            # Começamos com a tela base
             tela.blit(tela_base, (0, 0))
-            # Aplicamos o overlay com transparência decrescente
             tela.blit(overlay, (0, 0))
             pygame.display.update()
             pygame.time.delay(10)
@@ -334,22 +324,17 @@ class TransitionEffect:
         largura, altura = tela.get_size()
         tela_atual = tela.copy()
         
-        # Aceleração gradual para movimento mais natural
         aceleracao = 1.0
         posicao = 0
         
         while posicao < largura:
-            # Velocidade aumenta gradualmente
             velocidade_atual = velocidade * aceleracao
             posicao += velocidade_atual
             aceleracao += 0.05
             
-            # Limita a posição máxima
             posicao = min(posicao, largura)
             
-            # Desenha a tela atual deslizando para a esquerda
             tela.blit(tela_atual, (-posicao, 0))
-            # Desenha a nova tela chegando pela direita
             tela.blit(nova_tela, (largura-posicao, 0))
             pygame.display.update()
             pygame.time.delay(5)
@@ -360,22 +345,17 @@ class TransitionEffect:
         largura, altura = tela.get_size()
         tela_atual = tela.copy()
         
-        # Aceleração gradual para movimento mais natural
         aceleracao = 1.0
         posicao = 0
         
         while posicao < largura:
-            # Velocidade aumenta gradualmente
             velocidade_atual = velocidade * aceleracao
             posicao += velocidade_atual
             aceleracao += 0.05
             
-            # Limita a posição máxima
             posicao = min(posicao, largura)
             
-            # Desenha a tela atual deslizando para a direita
             tela.blit(tela_atual, (posicao, 0))
-            # Desenha a nova tela chegando pela esquerda
             tela.blit(nova_tela, (-largura+posicao, 0))
             pygame.display.update()
             pygame.time.delay(5)
@@ -387,25 +367,19 @@ class TransitionEffect:
         centro = (largura // 2, altura // 2)
         raio_max = int(math.sqrt(largura**2 + altura**2) / 2)
         
-        # Captura a tela atual
         tela_original = tela.copy()
         
-        # Para cada frame, reduzimos o raio do círculo
         for raio in range(raio_max, 0, -velocidade):
-            # Superfície para o efeito
             mascara = pygame.Surface((largura, altura), pygame.SRCALPHA)
             mascara.fill((0, 0, 0))
             
-            # Desenha um círculo transparente (a parte visível)
             pygame.draw.circle(mascara, (0, 0, 0, 0), centro, raio)
             
-            # Aplicar à tela
             tela.blit(tela_original, (0, 0))
             tela.blit(mascara, (0, 0))
             pygame.display.update()
             pygame.time.delay(5)
             
-        # Tela completamente preta no final
         tela.fill((0, 0, 0))
         pygame.display.update()
         
@@ -416,30 +390,23 @@ class TransitionEffect:
         centro = (largura // 2, altura // 2)
         raio_max = int(math.sqrt(largura**2 + altura**2) / 2)
         
-        # Captura a tela que será revelada
         tela_final = tela.copy()
         
-        # Começamos com a tela preta
         tela.fill((0, 0, 0))
         pygame.display.update()
         
-        # Para cada frame, aumentamos o raio do círculo
         for raio in range(0, raio_max + velocidade, velocidade):
-            # Superfície para o efeito
             mascara = pygame.Surface((largura, altura), pygame.SRCALPHA)
             mascara.fill((0, 0, 0))
             
-            # Desenha um círculo transparente (a parte visível)
             pygame.draw.circle(mascara, (0, 0, 0, 0), centro, raio)
             
-            # Aplicar à tela
             tela.fill((0, 0, 0))
             tela.blit(tela_final, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
             tela.blit(mascara, (0, 0))
             pygame.display.update()
             pygame.time.delay(5)
             
-        # Garantir que a tela final seja mostrada completamente
         tela.blit(tela_final, (0, 0))
         pygame.display.update()
 def resize(valor, eh_X = False):

@@ -19,10 +19,12 @@ def tela_escolha_usuario(tela):
     titulo_x = LARGURA_TELA//2 - resize(400, eh_X=True)
     titulo_y = resize(100)
 
-    y_inicial_botoes = resize(250)  # onde começam a listar os usuários
-    espacamento_botoes = resize(90) # espaçamento entre botões de usuários
+    y_inicial_botoes = resize(250)
+    espacamento_botoes = resize(90)
 
-    input_box = pygame.Rect(LARGURA_TELA//2 - resize(200, eh_X=True), y_inicial_botoes + len(lista_usuarios)*espacamento_botoes + resize(50), resize(400, eh_X=True), resize(60))
+    input_box = pygame.Rect(LARGURA_TELA//2 - resize(200, eh_X=True), 
+                           y_inicial_botoes + len(lista_usuarios)*espacamento_botoes + resize(50),
+                           resize(400, eh_X=True), resize(60))
 
     cor_ativo = cor_com_escala_cinza(200, 200, 200)
     cor_inativo = cor_com_escala_cinza(150, 150, 150)
@@ -48,7 +50,8 @@ def tela_escolha_usuario(tela):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto_sombra("Selecione um Usuário", fonte_titulo, COR_TITULO, tela, titulo_x-resize(100, eh_X=True), titulo_y)
+        desenhar_texto_sombra("Selecione um Usuário", fonte_titulo, COR_TITULO, 
+                             tela, titulo_x-resize(100, eh_X=True), titulo_y)
 
         # Lista de usuários
         y_offset = y_inicial_botoes
@@ -98,7 +101,9 @@ def tela_escolha_usuario(tela):
                     del usuarios_data[usr]
                 salvar_usuarios(usuarios_data)
                 lista_usuarios.remove(usr)
-                input_box = pygame.Rect(LARGURA_TELA//2 - resize(200, eh_X=True), y_inicial_botoes + len(lista_usuarios)*espacamento_botoes + resize(50), resize(400, eh_X=True), resize(60))
+                input_box = pygame.Rect(LARGURA_TELA//2 - resize(200, eh_X=True), 
+                                       y_inicial_botoes + len(lista_usuarios)*espacamento_botoes + resize(50), 
+                                       resize(400, eh_X=True), resize(60))
                 break
 
             y_offset += espacamento_botoes
@@ -119,7 +124,8 @@ def tela_escolha_usuario(tela):
             border_radius=resize(15)
         )
         if clicou_voltar:
-            return None  # Return None to indicate going back
+            return None
+            
         import constants
         if constants.ESCALA_CINZA:
             aplicar_filtro_cinza_superficie(tela)

@@ -15,8 +15,6 @@ def tela_falhou(tela, sistema_conquistas=None):
             pular_dialogo (bool): True para pular diálogo ao recomeçar o nível
     """
     from utils.audio_manager import audio_manager
-    
-    # Reproduz um áudio dublado de derrota quando a tela é exibida
     audio_manager.play_voiced_dialogue("perdeu")
     
     clock = pygame.time.Clock()
@@ -41,7 +39,8 @@ def tela_falhou(tela, sistema_conquistas=None):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto_sombra("Você perdeu todas as vidas!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        desenhar_texto_sombra("Você perdeu todas as vidas!", fonte_titulo, 
+                             COR_TITULO, tela, titulo_x, titulo_y)
 
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",

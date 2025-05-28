@@ -16,8 +16,6 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
             pular_dialogo (bool): True para pular diálogo ao repetir o nível
     """
     from utils.audio_manager import audio_manager
-    
-    # Reproduz um áudio dublado de vitória quando a tela é exibida
     audio_manager.play_voiced_dialogue("ganhou")
     
     clock = pygame.time.Clock()
@@ -36,14 +34,15 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return False, False, False  # Não continuar, não repetir, não pular diálogo
+                    return False, False, False
 
         if background_img:
             tela.blit(background_img, (0, 0))
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto_sombra(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        desenhar_texto_sombra(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", 
+                              fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
         clicou_rejogar, _ = desenhar_botao(
             texto="Rejogar Nível",
@@ -61,7 +60,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
         )
         if clicou_rejogar:
             audio_manager.stop_voiced_dialogue();
-            return True, True, True  # Continuar jogando, repetir nível, pular diálogo
+            return True, True, True
 
         clicou_avancar, _ = desenhar_botao(
             texto="Avançar Nível",
@@ -79,7 +78,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
         )
         if clicou_avancar:
             audio_manager.stop_voiced_dialogue();
-            return True, False, False  # Continuar jogando, avançar para próximo nível, não pular diálogo
+            return True, False, False
         
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
@@ -97,9 +96,8 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
         )
         if clicou_voltar:
             audio_manager.stop_voiced_dialogue();
-            return False, False, False  # Não continuar, não repetir, não pular diálogo
+            return False, False, False
         
-        # Garantir que as notificações de conquistas sejam exibidas
         if sistema_conquistas and sistema_conquistas.notificacao_ativa:
             sistema_conquistas.desenhar_notificacao(tela)
             

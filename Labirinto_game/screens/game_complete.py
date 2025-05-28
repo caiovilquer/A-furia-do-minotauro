@@ -30,7 +30,8 @@ def tela_conclusao(tela, sistema_conquistas):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto_sombra("Parabéns! Você concluiu todos os níveis!", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
+        desenhar_texto_sombra("Parabéns! Você concluiu todos os níveis!", 
+                             fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
@@ -50,6 +51,7 @@ def tela_conclusao(tela, sistema_conquistas):
             return
 
         sistema_conquistas.desenhar_notificacao(tela)
+        
         import constants
         if constants.ESCALA_CINZA:
             aplicar_filtro_cinza_superficie(tela)

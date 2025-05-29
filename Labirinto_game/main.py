@@ -19,6 +19,7 @@ from screens.achievements_screen import tela_conquistas
 from utils.user_data import carregar_usuarios, salvar_usuarios
 from screens.game_start_screen import tela_inicio_jogo
 from utils.audio_manager import audio_manager
+from screens.characters_screen import tela_personagens
 
 def main():
     """Função principal que inicia o jogo."""
@@ -113,7 +114,6 @@ def main():
             tela_conquistas(tela, usuario_escolhido)
         elif acao == "PERSONAGENS":
             TransitionEffect.fade_out(tela, velocidade=30)
-            from screens.characters_screen import tela_personagens
             tela_personagens(tela)
         else:
             pygame.quit()

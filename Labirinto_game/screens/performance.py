@@ -164,33 +164,35 @@ def tela_desempenho(tela, usuario):
 
         # Atualizar dados dos gráficos quando necessário
         if atualizar_graficos:
-            if aba_selecionada == 0:  # Tempo Médio por fase (todos os níveis)
-                # Obtém o tempo médio para cada nível completado com sucesso
-                dados_grafico_linha = []
+            if aba_selecionada == 0: 
+
+                dados_grafico_tempo_medio = []
                 for n in sorted(niveis_jogados):
                     tentativas_n = [t for t in tentativas if t["nivel"] == n and t["vidas"] > 0]
                     if tentativas_n:
                         tempo_medio = sum(t["tempo"] for t in tentativas_n) / len(tentativas_n)
-                        dados_grafico_linha.append({"nivel": n, "tempo": tempo_medio})
+                        dados_grafico_tempo_medio.append({
+                            "nivel": n, 
+                            "tempo": tempo_medio, 
+                            "rotulo": f"Nível {n}"
+                        })
                 
-                # Criar gráfico de linha para tempo médio por fase
-                grafico_linha = GraficoLinha(
+    
+                grafico_linha = GraficoBarras(
                     pos=(resize(100, eh_X=True), resize(240)),
                     tamanho=(LARGURA_TELA - resize(200, eh_X=True), resize(380)),
-                    dados=dados_grafico_linha,
+                    dados=dados_grafico_tempo_medio,
                     titulo="Tempo Médio por Fase (segundos)",
-                    cor_linha=VERMELHO_MINOTAURO,
-                    grossura_linha=4,
-                    campo_x="nivel",
-                    campo_y="tempo",
-                    rotulos_x=[f"Nível {d['nivel']}" for d in dados_grafico_linha],
+                    cor_barras=[VERMELHO_MINOTAURO, DOURADO_ANTIGO, TERRACOTA],
+                    campo_valor="tempo",
+                    campo_rotulo="rotulo",
                     fonte_titulo=fonte_titulo_grafico,
                     fonte_eixos=fonte_grafico,
-                    is_discrete_y=False # Tempo não é discreto
+                    is_discrete_y=False 
                 )
                 grafico_linha.reiniciar_animacao()
                 
-            elif aba_selecionada == 1:  # Tempo por tentativa em um nível específico (Linha)
+            elif aba_selecionada == 1:  
                 nivel_escolhido = niveis_jogados[indice_nivel_selecionado]
                 # Obtém todas as tentativas deste nível em ordem cronológica
                 tentativas_nivel = sorted(
@@ -209,7 +211,6 @@ def tela_desempenho(tela, usuario):
                         "rotulo": rotulo
                     })
                 
-                # Criar gráfico de linha para tempo em cada tentativa
                 grafico_tentativas = GraficoLinha(
                     pos=(resize(100, eh_X=True), resize(350)),
                     tamanho=(LARGURA_TELA - resize(200, eh_X=True), resize(300)), 
@@ -222,12 +223,11 @@ def tela_desempenho(tela, usuario):
                     rotulos_x=[d["rotulo"] for d in dados_grafico_tentativas],
                     fonte_titulo=fonte_titulo_grafico,
                     fonte_eixos=fonte_grafico,
-                    is_discrete_y=False # Tempo não é discreto
+                    is_discrete_y=False 
                 )
                 grafico_tentativas.reiniciar_animacao()
                 
-            elif aba_selecionada == 2:  # Colisões por nível (Barras - Média)
-                # Obtém o número médio de colisões para cada nível
+            elif aba_selecionada == 2:  
                 dados_grafico_colisoes = []
                 for n in sorted(niveis_jogados):
                     # Pega todas as tentativas deste nível
@@ -241,7 +241,6 @@ def tela_desempenho(tela, usuario):
                             "rotulo": f"Nível {n}"
                         })
                 
-                # Criar gráfico de barras para colisões por nível
                 grafico_colisoes = GraficoBarras(
                     pos=(resize(100, eh_X=True), resize(240)),
                     tamanho=(LARGURA_TELA - resize(200, eh_X=True), resize(380)), 
@@ -252,13 +251,13 @@ def tela_desempenho(tela, usuario):
                     campo_rotulo="rotulo",
                     fonte_titulo=fonte_titulo_grafico,
                     fonte_eixos=fonte_grafico,
-                    is_discrete_y=False # Média de colisões não é necessariamente discreta
+                    is_discrete_y=False 
                 )
                 grafico_colisoes.reiniciar_animacao()
             
-            elif aba_selecionada == 3:  # Colisões por tentativa em um nível específico (Linha)
+            elif aba_selecionada == 3:
                 nivel_escolhido = niveis_jogados[indice_nivel_selecionado]
-                # Obtém todas as tentativas deste nível em ordem cronológica
+
                 tentativas_nivel = sorted(
                     [t for t in tentativas if t["nivel"] == nivel_escolhido], 
                     key=lambda x: x["timestamp"]
@@ -275,7 +274,6 @@ def tela_desempenho(tela, usuario):
                         "rotulo": rotulo
                     })
                 
-                # Criar gráfico de linha para colisões em cada tentativa
                 grafico_colisoes_tentativa = GraficoLinha(
                     pos=(resize(100, eh_X=True), resize(350)),
                     tamanho=(LARGURA_TELA - resize(200, eh_X=True), resize(300)),
@@ -322,18 +320,17 @@ def tela_desempenho(tela, usuario):
         y_linhas = y_stats + resize(40)
         
         # Determinar tentativas a exibir com base na navegação
-        if aba_selecionada == 0 or aba_selecionada == 2: # Gráficos de visão geral
-            # Para o gráfico de tempo médio por fase e média de colisões, mostrar todas as tentativas bem-sucedidas
+        if aba_selecionada == 0 or aba_selecionada == 2: 
             tentativas_exibir = [t for t in tentativas if t["vidas"] > 0]
         else: # Gráficos específicos por nível/tentativa
             # Para outros gráficos, mostrar tentativas do nível escolhido
             nivel_escolhido = niveis_jogados[indice_nivel_selecionado]
             tentativas_exibir = [t for t in tentativas if t["nivel"] == nivel_escolhido]
         
-        # Ordenar tentativas por data
+
         tentativas_exibir = sorted(tentativas_exibir, key=lambda t: t["timestamp"], reverse=True)
         
-        # Sistema de paginação
+
         total_paginas = max(1, (len(tentativas_exibir) + tentativas_por_pagina - 1) // tentativas_por_pagina)
         if pagina_atual >= total_paginas:
             pagina_atual = total_paginas - 1
@@ -341,7 +338,7 @@ def tela_desempenho(tela, usuario):
         inicio = pagina_atual * tentativas_por_pagina
         fim = min(inicio + tentativas_por_pagina, len(tentativas_exibir))
         
-        # Desenhar cabeçalho da tabela
+  
         cabecalho = ["Nível", "Tempo (s)", "Vidas", "Colisões", "Data"]
         espacamento_x = resize(180, eh_X=True)
         x_inicio = resize(100, eh_X=True)
@@ -373,7 +370,7 @@ def tela_desempenho(tela, usuario):
             status_sucesso = t["vidas"] > 0
             cor_status = (0, 200, 0) if status_sucesso else (200, 50, 50)
             
-            # Dados para cada coluna
+
             dados = [
                 str(t["nivel"]),
                 f"{t['tempo']:.2f}",
@@ -398,7 +395,7 @@ def tela_desempenho(tela, usuario):
         if total_paginas > 1:
             nav_y = y_linhas + resize(40) + tentativas_por_pagina * resize(35) + resize(20)
             
-            # Botão página anterior
+
             clicou_ant_pag, _ = desenhar_botao(
                 texto="< Anterior",
                 x=resize(100, eh_X=True),
@@ -416,7 +413,7 @@ def tela_desempenho(tela, usuario):
             if clicou_ant_pag and pagina_atual > 0:
                 pagina_atual -= 1
             
-            # Indicador de página - centralizado
+
             desenhar_texto(
                 f"Página {pagina_atual + 1}/{total_paginas}", 
                 pygame.font.SysFont("arial", resize(24)), 
@@ -426,7 +423,7 @@ def tela_desempenho(tela, usuario):
                 nav_y + resize(15)
             )
             
-            # Botão próxima página
+
             clicou_prox_pag, _ = desenhar_botao(
                 texto="Próximo >",
                 x=LARGURA_TELA - resize(250, eh_X=True),
@@ -444,10 +441,10 @@ def tela_desempenho(tela, usuario):
             if clicou_prox_pag and pagina_atual < total_paginas - 1:
                 pagina_atual += 1
 
-        # Botão Voltar na parte inferior da tela - posicionamento dinâmico baseado no conteúdo
+
         botao_voltar_y = ALTURA_TELA - resize(80)
         if total_paginas > 1:
-            # Se tiver paginação, posiciona o botão após os controles de navegação
+
             nav_bottom = y_linhas + resize(40) + tentativas_por_pagina * resize(35) + resize(90)
             botao_voltar_y = max(nav_bottom, ALTURA_TELA - resize(80))
         

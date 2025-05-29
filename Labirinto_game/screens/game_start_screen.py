@@ -20,7 +20,6 @@ def tela_inicio_jogo(tela):
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
     
-    # Carregar usuários para verificar se existem jogos salvos
     usuarios = carregar_usuarios()
     tem_usuarios = len(usuarios) > 0
     
@@ -36,13 +35,11 @@ def tela_inicio_jogo(tela):
                     pygame.quit()
                     sys.exit()
 
-        # Desenhar fundo
         if background_img:
             tela.blit(background_img, (0, 0))
         else:
             tela.fill(AZUL_CLARO)
             
-        # Desenhar título
         desenhar_texto_sombra(
             "Escolha uma opção",
             fonte_titulo,
@@ -52,11 +49,9 @@ def tela_inicio_jogo(tela):
             resize(100)
         )
         
-        # Botões
         y_inicial = resize(300)
         espacamento_botoes = resize(120)
         
-        # Botão Continuar (apenas se houver usuários)
         if tem_usuarios:
             clicou_continuar, _ = desenhar_botao(
                 texto="Continuar Jogo",
@@ -75,12 +70,10 @@ def tela_inicio_jogo(tela):
             if clicou_continuar:
                 return 'CONTINUAR'
             
-            # Ajusta posição do botão Novo Jogo se houver o botão Continuar
             y_novo_jogo = y_inicial + espacamento_botoes
         else:
             y_novo_jogo = y_inicial
             
-        # Botão Novo Jogo
         clicou_novo, _ = desenhar_botao(
             texto="NOVO JOGO",
             x=LARGURA_TELA//2 - resize(200, eh_X=True),
@@ -98,7 +91,6 @@ def tela_inicio_jogo(tela):
         if clicou_novo:
             return 'NOVO'
             
-        # Botão Sair
         clicou_sair, _ = desenhar_botao(
             texto="Sair",
             x=LARGURA_TELA//2 - resize(200, eh_X=True),

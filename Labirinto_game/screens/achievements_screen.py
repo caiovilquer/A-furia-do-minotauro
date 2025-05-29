@@ -26,7 +26,7 @@ def carregar_e_redimensionar_icone(caminho, tamanho=(resize(80, eh_X=True), resi
         if os.path.exists(caminho):
             icone = pygame.image.load(caminho).convert_alpha()
             icone = pygame.transform.scale(icone, tamanho)
-            # Aplica cantos arredondados a todos os ícones no momento do carregamento
+
             icone = aplicar_borda_arredondada(icone, raio=10)
             return icone
         else:
@@ -43,11 +43,11 @@ def tela_conquistas(tela, usuario):
     fonte_texto = FONTE_TEXTO
     fonte_botao = FONTE_BOTAO
     
-    # Inicializa o sistema de conquistas
+
     sistema_conquistas = SistemaConquistas()
     conquistas = sistema_conquistas.carregar_conquistas_usuario(usuario)
     
-    # Pré-carrega os ícones
+
     icones = {}
     for chave, conquista in conquistas.items():
         icone_path = conquista.get('icone', None)
@@ -73,15 +73,15 @@ def tela_conquistas(tela, usuario):
         else:
             tela.fill(AZUL_CLARO)
         
-        # Título da tela
+
         desenhar_texto_sombra(f"Conquistas de {usuario}", fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
         
-        # Lista de conquistas
+
         y_offset = resize(180)
         espacamento = resize(100)
         
         for chave, conquista in conquistas.items():
-            # Status da conquista
+  
             status = "Desbloqueada" if conquista['desbloqueada'] else "Bloqueada"
             cor_status = (0, 255, 0) if conquista['desbloqueada'] else (255, 0, 0)
             
@@ -92,12 +92,9 @@ def tela_conquistas(tela, usuario):
             if chave in icones and icones[chave]:
                 # Ajuste o ícone para aparecer cinza se estiver bloqueado
                 if not conquista['desbloqueada']:
-                    # Cria uma cópia em escala de cinza do ícone
                     icone_cinza = icones[chave].copy()
-                    # Cria uma superfície para aplicar o efeito de escala de cinza
                     cinza_surface = pygame.Surface((resize(80, eh_X=True), resize(80)), pygame.SRCALPHA)
                     
-                    # Desenha um retângulo com cantos arredondados em vez de preencher toda a superfície
                     pygame.draw.rect(cinza_surface, (100, 100, 100, 150), 
                                     pygame.Rect(0, 0, resize(80, eh_X=True), resize(80)),
                                     border_radius=resize(10))
@@ -125,7 +122,6 @@ def tela_conquistas(tela, usuario):
             
             y_offset += espacamento
                 
-        # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA - resize(450, eh_X=True),

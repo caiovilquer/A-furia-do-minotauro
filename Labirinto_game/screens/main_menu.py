@@ -17,10 +17,8 @@ def tela_menu_principal(tela, usuario):
     ESCALA_CINZA = constants.ESCALA_CINZA
     SOM_LIGADO = constants.SOM_LIGADO
     
-    # Carrega as configurações do usuário
     usuarios_data = carregar_usuarios()
     usuario_data = usuarios_data[usuario]
-    dark_mode = usuario_data.get("dark_mode", False)
 
     titulo_x = LARGURA_TELA//2 - resize(350, eh_X=True)
     titulo_y = resize(100)
@@ -214,26 +212,6 @@ def tela_menu_principal(tela, usuario):
             pygame.quit()
             sys.exit()
         
-        # # Botão para alternar modo dark/light
-        # clicou_dark, _ = desenhar_botao(
-        #     texto=f"{'Desativar' if dark_mode else 'Ativar'} Modo Escuro",
-        #     x=LARGURA_TELA - resize(520, eh_X=True),
-        #     y=ALTURA_TELA-resize(300),
-        #     largura=resize(500, eh_X=True),
-        #     altura=resize(80),
-        #     cor_normal=cor_com_escala_cinza(70, 70, 120),
-        #     cor_hover=cor_com_escala_cinza(100, 100, 180),
-        #     fonte=fonte_botao,
-        #     tela=tela,
-        #     events=events,
-        #     imagem_fundo=BUTTON_PATH,
-        #     border_radius=resize(15)
-        # )
-        # if clicou_dark:
-        #     # Alterna o modo dark
-        #     usuario_data["dark_mode"] = not dark_mode
-        #     dark_mode = not dark_mode
-        #     salvar_usuarios(usuarios_data)
         if constants.ESCALA_CINZA:
             aplicar_filtro_cinza_superficie(tela)
 

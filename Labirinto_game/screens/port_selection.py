@@ -31,9 +31,9 @@ def tela_selecao_porta(tela):
     tempo_inicio_conexao = 0
     
     # Constantes de comunicação
-    MENSAGEM_INICIO = b'INICIAR\n'    # Mensagem enviada ao Arduino
-    MENSAGEM_CONFIRMACAO = b'OK\n'    # Mensagem esperada do Arduino
-    TIMEOUT_CONEXAO = 5               # Segundos para timeout
+    MENSAGEM_INICIO = b'INICIAR\n'    
+    MENSAGEM_CONFIRMACAO = b'OK\n'   
+    TIMEOUT_CONEXAO = 5              
 
     while True:
         events = pygame.event.get()
@@ -88,13 +88,11 @@ def tela_selecao_porta(tela):
                            LARGURA_TELA//2 - resize(200, eh_X=True), 
                            y_inicial_botoes + resize(300))
         
-        # Se houver mensagem de status, mostrá-la e exibir botões para novas ações
         elif mensagem_status:
             desenhar_texto(mensagem_status, fonte_texto, (255, 50, 50), tela, 
                           LARGURA_TELA//2 - resize(180, eh_X=True), 
                           y_inicial_botoes + resize(250))
             
-            # Botão para tentar novamente
             clicou_tentar, _ = desenhar_botao(
                 texto="Tentar Novamente",
                 x=LARGURA_TELA//2 - resize(175, eh_X=True),
@@ -110,14 +108,12 @@ def tela_selecao_porta(tela):
                 border_radius=resize(10)
             )
             if clicou_tentar:
-                # Reset das variáveis para tentar novamente
                 mensagem_status = None
                 arduino_conectando = False
                 if arduino_serial and arduino_serial.is_open:
                     arduino_serial.close()
                 arduino_serial = None
             
-            # Botão para usar simulação
             clicou_simular, _ = desenhar_botao(
                 texto="Usar Simulação",
                 x=LARGURA_TELA//2 - resize(175, eh_X=True),
@@ -172,7 +168,6 @@ def tela_selecao_porta(tela):
                     
                 y_offset += espacamento_botoes
 
-            # Caso não tenha porta ou para simulação
             clicou_semport, _ = desenhar_botao(
                 texto="Simulação",
                 x=LARGURA_TELA//2 - resize(160, eh_X=True),

@@ -11,7 +11,6 @@ def tela_escolha_usuario(tela):
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
-    input_font = FONTE_TEXTO
 
     usuarios_data = carregar_usuarios()
     lista_usuarios = list(usuarios_data.keys())
@@ -26,11 +25,7 @@ def tela_escolha_usuario(tela):
                            y_inicial_botoes + len(lista_usuarios)*espacamento_botoes + resize(50),
                            resize(400, eh_X=True), resize(60))
 
-    cor_ativo = cor_com_escala_cinza(200, 200, 200)
-    cor_inativo = cor_com_escala_cinza(150, 150, 150)
-    cor_atual = cor_inativo
-    usuario_digitado = ""
-    ativo_input = False
+
 
     while True:
         events = pygame.event.get()
@@ -53,7 +48,6 @@ def tela_escolha_usuario(tela):
         desenhar_texto_sombra("Selecione um Usuário", fonte_titulo, COR_TITULO, 
                              tela, titulo_x-resize(100, eh_X=True), titulo_y)
 
-        # Lista de usuários
         y_offset = y_inicial_botoes
         for usr in lista_usuarios:
             x_user_btn = LARGURA_TELA//2 - resize(220, eh_X=True)
@@ -108,7 +102,6 @@ def tela_escolha_usuario(tela):
 
             y_offset += espacamento_botoes
 
-        # Botão Voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA//2 - resize(200, eh_X=True),

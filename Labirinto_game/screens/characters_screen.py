@@ -70,14 +70,10 @@ def tela_personagens(tela):
         print("Nenhum personagem encontrado no arquivo JSON.")
         return
     
-    # Índice do personagem atual
     indice_atual = 0
     
-    # Largura máxima para o texto descritivo
     largura_max_texto = resize(800, eh_X=True)
-    
-    # Efeito de entrada
-    TransitionEffect.fade_in(tela, velocidade=5)
+
     
     while True:
         events = pygame.event.get()
@@ -111,7 +107,7 @@ def tela_personagens(tela):
             titulo_y
         )
         
-        # Carrega e exibe a imagem do personagem
+
         imagem = carregar_imagem_personagem(personagem["imagem"])
         if imagem:
             posicao_x = LARGURA_TELA - imagem.get_width() - resize(100, eh_X=True)
@@ -141,13 +137,11 @@ def tela_personagens(tela):
         for i, linha in enumerate(linhas):
             desenhar_texto(linha, fonte_texto, COR_TEXTO, tela, titulo_x, descricao_y + i * resize(40))
         
-        # Indicador de página
         texto_pagina = f"Personagem {indice_atual + 1} de {len(chaves_personagens)}"
         desenhar_texto(texto_pagina, fonte_texto, COR_TEXTO, tela, 
                       (LARGURA_TELA - fonte_texto.size(texto_pagina)[0]) // 2, 
                       ALTURA_TELA - resize(200))
         
-        # Botões de navegação (anterior e próximo)
         clicou_anterior, _ = desenhar_botao(
             texto="Anterior",
             x=resize(100, eh_X=True),
@@ -182,7 +176,6 @@ def tela_personagens(tela):
         if clicou_proximo:
             indice_atual = (indice_atual + 1) % len(chaves_personagens)
         
-        # Botão voltar
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA - resize(300, eh_X=True),

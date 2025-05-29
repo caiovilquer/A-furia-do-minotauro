@@ -11,7 +11,6 @@ class TelaDialogoInicial:
         self.largura_tela = tela.get_width()
         self.altura_tela = tela.get_height()
         
-        # Carrega imagens
         self.fundo = pygame.image.load("Labirinto_game/assets/images/backgrounds/fundo_dialogo.png").convert_alpha()
         self.fundo = pygame.transform.scale(self.fundo, (LARGURA_TELA, ALTURA_TELA))
         
@@ -21,7 +20,6 @@ class TelaDialogoInicial:
         # Posiciona personagem no meio da tela
         self.personagem_rect = self.personagem.get_rect(center=(LARGURA_TELA - resize(500, eh_X=True), ALTURA_TELA - resize(400)))
         
-        # Configurações da caixa de diálogo
         self.caixa_dialogo = pygame.Rect(
             resize(self.largura_tela * 0.1, eh_X=True),  # x
             resize(self.altura_tela * 0.7),  # y
@@ -29,7 +27,6 @@ class TelaDialogoInicial:
             resize(self.altura_tela * 0.2)    # altura
         )
         
-        # Configurações do texto de diálogo
         self.fonte = pygame.font.Font(None, resize(36))
         self.cor_texto = (255, 255, 255)
         self.linhas_dialogo = [
@@ -41,7 +38,7 @@ class TelaDialogoInicial:
         ]
         self.linha_atual = 0
         self.indice_animacao_texto = 0
-        self.velocidade_animacao_texto = 1  # Caracteres por quadro
+        self.velocidade_animacao_texto = 1 # Quanto menor, mais rápido aparece o texto
         self.contador_animacao_texto = 0
         
         # Configurações da animação de despertar
@@ -49,7 +46,6 @@ class TelaDialogoInicial:
         self.velocidade_despertar = 2  # Velocidade da animação de despertar
         self.despertando = True
         
-        # Indicador de pressionar tecla
         self.fonte_indicador = pygame.font.Font(None, resize(24))
         self.texto_indicador = "Pressione qualquer tecla para continuar..."
         
@@ -57,7 +53,6 @@ class TelaDialogoInicial:
         self.espacamento_linhas = resize(30)
         self.max_largura_linha = self.caixa_dialogo.width - resize(40, eh_X=True)
         
-        # Variáveis para o popup de entrada de nome
         self.mostrar_popup = False
         self.nome_usuario = ""
         self.ativo_input = False
@@ -137,7 +132,6 @@ class TelaDialogoInicial:
                         if evento.key == pygame.K_RETURN and self.nome_usuario.strip():
                             self.mostrar_popup = False
                             self.nome_escolhido = self.nome_usuario.strip()
-                            # Continua o diálogo a partir da linha 3 (índice 2)
                             self.linha_atual = 2
                             self.indice_animacao_texto = 0
                         elif evento.key == pygame.K_BACKSPACE:
@@ -149,7 +143,6 @@ class TelaDialogoInicial:
                 return False
             
             else:
-                # Eventos normais do diálogo
                 if evento.type == KEYDOWN or evento.type == MOUSEBUTTONDOWN:
                     if self.despertando:
                         # Pular animação de despertar se alguma tecla for pressionada
@@ -159,23 +152,19 @@ class TelaDialogoInicial:
                         # Exibe a linha completa instantaneamente se a animação não estiver completa
                         self.indice_animacao_texto = len(self.linhas_dialogo[self.linha_atual])
                     else:
-                        # Passa para a próxima linha se a animação estiver completa
                         self.linha_atual += 1
                         self.indice_animacao_texto = 0
                         
-                        # Verifica se precisa mostrar o popup após a segunda linha
-                        if self.linha_atual == 2:  # Após a segunda linha (índices 0 e 1)
+                        if self.linha_atual == 2:  
                             self.mostrar_popup = True
                             return False
                         
-                        # Retorna True quando todo o diálogo for exibido
                         if self.linha_atual >= len(self.linhas_dialogo):
                             return True
         
         return False
     
     def atualizar(self):
-        # Atualiza a animação de despertar
         if self.despertando:
             self.alpha_despertar -= self.velocidade_despertar
             if self.alpha_despertar <= 0:
@@ -192,12 +181,10 @@ class TelaDialogoInicial:
 
     def desenhar_popup(self):
         """Desenha o popup para entrada do nome do usuário"""
-        # Overlay semi-transparente para escurecer o fundo
         overlay = pygame.Surface((self.largura_tela, self.altura_tela), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
         self.tela.blit(overlay, (0, 0))
         
-        # Desenha o painel do popup
         popup_rect = pygame.Rect(
             LARGURA_TELA//2 - resize(250, eh_X=True),
             ALTURA_TELA//2 - resize(150),
@@ -207,7 +194,7 @@ class TelaDialogoInicial:
         pygame.draw.rect(self.tela, (50, 50, 70), popup_rect, border_radius=resize(15))
         pygame.draw.rect(self.tela, (200, 200, 220), popup_rect, width=resize(3), border_radius=resize(15))
         
-        # Título do popup
+        
         titulo_texto = self.fonte_popup.render("Digite seu nome:", True, (255, 255, 255))
         titulo_rect = titulo_texto.get_rect(center=(LARGURA_TELA//2, popup_rect.y + resize(40)))
         self.tela.blit(titulo_texto, titulo_rect)
@@ -218,7 +205,7 @@ class TelaDialogoInicial:
         
         # Texto digitado pelo usuário
         texto_superficie = self.fonte_popup.render(self.nome_usuario, True, (0, 0, 0))
-        # Centralize o texto verticalmente e o alinhe à esquerda horizontalmente
+
         self.tela.blit(texto_superficie, (self.rect_entrada.x + resize(10, eh_X=True), 
                                          self.rect_entrada.y + self.rect_entrada.height//2 - texto_superficie.get_height()//2))
         
@@ -248,7 +235,6 @@ class TelaDialogoInicial:
         self.tela.blit(self.personagem, self.personagem_rect)
         
         if not self.mostrar_popup:
-            # Desenha a caixa de diálogo (semi-transparente)
             superficie_dialogo = pygame.Surface((self.caixa_dialogo.width, self.caixa_dialogo.height), pygame.SRCALPHA)
             superficie_dialogo.fill((0, 0, 0, 180))  # Preto com transparência
             self.tela.blit(superficie_dialogo, (self.caixa_dialogo.x, self.caixa_dialogo.y))
@@ -276,7 +262,6 @@ class TelaDialogoInicial:
                     )
                     self.tela.blit(superficie_indicador, posicao_indicador)
         else:
-            # Desenhar o popup quando ativado
             self.desenhar_popup()
         
         # Desenha a animação de despertar (sobreposição preta)
@@ -303,4 +288,4 @@ class TelaDialogoInicial:
             pygame.display.flip()
             relogio.tick(60)
         
-        return self.nome_escolhido  # Retorna o nome escolhido pelo usuário
+        return self.nome_escolhido 

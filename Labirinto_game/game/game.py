@@ -24,7 +24,7 @@ class JogoLabirinto:
         self.usuario = usuario
         self.clock = pygame.time.Clock()
         self.fonte = FONTE_TEXTO
-        self.conexao_serial = conexao_serial  # Objeto de conexão serial
+        self.conexao_serial = conexao_serial
         
         # Para o timer visual
         self.timer_raio = resize(50)
@@ -210,7 +210,7 @@ class JogoLabirinto:
         # Lista de tentativas do usuário
         tentativas = self.usuarios_data.get(self.usuario, {}).get("tentativas", [])
         
-        # Verificar se está próximo de desbloquear "Pegadas de Bronze"
+
         if not self.sistema_conquistas.conquistas['pegadas_de_bronze']['desbloqueada']:
             total_jogos = len(tentativas)
             if total_jogos >= 25:  # Reduzido para 25 (50% de 50)
@@ -222,7 +222,7 @@ class JogoLabirinto:
                     'atual': total_jogos
                 })
         
-        # Verificar se está próximo de "Domador do Labirinto"
+
         if not self.sistema_conquistas.conquistas['domador_do_labirinto']['desbloqueada']:
             niveis_completados = set(t.get('nivel') for t in tentativas if t.get('vidas', 0) > 0)
             if len(niveis_completados) >= 2:  # Reduzido para 2 (40% de 5)
@@ -234,7 +234,7 @@ class JogoLabirinto:
                     'atual': len(niveis_completados)
                 })
                 
-        # Verificar se está próximo de "Renascido"
+
         if not self.sistema_conquistas.conquistas['renascido']['desbloqueada']:
             nivel_atual = self.nivel_atual
             tentativas_nivel = [t for t in tentativas if t.get('nivel') == nivel_atual]
@@ -247,11 +247,11 @@ class JogoLabirinto:
                     'atual': len(tentativas_nivel)
                 })
         
-        # Verificar se está próximo de "Herói de Atenas" (Complete todas as fases do jogo)
+
         if not self.sistema_conquistas.conquistas['heroi_de_atenas']['desbloqueada']:
             niveis_completados = set(t.get('nivel') for t in tentativas if t.get('vidas', 0) > 0)
-            total_niveis = 8  # Assumimos que há 8 níveis no total
-            if len(niveis_completados) >= 7:  # Se completou pelo menos metade
+            total_niveis = 8  
+            if len(niveis_completados) >= 7:  
                 conquistas_proximas.append({
                     'chave': 'heroi_de_atenas',
                     'nome': self.sistema_conquistas.conquistas['heroi_de_atenas']['nome'],
@@ -260,9 +260,9 @@ class JogoLabirinto:
                     'atual': len(niveis_completados)
                 })
         
-        # Verificar se está próximo de "Velocista Olímpico" (Completar um nível em menos de 10s)
+
         if not self.sistema_conquistas.conquistas['velocista_olimpico']['desbloqueada']:
-            # Filtrar tentativas bem-sucedidas
+
             tentativas_sucesso = [t for t in tentativas if t.get('vidas', 0) > 0]
             if tentativas_sucesso:
                 # Encontrar o melhor tempo
@@ -280,24 +280,23 @@ class JogoLabirinto:
                         'atual': f"{melhor_tempo:.1f}s"
                     })
         
-        # Verificar se está próximo de "Coragem de Teseu" (Complete um nível sem perder vida)
+
         if not self.sistema_conquistas.conquistas['coragem_de_teseu']['desbloqueada']:
             # Procurar tentativas onde o jogador completou perdendo apenas 1 vida
             tentativas_quase_perfeitas = [
                 t for t in tentativas 
-                if t.get('vidas', 0) == 2  # Completou com 2 vidas (perdeu 1)
+                if t.get('vidas', 0) == 2  
             ]
             if tentativas_quase_perfeitas:
                 # Se tem pelo menos uma tentativa quase perfeita
                 conquistas_proximas.append({
                     'chave': 'coragem_de_teseu',
                     'nome': self.sistema_conquistas.conquistas['coragem_de_teseu']['nome'],
-                    'progresso': 0.7,  # Está bem próximo, só precisa não perder vida
+                    'progresso': 0.7,
                     'meta': "3 vidas",
                     'atual': "2 vidas"
                 })
         
-        # Verificar se está próximo de "Despertar da Fúria" (Complete um nível após perder 2 vidas)
         if not self.sistema_conquistas.conquistas['despertar_da_furia']['desbloqueada']:
             # Ver quantas vezes o jogador completou níveis perdendo 1 vida
             tentativas_perdendo_uma = [
@@ -308,7 +307,7 @@ class JogoLabirinto:
                 conquistas_proximas.append({
                     'chave': 'despertar_da_furia',
                     'nome': self.sistema_conquistas.conquistas['despertar_da_furia']['nome'],
-                    'progresso': 0.5,  # Está na metade do caminho (perdendo 1 vida vs 2 vidas)
+                    'progresso': 0.5,
                     'meta': "Perder 2 vidas",
                     'atual': "Perdeu 1 vida"
                 })
@@ -339,7 +338,6 @@ class JogoLabirinto:
 
     def simular_progresso(self):
         """Simular progresso para modo de demonstração."""
-        # Incrementa gradualmente o progresso para simular movimento
         incremento = random.uniform(0.001, 0.005)
         self.progresso = min(1.0, self.progresso + incremento)
         
@@ -402,7 +400,6 @@ class JogoLabirinto:
         """Fornece feedback visual/sonoro para colisão."""
         from utils.audio_manager import audio_manager
         
-        # Reproduz o efeito sonoro padrão de colisão
         audio_manager.play_sound("collision")
         
         # Escolhe o áudio dublado correto baseado no número de vidas restantes
@@ -411,7 +408,6 @@ class JogoLabirinto:
         elif self.vidas == 2:
             audio_manager.play_voiced_dialogue("colisao_2vidas")
         
-        # Ativa o efeito de flash na tela
         self.flash_ativo = True
         self.flash_inicio = time.time()
             
@@ -419,8 +415,7 @@ class JogoLabirinto:
 
     def verifica_conclusao_nivel(self):
         """Verifica se o nível foi concluído."""
-        # Se estiver usando comunicação serial, o Arduino já enviará o sinal de conclusão
-        # Caso contrário, usamos a simulação
+
         if self.conexao_serial:
             return self.progresso >= 1.0
         else:
@@ -430,7 +425,7 @@ class JogoLabirinto:
         """Salva o progresso do jogador."""
         usuario_data = self.usuarios_data[self.usuario]
         
-        # Preparar informações da tentativa
+
         tentativa_info = {
             "nivel": self.nivel_atual,
             "tempo": tempo_gasto,
@@ -439,7 +434,7 @@ class JogoLabirinto:
             "timestamp": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         }
         
-        # Adicionar a nova tentativa à lista
+
         usuario_data.setdefault("tentativas", []).append(tentativa_info)
         
         # Atualizar o nível máximo desbloqueado
@@ -462,7 +457,6 @@ class JogoLabirinto:
         # Verificar conquistas com os dados atualizados
         conquistas_desbloqueadas = self.sistema_conquistas.verificar_conquistas(self.usuario, dados_jogo)
         
-        # Tocar som de sucesso se o nível foi concluído com sucesso
         if not falhou:
             from utils.audio_manager import audio_manager
             audio_manager.play_sound("success")
@@ -483,13 +477,10 @@ class JogoLabirinto:
         # Reset da flag de diálogo de fase
         self.mostrou_dialogo_fase_atual = False
         
-        # Atualiza o melhor tempo para o novo nível
         self.melhor_tempo = self.obter_melhor_tempo()
         
-        # Atualiza as conquistas próximas
         self.conquistas_proximas = self.verificar_conquistas_proximas()
         
-        # Enviar novo nível para o Arduino se necessário
         if self.conexao_serial:
             self.enviar_nivel_arduino()
             
@@ -506,17 +497,16 @@ class JogoLabirinto:
             # Nome da fase para buscar no arquivo de diálogos
             fase_dialogo = f"fase_{self.nivel_atual}"
             
-            # Executar o diálogo
+
             self.gerenciador_dialogos.executar(fase_dialogo, efeito_sonoro=None)
             
-            # Marca que o diálogo já foi mostrado para esta sessão de jogo
             self.mostrou_dialogo_fase_atual = True
 
     def desenhar_timer_visual(self, tempo_atual):
         """Desenha um timer visual animado"""
         # Convertemos o tempo em segundos para um ângulo (círculo completo = 60 segundos)
         segundos = int(tempo_atual) % 60
-        angulo_segundos = segundos * 6  # Cada segundo = 6 graus
+        angulo_segundos = segundos * 6
         
         # Desenhamos o círculo de fundo
         pygame.draw.circle(self.tela, self.timer_cor_fundo, self.timer_centro, self.timer_raio)
@@ -561,7 +551,6 @@ class JogoLabirinto:
         """Desenha o nome/título do nível atual na parte superior da tela"""
         nome_nivel = self.nomes_niveis.get(self.nivel_atual, f"Nível {self.nivel_atual}")
         
-        # Fundo para o título
         titulo_fonte = pygame.font.SysFont("Arial", resize(42, eh_X=True), bold=True)
         texto_surface = titulo_fonte.render(nome_nivel, True, (255, 255, 255))
         texto_rect = texto_surface.get_rect(center=(LARGURA_TELA // 2, resize(50)))
@@ -579,7 +568,7 @@ class JogoLabirinto:
         pygame.draw.rect(self.tela, cor_com_escala_cinza(255, 215, 0), 
                          faixa_rect, width=resize(2), border_radius=resize(15))
         
-        # Desenha o texto do título
+
         self.tela.blit(texto_surface, texto_rect)
         
         # Adiciona um pequeno ícone ou decoração relacionada ao nível
@@ -601,7 +590,7 @@ class JogoLabirinto:
             fonte_recorde = pygame.font.SysFont("Arial", resize(32, eh_X=True), bold=True)
             texto_surface = fonte_recorde.render(texto, True, (255, 215, 0))  # Cor dourada
             
-            # Posiciona abaixo do timer visual
+
             x = self.timer_centro[0] - texto_surface.get_width()//2 - resize(25, eh_X=True)
             y = self.timer_centro[1] + self.timer_raio + resize(20)
             
@@ -612,21 +601,19 @@ class JogoLabirinto:
         if not self.conquistas_proximas:
             return
             
-        # Dimensões e posicionamento - AUMENTADO largura para caber textos maiores
         x = resize(20, eh_X=True)
-        y = ALTURA_TELA - resize(230)  # Um pouco mais alto para acomodar o painel maior
-        largura = resize(500, eh_X=True)  # Aumentado de 350 para 450
-        altura_painel = resize(50)  # Aumentado de 40 para 50
+        y = ALTURA_TELA - resize(230)  
+        largura = resize(500, eh_X=True)  
+        altura_painel = resize(50)  
         espacamento = resize(15)
         
         # Cria painel de fundo para os indicadores
         altura_total = resize(45) + len(self.conquistas_proximas) * (altura_painel + espacamento)
         painel_rect = pygame.Rect(x - resize(10, eh_X=True), y - resize(40), largura + resize(20, eh_X=True), altura_total)
         
-        # Desenha painel com gradiente e transparência
+
         painel_surf = pygame.Surface((painel_rect.width, painel_rect.height), pygame.SRCALPHA)
         
-        # Gradiente do painel (da parte de cima até embaixo)
         for i in range(painel_rect.height):
             # Gradiente de cor escura a cor menos escura
             alpha = 180  # Transparência geral do painel
@@ -637,12 +624,11 @@ class JogoLabirinto:
             pygame.draw.line(painel_surf, (r, g, b, alpha), 
                             (0, i), (painel_rect.width, i))
         
-        # Borda arredondada no painel
         pygame.draw.rect(painel_surf, (0, 0, 0, 0), 
                         pygame.Rect(0, 0, painel_rect.width, painel_rect.height), 
                         border_radius=resize(15))
         
-        # Aplica painel
+
         self.tela.blit(painel_surf, painel_rect)
         
         # Borda dourada para o painel
@@ -665,9 +651,9 @@ class JogoLabirinto:
         self.tela.blit(brilho_surf, brilho_rect)
         self.tela.blit(titulo_surface, titulo_rect)
         
-        # Desenha cada indicador de conquista
+
         for i, conquista in enumerate(self.conquistas_proximas):
-            # Y atual para este indicador
+
             y_atual = y + i * (altura_painel + espacamento)
             
             # Rect para o indicador completo (inclui ícone e barra)
@@ -696,7 +682,7 @@ class JogoLabirinto:
                     except Exception as e:
                         print(f"Erro ao carregar ícone de conquista: {e}")
             
-            # Desenha o ícone
+
             if icone:
                 icone_rect = icone.get_rect(midleft=(x + resize(5, eh_X=True), indicador_rect.centery))
                 self.tela.blit(icone, icone_rect)
@@ -706,12 +692,11 @@ class JogoLabirinto:
                                   (x + resize(16, eh_X=True), indicador_rect.centery), 
                                   tamanho_icone // 2)
             
-            # Posição inicial da barra (após o ícone)
+ 
             x_barra = x + tamanho_icone + resize(15, eh_X=True)  # Aumentado o espaçamento
             largura_barra = largura - tamanho_icone - resize(25, eh_X=True)  # Ajustado para o novo tamanho
   
             
-            # Barra de fundo
             pygame.draw.rect(self.tela, (30, 30, 30), 
                             pygame.Rect(x_barra, y_atual + resize(5), largura_barra, altura_painel - resize(10)), 
                             border_radius=resize(7))
@@ -739,9 +724,7 @@ class JogoLabirinto:
                             pygame.Rect(x_barra, y_atual + resize(5), largura_barra, altura_painel - resize(10)), 
                             width=resize(1), border_radius=resize(7))
             
-            # Texto com nome da conquista e progresso
-                        # Texto com nome da conquista e progresso - Reduzido o tamanho da fonte para caber melhor
-            fonte_conquista = pygame.font.SysFont("Arial", resize(16, eh_X=True), bold=True)  # Reduzido de 18 para 16
+            fonte_conquista = pygame.font.SysFont("Arial", resize(16, eh_X=True), bold=True)  
             
             # Limitando o comprimento do texto para garantir que caiba
             nome_conquista = conquista['nome']
@@ -796,22 +779,18 @@ class JogoLabirinto:
             self.flash_ativo = False
             return
             
-        # A opacidade diminui com o tempo
         opacidade = int(255 * (1 - tempo_passado / self.flash_duracao))
         cor_flash = (self.flash_cor[0], self.flash_cor[1], self.flash_cor[2], opacidade)
         
-        # Cria uma superfície para o flash
         flash_surface = pygame.Surface((LARGURA_TELA, ALTURA_TELA), pygame.SRCALPHA)
         flash_surface.fill(cor_flash)
         
-        # Aplica o flash na tela
         self.tela.blit(flash_surface, (0, 0))
 
     def desenhar_controle_audio(self):
         """Desenha o botão de controle de áudio (mute/unmute)"""
         import constants
         
-        # Posição do botão de áudio
         x = resize(20, eh_X=True)
         y = resize(20)
         tamanho = resize(40)
@@ -819,29 +798,24 @@ class JogoLabirinto:
         # Rect para detectar clique
         rect_audio = pygame.Rect(x, y, tamanho, tamanho)
         
-        # Decide qual ícone mostrar
         if constants.SOM_LIGADO:
             icone = self.icone_som_ligado
         else:
             icone = self.icone_som_desligado
         
-        # Desenha o ícone
         self.tela.blit(icone, rect_audio)
         
-        # Verifica clique no botão de áudio
         pos_mouse = pygame.mouse.get_pos()
         if rect_audio.collidepoint(pos_mouse):
-            # Destaca o botão quando o mouse está sobre ele
             pygame.draw.rect(self.tela, (255, 255, 255), rect_audio, width=1, border_radius=resize(5))
             
-            # Verifica clique
+ 
             for event in pygame.event.get(pygame.MOUSEBUTTONDOWN):
-                if event.button == 1 and rect_audio.collidepoint(event.pos):  # Clique esquerdo
+                if event.button == 1 and rect_audio.collidepoint(event.pos):  
                     constants.SOM_LIGADO = not constants.SOM_LIGADO
                     from utils.audio_manager import audio_manager
                     audio_manager.som_ligado = constants.SOM_LIGADO
-                    
-                    # Reproduz um som para confirmar que o sistema de áudio funciona
+   
                     if constants.SOM_LIGADO:
                         audio_manager.play_sound("hover")
         
@@ -853,13 +827,13 @@ class JogoLabirinto:
         info_x = resize(200, eh_X=True)
         info_y = resize(300)
         
-        # Efeito de transição ao iniciar
+
         TransitionEffect.fade_in(tela, velocidade=8)
         
-        # Antes de iniciar o loop principal, mostramos o diálogo da fase
+
         nome_cena = f"fase_{self.nivel_atual}"
         if not pular_dialogo:
-            # Exiba o diálogo e marque como visto
+
             self.gerenciador_dialogos.executar(nome_cena)
             from utils.user_data import marcar_dialogo_como_visto
             marcar_dialogo_como_visto(self.usuario, nome_cena)
@@ -878,25 +852,25 @@ class JogoLabirinto:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.jogo_ativo = False
-                        # Efeito de transição ao sair
+
                         TransitionEffect.fade_out(tela, velocidade=8)
                         return
 
             self.atualizar_labirinto()
 
-            # Desenho de fundo
+
             if dialogo_dentro_img:
                 self.tela.blit(dialogo_dentro_img, (0, 0))
             else:
                 self.tela.fill(AZUL_CLARO)
                 
-            # Desenha elementos temáticos (decorações conforme o tema)
+
             self.desenhar_elementos_tematicos()
                 
-            # Desenha o nome/título do nível
+
             self.desenhar_nome_nivel()
 
-            # BOTÃO VOLTAR
+
             clicou_voltar, _ = desenhar_botao(
                 texto="VOLTAR",
                 x=resize(200, eh_X=True),
@@ -915,25 +889,23 @@ class JogoLabirinto:
                 self.jogo_ativo = False
                 from utils.audio_manager import audio_manager
                 audio_manager.stop_voiced_dialogue();
-                # Efeito de transição ao sair
+
                 TransitionEffect.fade_out(tela, velocidade=8)
                 return
 
-            # Se acabou as vidas
+
             if self.vidas <= 0:
                 tempo_total = time.time() - self.inicio_tempo
                 self.salvar_progresso(tempo_total, falhou=True)
-                # Efeito de transição antes de mostrar tela de falha
+
                 TransitionEffect.fade_out(tela, velocidade=10)
                 self.jogo_ativo, pular_dialogo = tela_falhou(tela, self.sistema_conquistas)
                 
-                # Se decidiu continuar, reseta o nível e mostra o diálogo novamente
                 if self.jogo_ativo:
                     self.resetar_nivel()
-                    # Reinicia o loop para mostrar o diálogo novamente
+
                     return self.loop_principal(pular_dialogo=pular_dialogo)
 
-            # Se concluiu o nível
             if self.verifica_conclusao_nivel():
                 tempo_total = time.time() - self.inicio_tempo
                     
@@ -950,26 +922,25 @@ class JogoLabirinto:
                     self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
                     proximo_nivel = self.nivel_atual + 1
                     
-                    # Efeito de transição
+
                     TransitionEffect.fade_out(tela, velocidade=10)
-                    # Mostra tela de conclusão do nível atual
+
                     continuar_jogando, repetir_nivel, pular_dialogo = tela_conclusao_nivel(tela, self.nivel_atual, tempo_total, self.sistema_conquistas)
                     
                     if not continuar_jogando:
-                        # Jogador optou por sair
+
                         self.jogo_ativo = False
                         return
                     
-                    # Define o próximo nível (continuar ou repetir)
                     self.nivel_atual = self.nivel_atual if repetir_nivel else proximo_nivel
                     
-                    # Reseta o estado do jogo para o próximo nível
+ 
                     self.resetar_nivel()
                     
-                    # Reinicia o loop para mostrar o diálogo do próximo nível
+   
                     return self.loop_principal(pular_dialogo=pular_dialogo)
 
-            # Mostrar textos (posicionados e espaçados)
+
             desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
             desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(60))
             desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(120))

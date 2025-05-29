@@ -564,7 +564,7 @@ class GraficoBarras(GraficoBase):
             x_barra = x_centro - largura_barra / 2
             
             valor = dado[self.campo_valor]
-            altura_maxima = self.area_grafico[3] * (valor / self.max_y)
+            altura_maxima = (self.area_grafico[3] * (valor / self.max_y)) if self.max_y > 0 else 0
             
             # Aplicar animação (altura cresce progressivamente)
             altura_atual = altura_maxima * self.animacao_progresso

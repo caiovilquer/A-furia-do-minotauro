@@ -20,7 +20,7 @@ def tela_falhou(tela, sistema_conquistas=None):
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
-    titulo_x = LARGURA_TELA//2 - resize(600, eh_X=True)
+    titulo_x = LARGURA_TELA//2 - resize(500, eh_X=True)
     titulo_y = resize(400)
 
     while True:

@@ -36,7 +36,6 @@ def tela_desempenho(tela, usuario):
     fonte_titulo_grafico = pygame.font.SysFont("arial", resize(30))
     
     # Definir dados iniciais para os gráficos
-    dados_grafico_linha = []
     dados_grafico_tentativas = []
     dados_grafico_colisoes = []
     
@@ -48,7 +47,6 @@ def tela_desempenho(tela, usuario):
     grafico_tentativas = None
     grafico_colisoes = None
     grafico_colisoes_tentativa = None
-    grafico_colisoes_tentativa_barras = None # Novo gráfico de barras
     
     # Aba selecionada
     # 0 = Tempo médio por fase
@@ -165,9 +163,10 @@ def tela_desempenho(tela, usuario):
         # Atualizar dados dos gráficos quando necessário
         if atualizar_graficos:
             if aba_selecionada == 0: 
-
+                # Tempo médio por fase - APENAS tentativas bem-sucedidas
                 dados_grafico_tempo_medio = []
                 for n in sorted(niveis_jogados):
+                    # Filtrar apenas tentativas bem-sucedidas (vidas > 0)
                     tentativas_n = [t for t in tentativas if t["nivel"] == n and t["vidas"] > 0]
                     if tentativas_n:
                         tempo_medio = sum(t["tempo"] for t in tentativas_n) / len(tentativas_n)
@@ -194,16 +193,16 @@ def tela_desempenho(tela, usuario):
                 
             elif aba_selecionada == 1:  
                 nivel_escolhido = niveis_jogados[indice_nivel_selecionado]
-                # Obtém todas as tentativas deste nível em ordem cronológica
+                # Obtém apenas as tentativas bem-sucedidas deste nível em ordem cronológica
                 tentativas_nivel = sorted(
-                    [t for t in tentativas if t["nivel"] == nivel_escolhido], 
+                    [t for t in tentativas if t["nivel"] == nivel_escolhido and t["vidas"] > 0], 
                     key=lambda x: x["timestamp"]
                 )
                 
                 dados_grafico_tentativas = []
                 for i, t in enumerate(tentativas_nivel):
                     # Adicionar conector visual (nome da tentativa) para marcar tentativas não concluídas
-                    status = "C" if t["vidas"] > 0 else "NC"
+                    status = "OK" if t["vidas"] > 0 else "FALHA"
                     rotulo = f"{i+1} {status}"
                     dados_grafico_tentativas.append({
                         "indice": i,
@@ -228,9 +227,10 @@ def tela_desempenho(tela, usuario):
                 grafico_tentativas.reiniciar_animacao()
                 
             elif aba_selecionada == 2:  
+                # Média de colisões por nível - INCLUINDO tentativas falhas
                 dados_grafico_colisoes = []
                 for n in sorted(niveis_jogados):
-                    # Pega todas as tentativas deste nível
+                    # Pega TODAS as tentativas deste nível (incluindo falhas)
                     tentativas_n = [t for t in tentativas if t["nivel"] == n]
                     if tentativas_n:
                         colisoes = [t.get("colisoes", 0) for t in tentativas_n]
@@ -258,6 +258,7 @@ def tela_desempenho(tela, usuario):
             elif aba_selecionada == 3:
                 nivel_escolhido = niveis_jogados[indice_nivel_selecionado]
 
+                # Incluir TODAS as tentativas neste nível (incluindo falhas)
                 tentativas_nivel = sorted(
                     [t for t in tentativas if t["nivel"] == nivel_escolhido], 
                     key=lambda x: x["timestamp"]
@@ -266,7 +267,7 @@ def tela_desempenho(tela, usuario):
                 dados_grafico_colisoes_tentativa = []
                 for i, t in enumerate(tentativas_nivel):
                     # Adicionar conector visual (nome da tentativa) para marcar tentativas não concluídas
-                    status = "C" if t["vidas"] > 0 else "NC"
+                    status = "OK" if t["vidas"] > 0 else "FALHA"
                     rotulo = f"{i+1} {status}"
                     dados_grafico_colisoes_tentativa.append({
                         "indice": i,
@@ -319,15 +320,15 @@ def tela_desempenho(tela, usuario):
         # Linhas de informação detalhada
         y_linhas = y_stats + resize(40)
         
-        # Determinar tentativas a exibir com base na navegação
+        # Determinar tentativas a exibir com base na navegação - SEMPRE mostrar TODAS as tentativas
         if aba_selecionada == 0 or aba_selecionada == 2: 
-            tentativas_exibir = [t for t in tentativas if t["vidas"] > 0]
-        else: # Gráficos específicos por nível/tentativa
-            # Para outros gráficos, mostrar tentativas do nível escolhido
+            # Para gráfico de tempo médio, mostrar todas as tentativas
+            tentativas_exibir = tentativas
+        else:
+            # Para outros gráficos, mostrar todas as tentativas do nível escolhido
             nivel_escolhido = niveis_jogados[indice_nivel_selecionado]
             tentativas_exibir = [t for t in tentativas if t["nivel"] == nivel_escolhido]
         
-
         tentativas_exibir = sorted(tentativas_exibir, key=lambda t: t["timestamp"], reverse=True)
         
 
@@ -369,12 +370,11 @@ def tela_desempenho(tela, usuario):
             # Status baseado nas vidas restantes (para códigos de cores)
             status_sucesso = t["vidas"] > 0
             cor_status = (0, 200, 0) if status_sucesso else (200, 50, 50)
-            
 
             dados = [
                 str(t["nivel"]),
                 f"{t['tempo']:.2f}",
-                f"{t['vidas']} {'C' if status_sucesso else 'NC'}",
+                f"{t['vidas']} {'OK' if status_sucesso else 'FALHA'}", 
                 str(t.get("colisoes", 0)),
                 t["timestamp"]
             ]

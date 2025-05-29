@@ -22,7 +22,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO
 
-    titulo_x = LARGURA_TELA//2 - resize(900, eh_X=True)
+    titulo_x = LARGURA_TELA//2 - resize(930, eh_X=True)
     titulo_y = resize(400)
 
     while True:
@@ -41,7 +41,7 @@ def tela_conclusao_nivel(tela, nivel, tempo, sistema_conquistas=None):
         else:
             tela.fill(AZUL_CLARO)
 
-        desenhar_texto_sombra(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s !", 
+        desenhar_texto_sombra(f"Parabéns! Você concluiu o nível {nivel} em {tempo:.2f}s", 
                               fonte_titulo, COR_TITULO, tela, titulo_x, titulo_y)
 
         clicou_rejogar, _ = desenhar_botao(

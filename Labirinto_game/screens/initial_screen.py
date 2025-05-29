@@ -36,8 +36,8 @@ def tela_inicial(tela):
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-                else:
-                    rodando = False
+                # else:
+                #     rodando = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 rodando = False
 

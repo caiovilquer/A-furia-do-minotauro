@@ -92,6 +92,14 @@ class JogoLabirinto:
         self.mostrou_dialogo_fase_atual = False
 
         self.vidas = 3
+        # Configurações de exibição dos corações
+        self.tamanho_coracao = resize(150)
+        self.posicao_y_coracoes = resize(320) 
+        self.espacamento_coracoes = resize(25) 
+        self.estados_coracoes = [True, True, True]
+        self.progresso_animacao_coracoes = [0.0, 0.0, 0.0] 
+        self.duracao_animacao_coracoes = 0.5
+
         self.inicio_tempo = time.time()
         self.jogo_ativo = True
         
@@ -403,14 +411,28 @@ class JogoLabirinto:
         audio_manager.play_sound("collision")
         
         # Escolhe o áudio dublado correto baseado no número de vidas restantes
-        if self.vidas == 1:
+        # Nota: self.vidas já foi decrementado antes desta chamada
+        if self.vidas == 1: # Será 1 após esta colisão se era 2 antes
             audio_manager.play_voiced_dialogue("colisao_1vida")
-        elif self.vidas == 2:
+        elif self.vidas == 2: # Será 2 após esta colisão se era 3 antes
             audio_manager.play_voiced_dialogue("colisao_2vidas")
         
         self.flash_ativo = True
         self.flash_inicio = time.time()
-            
+
+        # Aciona a animação do coração
+        # self.vidas é o número de vidas RESTANTES.
+        # Corações são indexados 0, 1, 2.
+        # Se 3 vidas -> 2 vidas restantes, coração no índice 2 é perdido.
+        # Se 2 vidas -> 1 vida restante, coração no índice 1 é perdido.
+        # Se 1 vida -> 0 vidas restantes, coração no índice 0 é perdido.
+        indice_coracao_perdido = self.vidas 
+        if 0 <= indice_coracao_perdido < 3 and self.estados_coracoes[indice_coracao_perdido]:
+            # Inicia a animação apenas se não já iniciada
+            if self.progresso_animacao_coracoes[indice_coracao_perdido] == 0.0: 
+                self.progresso_animacao_coracoes[indice_coracao_perdido] = 0.01 # Inicia animação
+            # O estado self.estados_coracoes[indice_coracao_perdido] será definido como False quando a animação completar.
+
         print(f"Colisão! Progresso atual: {self.progresso:.2f}")
 
     def verifica_conclusao_nivel(self):
@@ -467,9 +489,9 @@ class JogoLabirinto:
     def resetar_nivel(self):
         """Reseta o estado do jogo para o próximo nível"""
         self.vidas = 3
+        self.estados_coracoes = [True, True, True]
+        self.progresso_animacao_coracoes = [0.0, 0.0, 0.0]
         self.progresso = 0.0
-        self.colisoes = 0
-        self.inicio_tempo = time.time()
         # Recarga explícita das conquistas para garantir estado atualizado
         self.sistema_conquistas.limpar_notificacoes()
         self.sistema_conquistas.carregar_conquistas_usuario(self.usuario)
@@ -767,6 +789,132 @@ class JogoLabirinto:
                 pygame.draw.rect(self.tela, brilho_cor, indicador_rect, 
                                 width=resize(2), border_radius=resize(10))
 
+    def desenhar_forma_coracao(self, superficie, area_retangulo, cor):
+        """Desenha uma forma de coração na superfície fornecida dentro da area_retangulo."""
+        largura_rect, altura_rect = area_retangulo.width, area_retangulo.height
+        
+        # Parâmetros para a forma do coração
+        # Novo raio para garantir sobreposição e um visual mais "cheio"
+        raio_circulo = largura_rect * 0.3  
+
+
+        centro_x_circulo_esquerdo = raio_circulo
+        centro_x_circulo_direito = largura_rect - raio_circulo 
+        
+        # Coordenada Y para o centro dos círculos
+        centro_y_circulo = raio_circulo + (altura_rect * 0.08)
+
+        # Ponta inferior do coração
+        ponta_y = altura_rect * 0.90 # Posição Y da ponta inferior
+        ponta_x = largura_rect / 2.0
+        ponto_ponta = (int(ponta_x), int(ponta_y))
+
+        # Ângulo para os pontos de conexão do polígono nos círculos
+        # math.pi / 4 (45 graus) para um bom ponto de tangência
+        angulo_conexao = math.pi / 4 
+
+        cos_angulo = math.cos(angulo_conexao)
+        sin_angulo = math.sin(angulo_conexao)
+
+        # Ponto de conexão esquerdo (no círculo esquerdo)
+        conexao_x_esquerdo = centro_x_circulo_esquerdo - 0.95*raio_circulo * cos_angulo
+        conexao_y_esquerdo = centro_y_circulo + raio_circulo * sin_angulo
+        ponto_conexao_esquerdo = (int(conexao_x_esquerdo), int(conexao_y_esquerdo))
+
+        # Ponto de conexão direito (no círculo direito)
+        conexao_x_direito = centro_x_circulo_direito + 0.95*raio_circulo * cos_angulo
+        conexao_y_direito = centro_y_circulo + raio_circulo * sin_angulo
+        ponto_conexao_direito = (int(conexao_x_direito), int(conexao_y_direito))
+        
+        # Pontos do polígono para a base em V do coração
+        pontos_poligono = [
+            ponto_conexao_esquerdo,
+            ponto_ponta,
+            ponto_conexao_direito
+        ]
+        
+        # Desenha o polígono (base em V) primeiro
+        pygame.draw.polygon(superficie, cor, pontos_poligono)
+
+        # Desenha os dois círculos para a parte superior.
+        # Eles irão sobrepor o polígono e criar a forma arredondada superior do coração.
+        pygame.draw.circle(superficie, cor, (int(centro_x_circulo_esquerdo), int(centro_y_circulo)), int(raio_circulo))
+        pygame.draw.circle(superficie, cor, (int(centro_x_circulo_direito), int(centro_y_circulo)), int(raio_circulo))
+
+    def desenhar_efeito_corte(self, superficie, area_retangulo, progresso):
+        """Desenha um efeito de corte diagonal na superficie."""
+        if progresso <= 0 or progresso >= 1:
+            return
+
+        largura_rect, altura_rect = area_retangulo.width, area_retangulo.height
+        cor_linha = (255, 255, 255, 200) # Branco, semi-transparente
+        espessura_linha = resize(5) # Aumentada para corações maiores
+
+        # Linha diagonal do canto superior direito ao inferior esquerdo, comprimento baseado no progresso
+        x1, y1 = largura_rect, 0  # Começa do canto superior direito da área do coração
+        
+        # Ponto final alvo para o corte completo (canto inferior esquerdo)
+        x_alvo2, y_alvo2 = 0, altura_rect
+        
+        # Interpola o ponto final atual da linha
+        x_atual2 = x1 + (x_alvo2 - x1) * progresso
+        y_atual2 = y1 + (y_alvo2 - y1) * progresso
+        
+        pygame.draw.line(superficie, cor_linha, (x1, y1), (int(x_atual2), int(y_atual2)), espessura_linha)
+
+        # Efeito de brilho para a linha de corte
+        for i in range(1, 3):
+            alfa_brilho = 150 - i * 40
+            cor_brilho = (255, 255, 255, alfa_brilho)
+            pygame.draw.line(superficie, cor_brilho, (x1, y1), (int(x_atual2), int(y_atual2)), espessura_linha + i * resize(2)) # Aumentado brilho
+
+
+    def desenhar_coracoes(self):
+        """Desenha os três corações representando as vidas."""
+        numero_coracoes = 3
+        largura_total_coracoes = numero_coracoes * self.tamanho_coracao + (numero_coracoes - 1) * self.espacamento_coracoes
+        x_inicial = (LARGURA_TELA - largura_total_coracoes) / 2
+        
+        # Ajusta y_retangulo para centralizar verticalmente os corações maiores
+        y_retangulo = self.posicao_y_coracoes - self.tamanho_coracao / 2
+
+
+        for i in range(numero_coracoes):
+            x_coracao = x_inicial + i * (self.tamanho_coracao + self.espacamento_coracoes)
+            area_retangulo = pygame.Rect(x_coracao, y_retangulo, self.tamanho_coracao, self.tamanho_coracao)
+            
+            # Cria uma superfície temporária para cada coração para lidar com animação e transparência
+            superficie_coracao = pygame.Surface((self.tamanho_coracao, self.tamanho_coracao), pygame.SRCALPHA)
+            superficie_coracao.fill((0,0,0,0)) # Fundo transparente
+
+            progresso_animacao = self.progresso_animacao_coracoes[i]
+
+            if self.estados_coracoes[i]: # Coração está ativo ou sendo perdido
+                if progresso_animacao > 0: # Animando perda
+                    # Interpola cor de vermelho para cinza
+                    fator = min(progresso_animacao, 1.0)
+                    r = int(255 * (1 - fator) + 100 * fator)
+                    g = int(0 * (1 - fator) + 100 * fator)
+                    b = int(0 * (1 - fator) + 100 * fator)
+                    cor_atual = (r, g, b)
+                    
+                    self.desenhar_forma_coracao(superficie_coracao, superficie_coracao.get_rect(), cor_atual)
+                    self.desenhar_efeito_corte(superficie_coracao, superficie_coracao.get_rect(), progresso_animacao)
+                    
+                    # Atualiza progresso da animação
+                    self.progresso_animacao_coracoes[i] += (1.0 / (self.duracao_animacao_coracoes * FPS))
+                    if self.progresso_animacao_coracoes[i] >= 1.0:
+                        self.progresso_animacao_coracoes[i] = 1.0 # Limita em 1
+                        self.estados_coracoes[i] = False # Marca como perdido
+                else: # Coração totalmente ativo
+                    cor_atual = (255, 0, 0) # Vermelho
+                    self.desenhar_forma_coracao(superficie_coracao, superficie_coracao.get_rect(), cor_atual)
+            else: # Coração está perdido (e animação finalizada)
+                cor_atual = (100, 100, 100) # Cinza
+                self.desenhar_forma_coracao(superficie_coracao, superficie_coracao.get_rect(), cor_atual)
+
+            self.tela.blit(superficie_coracao, area_retangulo.topleft)
+
     def desenhar_efeito_colisao(self):
         """Desenha o efeito de flash quando ocorre uma colisão"""
         if not self.flash_ativo:
@@ -816,6 +964,7 @@ class JogoLabirinto:
                     from utils.audio_manager import audio_manager
                     audio_manager.som_ligado = constants.SOM_LIGADO
    
+
                     if constants.SOM_LIGADO:
                         audio_manager.play_sound("hover")
         
@@ -826,7 +975,6 @@ class JogoLabirinto:
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
         info_x = resize(200, eh_X=True)
         info_y = resize(300)
-        
 
         TransitionEffect.fade_in(tela, velocidade=8)
         
@@ -873,8 +1021,8 @@ class JogoLabirinto:
 
             clicou_voltar, _ = desenhar_botao(
                 texto="VOLTAR",
-                x=resize(200, eh_X=True),
-                y=resize(600),
+                x=LARGURA_TELA-resize(220, eh_X=True),
+                y=ALTURA_TELA-resize(100),
                 largura=resize(200, eh_X=True),
                 altura=resize(70),
                 cor_normal=cor_com_escala_cinza(255, 200, 0),
@@ -915,7 +1063,7 @@ class JogoLabirinto:
                     self.salvar_progresso(tempo_total)
                     self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
                     tela_conclusao(tela, self.sistema_conquistas)
-                    self.resetar_nivel()
+                    self.resetar_nivel() # Reseta corações
                     return
                 else:
                     self.salvar_progresso(tempo_total)
@@ -935,7 +1083,7 @@ class JogoLabirinto:
                     self.nivel_atual = self.nivel_atual if repetir_nivel else proximo_nivel
                     
  
-                    self.resetar_nivel()
+                    self.resetar_nivel() # Reseta corações
                     
    
                     return self.loop_principal(pular_dialogo=pular_dialogo)
@@ -943,7 +1091,8 @@ class JogoLabirinto:
 
             desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
             desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(60))
-            desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(120))
+            # desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(120)) # Removido
+            self.desenhar_coracoes() # Adicionado e agora usa nomes em português internamente
             
             tempo_atual = time.time() - self.inicio_tempo
             self.desenhar_timer_visual(tempo_atual)

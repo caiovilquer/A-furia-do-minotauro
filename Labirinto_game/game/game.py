@@ -78,13 +78,32 @@ class JogoLabirinto:
             8: "Confronto Final"
         }
         
+        # Nomes dos arquivos de imagem de fundo para cada nível
+        self.background_files = {
+            1: "initial_labyrinth.png",
+            2: "winding_corridors.png",
+            3: "path_of_shadows.png",
+            4: "minotaurs_garden.png",
+            5: "secret_passage.png",
+            6: "echo_cavern.png",
+            7: "hall_of_heroes.png",
+            8: "final_confrontation.png"
+        }
+        
+        # Dicionário para armazenar as imagens de fundo carregadas
+        self.background_images = {}
+        
+        # Carregar as imagens de fundo
+        self.carregar_imagens_fundo()
+        
         # Elementos temáticos para cada nível (posição na tela, imagem)
         self.carregar_elementos_tematicos()
 
-        # Criação do gerenciador de diálogos
+        # Criação do gerenciador de diálogos - agora com acesso às imagens de fundo
         self.gerenciador_dialogos = GerenciadorDialogos(
             tela, 
-            "Labirinto_game/data/dialogos_fases.json"
+            "Labirinto_game/data/dialogos_fases.json",
+            background_images=self.background_images  # Passamos as imagens de fundo carregadas
         )
 
         # Flag para controlar se o diálogo inicial da fase já foi mostrado
@@ -200,6 +219,25 @@ class JogoLabirinto:
                         print(f"Erro ao carregar elemento temático {elem}: {e}")
         except Exception as e:
             print(f"Erro ao carregar elementos temáticos: {e}")
+
+    def carregar_imagens_fundo(self):
+        """Carrega as imagens de fundo para cada nível"""
+        try:
+            for nivel, arquivo in self.background_files.items():
+                caminho = f"Labirinto_game/assets/images/backgrounds/{arquivo}"
+                try:
+                    imagem = pygame.image.load(caminho).convert()
+                    
+                    # Redimensiona para caber na tela
+                    imagem = pygame.transform.scale(imagem, (LARGURA_TELA, ALTURA_TELA))
+                    
+                    self.background_images[nivel] = imagem
+                    print(f"Imagem de fundo carregada para nível {nivel}: {arquivo}")
+                except Exception as e:
+                    print(f"Erro ao carregar imagem de fundo para nível {nivel}: {e}")
+                    self.background_images[nivel] = None
+        except Exception as e:
+            print(f"Erro geral ao carregar imagens de fundo: {e}")
 
     def obter_melhor_tempo(self):
         """Obtém o melhor tempo do jogador para o nível atual"""
@@ -1007,10 +1045,17 @@ class JogoLabirinto:
 
             self.atualizar_labirinto()
 
-
-            if dialogo_dentro_img:
+            # Renderiza o fundo apropriado para o nível atual
+            background_atual = self.background_images.get(self.nivel_atual)
+            
+            if background_atual:
+                # Usa a imagem de fundo específica do nível atual
+                self.tela.blit(background_atual, (0, 0))
+            elif dialogo_dentro_img:
+                # Fallback para a imagem de diálogo genérica se disponível
                 self.tela.blit(dialogo_dentro_img, (0, 0))
             else:
+                # Último fallback para cor sólida
                 self.tela.fill(AZUL_CLARO)
                 
 

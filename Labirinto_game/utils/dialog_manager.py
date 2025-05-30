@@ -9,16 +9,22 @@ from constants import LARGURA_TELA, ALTURA_TELA
 class GerenciadorDialogos:
     """Classe que gerencia a exibição de diálogos entre personagens."""
     
-    def __init__(self, tela, arquivo_json):
+    def __init__(self, tela, arquivo_json, background_images=None):
         # Inicialização da tela e variáveis
         self.tela = tela
         self.largura_tela = tela.get_width()
         self.altura_tela = tela.get_height()
         
+        # Dicionário de imagens de fundo por nível
+        self.background_images = background_images or {}
+        
+        # Cena atual para rastrear qual fundo usar
+        self.cena_atual = None
+        
         # Carrega o arquivo JSON com os diálogos
         self.carregar_dialogos(arquivo_json)
         
-        # Carrega imagens de fundo
+        # Carrega imagem de fundo genérica (fallback)
         self.carregar_imagens_fundo()
         
         # Configurações da caixa de diálogo
@@ -77,16 +83,15 @@ class GerenciadorDialogos:
             self.dados_dialogos = {}
     
     def carregar_imagens_fundo(self):
-        """Carrega imagens de fundo."""
-        # Carrega o fundo
+        """Carrega imagem de fundo genérica como fallback."""
         try:
             fundo_path = "Labirinto_game/assets/images/backgrounds/fundo_dialogo_labirinto_dark.png"
-            self.fundo = pygame.image.load(fundo_path).convert_alpha()
-            self.fundo = pygame.transform.scale(self.fundo, (LARGURA_TELA, ALTURA_TELA))
+            self.fundo_generico = pygame.image.load(fundo_path).convert_alpha()
+            self.fundo_generico = pygame.transform.scale(self.fundo_generico, (LARGURA_TELA, ALTURA_TELA))
         except Exception as e:
-            print(f"Erro ao carregar imagem de fundo: {e}")
-            self.fundo = None
-    
+            print(f"Erro ao carregar imagem de fundo genérica: {e}")
+            self.fundo_generico = None
+
     def carregar_personagem(self, nome, imagem_path):
         """Carrega a imagem de um personagem se ainda não foi carregada."""
         if nome not in self.personagens:
@@ -222,13 +227,35 @@ class GerenciadorDialogos:
                 if self.indice_animacao_texto < len(texto_atual):
                     self.indice_animacao_texto += 1
     
+    def obter_nivel_da_cena(self):
+        """Extrai o número do nível a partir do nome da cena atual."""
+        if self.cena_atual and self.cena_atual.startswith("fase_"):
+            try:
+                # Extrai o número do nível de "fase_X"
+                nivel = int(self.cena_atual.split("_")[1])
+                return nivel
+            except (ValueError, IndexError):
+                pass
+        return None
+    
     def desenhar(self):
         """Desenha a cena de diálogo na tela."""
+        # Determina qual imagem de fundo usar
+        nivel_atual = self.obter_nivel_da_cena()
+        background_nivel = None
+        
+        if nivel_atual and nivel_atual in self.background_images:
+            background_nivel = self.background_images[nivel_atual]
+        
         # Desenha o fundo
-        if self.fundo:
-            self.tela.blit(self.fundo, (0, 0))
+        if background_nivel:
+            # Usa a imagem específica do nível
+            self.tela.blit(background_nivel, (0, 0))
+        elif self.fundo_generico:
+            # Fallback para a imagem genérica
+            self.tela.blit(self.fundo_generico, (0, 0))
         else:
-            # Fallback para fundo preto se a imagem não carregou
+            # Último fallback para fundo preto
             self.tela.fill((0, 0, 0))
         
         # Desenha o personagem atual

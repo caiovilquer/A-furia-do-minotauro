@@ -191,6 +191,7 @@ class JogoLabirinto:
                         # Define uma posição para o elemento (personalizar conforme necessário)
                         if i == 0:
                             pos = (resize(50, eh_X=True), ALTURA_TELA - altura - resize(50))
+                            pass
                         else:
                             pos = (LARGURA_TELA - largura - resize(50, eh_X=True), ALTURA_TELA - altura - resize(50))
                         
@@ -593,11 +594,11 @@ class JogoLabirinto:
 
         self.tela.blit(texto_surface, texto_rect)
         
-        # Adiciona um pequeno ícone ou decoração relacionada ao nível
-        if self.nivel_atual in self.elementos_tematicos and len(self.elementos_tematicos[self.nivel_atual]) > 0:
-            icone, _ = self.elementos_tematicos[self.nivel_atual][0]  # Usa o primeiro elemento como ícone
-            icone_pequeno = pygame.transform.scale(icone, (resize(30, eh_X=True), resize(30)))
-            self.tela.blit(icone_pequeno, (faixa_rect.left + resize(10, eh_X=True), faixa_rect.centery - resize(15)))
+        # # Adiciona um pequeno ícone ou decoração relacionada ao nível
+        # if self.nivel_atual in self.elementos_tematicos and len(self.elementos_tematicos[self.nivel_atual]) > 0:
+        #     icone, _ = self.elementos_tematicos[self.nivel_atual][0]  # Usa o primeiro elemento como ícone
+        #     icone_pequeno = pygame.transform.scale(icone, (resize(30, eh_X=True), resize(30)))
+        #     self.tela.blit(icone_pequeno, (faixa_rect.left + resize(10, eh_X=True), faixa_rect.centery - resize(15)))
 
     def desenhar_elementos_tematicos(self):
         """Desenha elementos decorativos temáticos do nível atual"""
@@ -624,7 +625,7 @@ class JogoLabirinto:
             return
             
         x = resize(20, eh_X=True)
-        y = ALTURA_TELA - resize(230)  
+        y = ALTURA_TELA - resize(600)  
         largura = resize(500, eh_X=True)  
         altura_painel = resize(50)  
         espacamento = resize(15)
@@ -973,8 +974,8 @@ class JogoLabirinto:
     def loop_principal(self, pular_dialogo=False):
         """Loop principal do jogo."""
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
-        info_x = resize(200, eh_X=True)
-        info_y = resize(300)
+        info_x = resize(20, eh_X=True)
+        info_y = resize(100)
 
         TransitionEffect.fade_in(tela, velocidade=8)
         
@@ -1021,7 +1022,7 @@ class JogoLabirinto:
 
             clicou_voltar, _ = desenhar_botao(
                 texto="VOLTAR",
-                x=LARGURA_TELA-resize(220, eh_X=True),
+                x=LARGURA_TELA//2-resize(100, eh_X=True),
                 y=ALTURA_TELA-resize(100),
                 largura=resize(200, eh_X=True),
                 altura=resize(70),
@@ -1091,8 +1092,7 @@ class JogoLabirinto:
 
             desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
             desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(60))
-            # desenhar_texto(f"Vidas: {self.vidas}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(120)) # Removido
-            self.desenhar_coracoes() # Adicionado e agora usa nomes em português internamente
+            self.desenhar_coracoes()
             
             tempo_atual = time.time() - self.inicio_tempo
             self.desenhar_timer_visual(tempo_atual)

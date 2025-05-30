@@ -7,7 +7,7 @@ display_info = pygame.display.Info()
 LARGURA_TELA = display_info.current_w
 ALTURA_TELA = display_info.current_h
 TITULO_JOGO = "A Fúria do Minotauro"
-FPS = 120
+FPS = 60
 
 # Flags globais
 ESCALA_CINZA = False

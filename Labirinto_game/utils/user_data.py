@@ -43,10 +43,8 @@ def get_acessibilidade(usuario, usuarios_data=None):
     if usuarios_data is None:
         usuarios_data = carregar_usuarios()
     
-    # Garante valores padrão para ESCALA_CINZA e outras configurações
     acessibilidade = usuarios_data.get(usuario, {}).get("acessibilidade", {})
     
-    # Atualiza as constantes globais com base nas preferências do usuário
     import constants
     if "ESCALA_CINZA" in acessibilidade:
         constants.ESCALA_CINZA = acessibilidade.get("ESCALA_CINZA", False)
@@ -59,7 +57,6 @@ def set_acessibilidade(usuario, opcoes, usuarios_data=None):
     if usuario not in usuarios_data:
         usuarios_data[usuario] = {}
     
-    # Atualiza as constantes globais para refletir as novas configurações
     import constants
     if "ESCALA_CINZA" in opcoes:
         constants.ESCALA_CINZA = opcoes["ESCALA_CINZA"]

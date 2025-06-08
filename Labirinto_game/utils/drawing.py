@@ -461,3 +461,20 @@ def aplicar_filtro_cinza_superficie(surface, alpha=180):
     
     # Aplica a superfície em escala de cinza sobre a original
     surface.blit(gray_surface, (0, 0))
+
+def desenhar_barra_qte(tela, x, y, largura=100, altura=8, porcentagem=1.0, cor=(255, 215, 0)):
+    """Desenha uma barra de progresso para QTEs."""
+    # Desenha o fundo da barra
+    fundo_rect = pygame.Rect(x, y, largura, altura)
+    pygame.draw.rect(tela, (50, 50, 50), fundo_rect)
+    
+    # Desenha o preenchimento baseado na porcentagem
+    fill_width = int(largura * porcentagem)
+    if fill_width > 0:
+        fill_rect = pygame.Rect(x, y, fill_width, altura)
+        pygame.draw.rect(tela, cor, fill_rect)
+    
+    # Desenha a borda
+    pygame.draw.rect(tela, (200, 200, 200), fundo_rect, 1)
+    
+    return fundo_rect

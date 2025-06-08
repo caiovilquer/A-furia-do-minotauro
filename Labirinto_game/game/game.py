@@ -9,7 +9,8 @@ from constants import (
     BUTTON_PATH, FONTE_BOTAO, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
     FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA, SOUND_PATH, dialogo_dentro_img,
     NUM_VIDAS, MODO_PRATICA, SERVO_VELOCIDADE, DEBOUNCE_COLISAO_MS, FEEDBACK_CANAL,
-    FEEDBACK_INTENSIDADE, REDUZIR_FLASHES, QUICK_TIME_EVENTS, ESCALA_CINZA, SOM_LIGADO, DIALOGO_VELOCIDADE
+    FEEDBACK_INTENSIDADE, REDUZIR_FLASHES, QUICK_TIME_EVENTS, ESCALA_CINZA, SOM_LIGADO, DIALOGO_VELOCIDADE,
+    QTE_CHANCE, QTE_TIMEOUT, QTE_SEQ_MIN, QTE_SEQ_MAX, QTE_INTERVALO_MIN
 )
 from utils.drawing import aplicar_filtro_cinza_superficie, desenhar_texto, desenhar_botao, resize, TransitionEffect
 from utils.colors import cor_com_escala_cinza
@@ -19,6 +20,7 @@ from screens.level_complete import tela_conclusao_nivel
 from screens.game_complete import tela_conclusao
 from utils.dialog_manager import GerenciadorDialogos
 from utils.achievements import SistemaConquistas
+from utils.qte_manager import QTEManager
 
 class JogoLabirinto:
     """Classe principal do jogo que gerencia o estado e a lógica do jogo."""
@@ -146,6 +148,16 @@ class JogoLabirinto:
         if self.conexao_serial:
             self.enviar_nivel_arduino()
             
+        # Para sistema de QTE
+        self.qte_manager = QTEManager(QTE_TIMEOUT, QTE_SEQ_MIN, QTE_SEQ_MAX)
+        # Inicializa o último QTE para evitar que apareça imediatamente no início do jogo
+        self.ultimo_qte = time.time()  # Alterado: Não subtrai o intervalo mínimo
+        self.qte_ativado = False
+        self.qte_stats = {"qte_sucesso": 0, "qte_falhas": 0}
+        self.servo_congelado = False
+        self.tempo_servo_congelado = 0
+        self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Tempo para o próximo sorteio de QTE
+        
     def aplicar_opcoes_acessibilidade(self):
         # Número de vidas
         self.num_vidas = self.opcoes.get("NUM_VIDAS", NUM_VIDAS)
@@ -432,11 +444,63 @@ class JogoLabirinto:
 
     def atualizar_labirinto(self):
         """Atualiza o estado do labirinto."""
+        # Verificar e atualizar estado do servo congelado
+        if self.servo_congelado and time.time() > self.tempo_servo_congelado:
+            self.servo_congelado = False
+            if self.conexao_serial:
+                try:
+                    self.conexao_serial.write(f"FREEZE:0\n".encode())
+                except Exception as e:
+                    print(f"Erro ao desativar congelamento: {e}")
+        
+        # Atualizar QTE
+        self.qte_manager.atualizar(1/FPS)
+        
+        # Se o QTE foi concluído (sucesso ou falha), resetar
+        if self.qte_manager.concluido:
+            # Se foi bem-sucedido, aplicar power-up
+            if self.qte_manager.sucesso:
+                self.qte_concluido_sucesso()
+            self.qte_manager.resetar()
+        
+        # Verificar se deve iniciar um novo QTE - apenas uma vez por intervalo
+        tempo_atual = time.time()
+        
+        # Realiza o sorteio apenas quando chegar o momento do próximo check
+        if (self.quick_time_events and           # Se QTEs estão ativados nas configurações
+            not self.qte_manager.ativo and       # Se não há QTE em andamento
+            tempo_atual >= self.proximo_check_qte):  # Se chegou o momento do próximo check
+            
+            # Faz um único sorteio por intervalo
+            chance_atual = random.random() 
+            print(f"Check de QTE: {chance_atual:.4f} (limite: {QTE_CHANCE})")
+            
+            if chance_atual < QTE_CHANCE:
+                print(f"Iniciando novo QTE! Próximo sorteio em {QTE_INTERVALO_MIN} segundos.")
+                self.qte_manager.iniciar()
+                self.ultimo_qte = tempo_atual
+            
+            # Independente do resultado, agenda o próximo check para daqui a QTE_INTERVALO_MIN segundos
+            self.proximo_check_qte = tempo_atual + QTE_INTERVALO_MIN
+        
         if self.conexao_serial:
             self.ler_dados_serial()
         else:
             # Simulação quando não há comunicação com Arduino
             self.simular_progresso()
+            
+            # Simular botões para QTE em modo de simulação
+            if self.qte_manager.ativo and not self.qte_manager.concluido and random.random() < 0.05:
+                # 50% de chance de acertar o input correto
+                if random.random() < 0.5:
+                    input_correto = self.qte_manager.sequencia[self.qte_manager.passo_atual]
+                    resultado = self.qte_manager.processar_input(input_correto)
+                    if resultado is True:
+                        self.qte_concluido_sucesso()
+                else:
+                    input_errado = "R" if self.qte_manager.sequencia[self.qte_manager.passo_atual] == "L" else "L"
+                    self.qte_manager.processar_input(input_errado)
+                    self.qte_stats["qte_falhas"] += 1
 
     def simular_progresso(self):
         """Simular progresso para modo de demonstração."""
@@ -475,13 +539,14 @@ class JogoLabirinto:
         print(f"Dados recebidos: {dados}")
         
         # Formato esperado dos dados: COMANDO:VALOR
-        # Exemplos: PROGRESSO:0.75, COLISAO:1, CONCLUIDO:1
+        # Exemplos: PROGRESSO:0.75, COLISAO:1, CONCLUIDO:1, BTN:L, BTN:R
         try:
             if ':' in dados:
                 comando, valor = dados.split(':', 1)
                 
                 if comando == "PROGRESSO":
-                    self.progresso = float(valor)
+                    if not self.servo_congelado:
+                        self.progresso = float(valor)
                     
                 elif comando == "COLISAO":
                     if int(valor) == 1:
@@ -493,11 +558,64 @@ class JogoLabirinto:
                     if int(valor) == 1:
                         # Marca o nível como concluído
                         self.progresso = 1.0
+                
+                elif comando == "BTN":
+                    # Processa botões para QTEs
+                    if valor in ["E", "D"]:
+                        if self.qte_manager.ativo and not self.qte_manager.concluido:
+                            resultado = self.qte_manager.processar_input(valor)
+                            if resultado is True:  # QTE concluído com sucesso
+                                self.qte_concluido_sucesso()
+                            elif resultado is False:  # Erro no QTE
+                                self.qte_stats["qte_falhas"] += 1
                         
         except Exception as e:
             print(f"Erro ao processar dados: {e}")
-
-
+    
+    def qte_concluido_sucesso(self):
+        """Aplica power-up aleatório quando um QTE é concluído com sucesso"""
+        from utils.audio_manager import audio_manager
+        
+        # Incrementar contagem de QTEs bem-sucedidos
+        self.qte_stats["qte_sucesso"] += 1
+        print(f"QTE concluído com sucesso! Total: {self.qte_stats['qte_sucesso']}")
+        
+        # Escolher power-up aleatório
+        power_up = random.choice(["vida_extra", "congelar_servos", "reduzir_tempo"])
+        
+        if power_up == "vida_extra" and self.vidas < self.num_vidas:
+            # +1 Vida (até o máximo)
+            self.vidas += 1
+            print(f"Power-up: Vida extra! Vidas: {self.vidas}")
+            # Atualiza estados dos corações
+            indice_coracao_recuperado = self.vidas - 1
+            if 0 <= indice_coracao_recuperado < self.num_vidas:
+                self.estados_coracoes[indice_coracao_recuperado] = True
+                self.progresso_animacao_coracoes[indice_coracao_recuperado] = 0.0
+            audio_manager.play_sound("powerup")
+            audio_manager.play_voiced_dialogue("vida_extra")
+            
+        elif power_up == "congelar_servos":
+            # Congelar servos por 5 segundos
+            self.servo_congelado = True
+            self.tempo_servo_congelado = time.time() + 5.0  # 5 segundos
+            print(f"Power-up: Servos congelados por 5 segundos!")
+            if self.conexao_serial:
+                try:
+                    self.conexao_serial.write(f"FREEZE:1\n".encode())
+                except Exception as e:
+                    print(f"Erro ao enviar comando de congelamento: {e}")
+            audio_manager.play_sound("powerup")
+            audio_manager.play_voiced_dialogue("servos_congelados")
+            
+        elif power_up == "reduzir_tempo":
+            # Reduzir 10 segundos do tempo
+            self.inicio_tempo += 10.0  # Adicionar 10 segundos ao início (reduz o tempo decorrido)
+            tempo_atual = time.time() - self.inicio_tempo
+            print(f"Power-up: Tempo reduzido em 10 segundos! Novo tempo: {tempo_atual:.1f}s")
+            audio_manager.play_sound("powerup")
+            audio_manager.play_voiced_dialogue("tempo_reduzido")
+            
     def feedback_colisao(self):
         """Fornece feedback visual/sonoro para colisão."""
         from utils.audio_manager import audio_manager
@@ -505,7 +623,6 @@ class JogoLabirinto:
         audio_manager.play_sound("collision")
         
         # Escolhe o áudio dublado correto baseado no número de vidas restantes
-        # Nota: self.vidas já foi decrementado antes desta chamada
         if self.vidas == 1: # Será 1 após esta colisão se era 2 antes
             audio_manager.play_voiced_dialogue("colisao_1vida")
         elif self.vidas == 2: # Será 2 após esta colisão se era 3 antes
@@ -514,16 +631,11 @@ class JogoLabirinto:
         self.flash_ativo = True
         self.flash_inicio = time.time()
 
-        # Aciona a animação do coração
-        # self.vidas é o número de vidas RESTANTES.
-        # Se o indice_coracao_perdido está dentro do range válido
         indice_coracao_perdido = self.vidas 
         if 0 <= indice_coracao_perdido < self.num_vidas and self.estados_coracoes[indice_coracao_perdido]:
             # Inicia a animação apenas se não já iniciada
             if self.progresso_animacao_coracoes[indice_coracao_perdido] == 0.0: 
-                self.progresso_animacao_coracoes[indice_coracao_perdido] = 0.01 # Inicia animação
-            # O estado self.estados_coracoes[indice_coracao_perdido] será definido como False quando a animação completar.
-
+                self.progresso_animacao_coracoes[indice_coracao_perdido] = 0.01
         print(f"Colisão! Progresso atual: {self.progresso:.2f}")
 
     def verifica_conclusao_nivel(self):
@@ -533,7 +645,7 @@ class JogoLabirinto:
             return self.progresso >= 1.0
         else:
             return (time.time() - self.inicio_tempo) > 10 or self.progresso >= 1.0
-
+    
     def salvar_progresso(self, tempo_gasto, falhou=False):
         """Salva o progresso do jogador."""
         usuario_data = self.usuarios_data[self.usuario]
@@ -564,7 +676,8 @@ class JogoLabirinto:
             'tentativas': usuario_data.get('tentativas', []),
             'vidas_restantes': self.vidas,
             'vidas_iniciais': self.num_vidas,  # Usar o número de vidas configurado
-            'concluido': not falhou
+            'concluido': not falhou,
+            'qte_sucesso': self.qte_stats.get("qte_sucesso", 0)
         }
         
         # Verificar conquistas com os dados atualizados
@@ -596,6 +709,12 @@ class JogoLabirinto:
         self.progresso = 0.0
         self.mostrou_dialogo_fase_atual = False
         
+        # Reset QTE timer when starting a new level
+        self.ultimo_qte = time.time()
+        self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda o primeiro check
+        self.qte_manager.resetar()
+        
+        # Obter melhor tempo do jogador para este nível
         self.melhor_tempo = self.obter_melhor_tempo()
         
         self.conquistas_proximas = self.verificar_conquistas_proximas()
@@ -1051,6 +1170,103 @@ class JogoLabirinto:
         
         return rect_audio
 
+    def desenhar_qte(self):
+        """Desenha a interface do QTE atual"""
+        if not self.qte_manager.ativo:
+            return
+            
+        from utils.drawing import desenhar_barra_qte
+        
+        # Calcula posição central na tela
+        centro_x = LARGURA_TELA // 2
+        centro_y = ALTURA_TELA // 2 - resize(150)
+        
+        # Desenha um painel de fundo semitransparente
+        painel_largura = resize(400, eh_X=True)
+        painel_altura = resize(200)
+        painel_x = centro_x - painel_largura // 2
+        painel_y = centro_y - painel_altura // 2
+        
+        painel = pygame.Surface((painel_largura, painel_altura), pygame.SRCALPHA)
+        painel.fill((0, 0, 0, 150))  # Fundo escuro semitransparente
+        self.tela.blit(painel, (painel_x, painel_y))
+        
+        # Desenha borda dourada
+        pygame.draw.rect(self.tela, (255, 215, 0), 
+                        pygame.Rect(painel_x, painel_y, painel_largura, painel_altura),
+                        width=resize(2), border_radius=resize(10))
+        
+        # Título do QTE
+        fonte_titulo = pygame.font.SysFont("Arial", resize(32, eh_X=True), bold=True)
+        texto_titulo = "Evento de Tempo Rápido!"
+        surf_titulo = fonte_titulo.render(texto_titulo, True, (255, 215, 0))
+        rect_titulo = surf_titulo.get_rect(center=(centro_x, painel_y + resize(30)))
+        self.tela.blit(surf_titulo, rect_titulo)
+        
+        # Desenha a sequência de botões
+        btn_y = painel_y + resize(80)
+        btn_tamanho = resize(50)
+        espacamento = resize(20, eh_X=True)
+        
+        # Calcula a posição inicial dos botões para centralizá-los
+        total_largura = len(self.qte_manager.sequencia) * btn_tamanho + (len(self.qte_manager.sequencia) - 1) * espacamento
+        btn_x_inicial = centro_x - total_largura // 2
+        
+        for i, comando in enumerate(self.qte_manager.sequencia):
+            btn_x = btn_x_inicial + i * (btn_tamanho + espacamento)
+            btn_rect = pygame.Rect(btn_x, btn_y, btn_tamanho, btn_tamanho)
+            
+            # Determina a cor do botão
+            if i < self.qte_manager.passo_atual:  # Botões já pressionados corretamente
+                cor_btn = (0, 200, 0)  # Verde
+            elif i == self.qte_manager.passo_atual:  # Botão atual
+                # Efeito pulsante para o botão atual
+                pulso = (math.sin(time.time() * 5) + 1) / 2  # Varia de 0 a 1
+                if comando == "E":
+                    cor_btn = (0, 0 , 255)
+                elif comando == "D":
+                    cor_btn = (255, 0, 0)
+                # Desenha efeito de pulso (círculo ao redor)
+                pulso_tamanho = int(btn_tamanho * (1 + 0.2 * pulso))
+                pulso_x = btn_x + btn_tamanho // 2 - pulso_tamanho // 2
+                pulso_y = btn_y + btn_tamanho // 2 - pulso_tamanho // 2
+                pygame.draw.circle(self.tela, (255, 215, 0, 100), 
+                                 (btn_x + btn_tamanho // 2, btn_y + btn_tamanho // 2),
+                                 pulso_tamanho // 2, width=resize(2))
+            else:  # Botões futuros
+                if comando == "E":
+                    cor_btn = (0, 0, 100)
+                elif comando == "D":
+                    cor_btn = (100, 0, 0)
+
+            
+            # Desenha o botão
+            pygame.draw.rect(self.tela, cor_btn, btn_rect, border_radius=resize(10))
+            pygame.draw.rect(self.tela, (255, 255, 255), btn_rect, width=resize(2), border_radius=resize(10))
+            
+            # Desenha o texto do botão (L ou R)
+            fonte_btn = pygame.font.SysFont("Arial", resize(24, eh_X=True), bold=True)
+            texto_btn = fonte_btn.render(comando, True, (255, 255, 255))
+            rect_texto = texto_btn.get_rect(center=btn_rect.center)
+            self.tela.blit(texto_btn, rect_texto)
+        
+        # Desenha a barra de tempo
+        barra_largura = resize(350, eh_X=True)
+        barra_altura = resize(20)
+        barra_x = centro_x - barra_largura // 2
+        barra_y = painel_y + painel_altura - resize(40)
+        
+        # A cor da barra varia conforme o tempo restante
+        tempo_pct = self.qte_manager.progresso_tempo()
+        if tempo_pct > 0.66:
+            cor_barra = (0, 200, 0)  # Verde
+        elif tempo_pct > 0.33:
+            cor_barra = (255, 215, 0)  # Amarelo
+        else:
+            cor_barra = (200, 0, 0)  # Vermelho
+            
+        desenhar_barra_qte(self.tela, barra_x, barra_y, barra_largura, barra_altura, tempo_pct, cor_barra)
+        
     def loop_principal(self, pular_dialogo=False):
         """Loop principal do jogo."""
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
@@ -1064,8 +1280,10 @@ class JogoLabirinto:
             from utils.user_data import marcar_dialogo_como_visto
             marcar_dialogo_como_visto(self.usuario, nome_cena)
         
-        # Reinicia o timer após o diálogo (importante!)
+        # Reinicia o timer após o diálogo (importante!) e também o timer do QTE
         self.inicio_tempo = time.time()
+        self.ultimo_qte = time.time()  
+        self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda primeiro check
         
         while self.jogo_ativo:
             events = pygame.event.get()
@@ -1078,12 +1296,16 @@ class JogoLabirinto:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.jogo_ativo = False
-
                         TransitionEffect.fade_out(tela, velocidade=8)
                         return
+                    # Simular botões QTE com teclado (para testes)
+                    elif event.key == pygame.K_LEFT and self.qte_manager.ativo and not self.qte_manager.concluido:
+                        resultado = self.qte_manager.processar_input("E")
+                    elif event.key == pygame.K_RIGHT and self.qte_manager.ativo and not self.qte_manager.concluido:
+                        resultado = self.qte_manager.processar_input("D")
 
             self.atualizar_labirinto()
-
+            
             # Renderiza o fundo apropriado para o nível atual
             background_atual = self.background_images.get(self.nivel_atual)
             
@@ -1099,10 +1321,8 @@ class JogoLabirinto:
                 
 
             self.desenhar_elementos_tematicos()
-                
-
+            
             self.desenhar_nome_nivel()
-
 
             clicou_voltar, _ = desenhar_botao(
                 texto="VOLTAR",
@@ -1180,6 +1400,8 @@ class JogoLabirinto:
             
             tempo_atual = time.time() - self.inicio_tempo
             self.desenhar_timer_visual(tempo_atual)
+
+            self.desenhar_qte()
 
             self.desenhar_melhor_tempo()
             

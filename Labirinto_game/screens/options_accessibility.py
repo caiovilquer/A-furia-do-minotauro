@@ -14,13 +14,11 @@ class Slider:
         self.valor = valor_inicial
         self.min_valor = min_valor
         self.max_valor = max_valor
-        # Garantir que a cor é uma tupla RGB válida
         if isinstance(cor, (list, tuple)) and len(cor) >= 3:
             self.cor = (int(cor[0]), int(cor[1]), int(cor[2]))
         else:
             self.cor = (100, 100, 200)  # Cor padrão caso inválida
         
-        # Cor para estado hover
         r, g, b = self.cor
         self.cor_hover = (min(r+40, 255), min(g+40, 255), min(b+40, 255))
         self.cor_handle = (255, 255, 255)
@@ -92,7 +90,7 @@ class Slider:
         pos = int((self.valor - self.min_valor) / (self.max_valor - self.min_valor) * self.rect.width)
         fill_rect = pygame.Rect(self.rect.x, self.rect.y, pos, self.rect.height)
         
-        # Efeito gradiente no preenchimento - CORRIGIDO
+        # Efeito gradiente no preenchimento 
         r, g, b = self.cor
         for i in range(fill_rect.width):
             if i >= self.rect.width:
@@ -114,7 +112,7 @@ class Slider:
         # Borda do slider
         pygame.draw.rect(tela, (150,150,150), self.rect, width=1, border_radius=resize(8))
         
-        # Handle (puxador)
+
         handle_x = self.rect.x + pos
         handle_y = self.rect.y + self.rect.height // 2
         handle_color = self.cor if not self.hover else self.cor_hover
@@ -239,7 +237,6 @@ class Selector:
                        (self.rect.right - resize(20, eh_X=True), self.rect.centery), 
                        (self.rect.right - resize(10, eh_X=True), self.rect.bottom - resize(10)), resize(2))
         
-        # Texto com nome e valor selecionado
         texto_completo = f"{self.nome}: {self.opcoes[self.indice]}"
         desenhar_texto_sombra(texto_completo, self.fonte, (220, 220, 220), 
                             tela, self.rect.x + resize(50, eh_X=True), self.rect.y + resize(12))
@@ -257,27 +254,21 @@ def carregar_icone(nome, tamanho=32):
 
 def criar_botao_navegacao(tela, x, y, largura, altura, texto, icone, cor, selecionado, events):
     """Cria um botão de navegação para as abas de opções"""
-    # Estado do botão
     hover = False
     mouse_pos = pygame.mouse.get_pos()
     rect = pygame.Rect(x, y, largura, altura)
     hover = rect.collidepoint(mouse_pos)
     
-    # Cores do botão baseadas no estado
     if selecionado:
-        # Botão selecionado
         cor_bg = (min(cor[0] + 20, 255), min(cor[1] + 20, 255), min(cor[2] + 20, 255))
         cor_borda = (255, 255, 255)
     elif hover:
-        # Hover
         cor_bg = (min(cor[0] + 10, 255), min(cor[1] + 10, 255), min(cor[2] + 10, 255))
         cor_borda = (200, 200, 200)
     else:
-        # Normal
         cor_bg = cor
         cor_borda = (120, 120, 120)
     
-    # Desenha o botão
     pygame.draw.rect(tela, cor_bg, rect, border_radius=resize(10))
     pygame.draw.rect(tela, cor_borda, rect, width=resize(2), border_radius=resize(10))
     
@@ -288,11 +279,9 @@ def criar_botao_navegacao(tela, x, y, largura, altura, texto, icone, cor, seleci
     else:
         pos_texto_x = x + resize(10, eh_X=True)
     
-    # Desenha texto
     fonte = pygame.font.Font("Labirinto_game/assets/fonts/greek-freak.regular.ttf", resize(22))
     desenhar_texto_sombra(texto, fonte, (255, 255, 255), tela, pos_texto_x, y + resize(8))
     
-    # Verifica clique
     clicado = False
     for event in events:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -317,7 +306,6 @@ def tela_opcoes_acessibilidade(tela, usuario):
     ESCALA_CINZA = constants.ESCALA_CINZA
     SOM_LIGADO = constants.SOM_LIGADO
     
-    # Carrega ícones para as categorias
     icones = {
         "audio": carregar_icone("audio", 32),
         "imagem": carregar_icone("display", 32),
@@ -327,7 +315,6 @@ def tela_opcoes_acessibilidade(tela, usuario):
         "texto": carregar_icone("text", 32),
     }
     
-    # Configurações de cor para cada categoria
     cores_categoria = {
         "audio": (100, 140, 220),
         "imagem": (220, 140, 100),
@@ -337,7 +324,6 @@ def tela_opcoes_acessibilidade(tela, usuario):
         "texto": (100, 180, 180),
     }
     
-    # Carrega dados do usuário
     usuarios_data = carregar_usuarios()
     opcoes = get_acessibilidade(usuario, usuarios_data).copy()
     
@@ -362,9 +348,9 @@ def tela_opcoes_acessibilidade(tela, usuario):
     
     # Posições e dimensões base
     x_central = LARGURA_TELA // 2
-    y_base = resize(300)  # Aumenta para deixar espaço para o título e botões
-    espac = resize(100)   # Espaçamento maior entre elementos
-    largura_slider = resize(500, eh_X=True)  # Sliders mais largos
+    y_base = resize(300)  #
+    espac = resize(100)
+    largura_slider = resize(500, eh_X=True)
     
     # Categoria inicial selecionada
     categoria_atual = "audio"
@@ -444,7 +430,7 @@ def tela_opcoes_acessibilidade(tela, usuario):
         "texto": {
             "sliders": {
                 "DIALOGO_VELOCIDADE": Slider(x_central - largura_slider//2, y_base + espac, largura_slider, 
-                                           opcoes["DIALOGO_VELOCIDADE"], 0, 100, 
+                                           opcoes["DIALOGO_VELOCIDADE"], 10, 100, 
                                            cores_categoria["texto"], 
                                            "Velocidade do Texto em Diálogos", fonte_menor, 1, "ms"),
             },
@@ -510,7 +496,7 @@ def tela_opcoes_acessibilidade(tela, usuario):
                         audio_manager.set_music_volume(controle.valor)
                     elif key == "VOLUME_SFX":
                         audio_manager.set_sfx_volume(controle.valor)
-                        if tempo - ultimo_teste_audio > 300:  # Evita tocar muitos sons
+                        if tempo - ultimo_teste_audio > 300:
                             audio_manager.play_sound("hover")
                             ultimo_teste_audio = tempo
                     elif key == "VOLUME_VOZ":
@@ -518,7 +504,6 @@ def tela_opcoes_acessibilidade(tela, usuario):
             
             for key, checkbox in controles_categoria["checkboxes"].items():
                 if checkbox.handle_event(event):
-                    # Aplica alterações de som imediatamente
                     if key == "SOM_LIGADO":
                         audio_manager.som_ligado = checkbox.checked
                         constants.SOM_LIGADO = checkbox.checked
@@ -541,7 +526,7 @@ def tela_opcoes_acessibilidade(tela, usuario):
         # Fundo com gradiente
         painel = pygame.Surface((largura_painel, altura_painel), pygame.SRCALPHA)
         for y in range(altura_painel):
-            alpha = 180  # Transparência
+            alpha = 180  
             fator_y = y / altura_painel
             r = int(20 + 20 * fator_y)
             g = int(20 + 20 * fator_y)
@@ -594,19 +579,16 @@ def tela_opcoes_acessibilidade(tela, usuario):
             x_inicial_linha1 = x_central - largura_linha1 // 2
             x_inicial_linha2 = x_central - largura_linha2 // 2
             
-            # Primeira linha de botões
             for i, cat in enumerate(categorias_linha1):
                 x_btn = x_inicial_linha1 + i * (largura_btn + espaco_btn)
                 y_btn = y_base - resize(80)  # Primeira linha mais acima
                 
-                # Capitaliza o nome da categoria para o botão
+
                 nome_cat = cat.upper()
                 cor = cores_categoria[cat]
                 
-                # Verifica se este botão está selecionado
                 selecionado = (cat == categoria_atual)
                 
-                # Cria o botão e verifica se foi clicado
                 if criar_botao_navegacao(tela, x_btn, y_btn, largura_btn, altura_btn, 
                                        nome_cat, icones[cat], cor, selecionado, events):
                     # Muda para a categoria selecionada
@@ -615,40 +597,30 @@ def tela_opcoes_acessibilidade(tela, usuario):
             # Segunda linha de botões
             for i, cat in enumerate(categorias_linha2):
                 x_btn = x_inicial_linha2 + i * (largura_btn + espaco_btn)
-                y_btn = y_base - resize(35)  # Segunda linha
+                y_btn = y_base - resize(35)
                 
-                # Capitaliza o nome da categoria para o botão
                 nome_cat = cat.upper()
                 cor = cores_categoria[cat]
                 
-                # Verifica se este botão está selecionado
                 selecionado = (cat == categoria_atual)
                 
-                # Cria o botão e verifica se foi clicado
                 if criar_botao_navegacao(tela, x_btn, y_btn, largura_btn, altura_btn, 
                                        nome_cat, icones[cat], cor, selecionado, events):
-                    # Muda para a categoria selecionada
                     categoria_atual = cat
         else:
-            # Uma única linha de botões é suficiente
             x_inicial_btn = x_central - largura_total // 2
             
-            # Desenha todos os botões de navegação
             for i, cat in enumerate(categorias):
                 x_btn = x_inicial_btn + i * (largura_btn + espaco_btn)
                 y_btn = y_base - resize(60)
                 
-                # Capitaliza o nome da categoria para o botão
                 nome_cat = cat.upper()
                 cor = cores_categoria[cat]
                 
-                # Verifica se este botão está selecionado
                 selecionado = (cat == categoria_atual)
                 
-                # Cria o botão e verifica se foi clicado
                 if criar_botao_navegacao(tela, x_btn, y_btn, largura_btn, altura_btn, 
                                        nome_cat, icones[cat], cor, selecionado, events):
-                    # Muda para a categoria selecionada
                     categoria_atual = cat
                 
         # Desenha uma linha divisória após os botões
@@ -658,17 +630,13 @@ def tela_opcoes_acessibilidade(tela, usuario):
                        (x_painel + largura_painel - resize(50, eh_X=True), y_linha),
                        resize(3))
         
-        # Desenha o título da categoria atual
         titulo_cat = f"Configurações de {categoria_atual.capitalize()}"
-        # Calcula posição central para o texto
         texto_width = fonte_menor.size(titulo_cat)[0]
         desenhar_texto_sombra(titulo_cat, fonte_menor, cores_categoria[categoria_atual], 
                             tela, x_central - texto_width//2, y_base - resize(5))
         
-        # Desenha os controles da categoria atual
         controles = controles_por_categoria[categoria_atual]
         
-        # Verificamos se cada tipo de controle tem itens antes de renderizar
         if controles["sliders"]:
             for slider in controles["sliders"].values():
                 slider.draw(tela)
@@ -681,7 +649,6 @@ def tela_opcoes_acessibilidade(tela, usuario):
             for selector in controles["selectors"].values():
                 selector.draw(tela)
         
-        # Descrição da categoria (opcional)
         descricoes = {
             "audio": "Ajuste os volumes de música, efeitos sonoros e vozes do jogo.",
             "imagem": "Configure a escala da interface, efeitos visuais e modo escala de cinza.",
@@ -707,7 +674,6 @@ def tela_opcoes_acessibilidade(tela, usuario):
             # Texto
             tela.blit(surf_desc, rect_desc)
         
-        # Botões de ação
         clicou_voltar, _ = desenhar_botao(
             texto="Salvar e Voltar",
             x=LARGURA_TELA//2 - resize(430, eh_X=True),
@@ -745,9 +711,6 @@ def tela_opcoes_acessibilidade(tela, usuario):
         if clicou_padrao:
             # Restaura configurações padrão da categoria atual
             for key, slider in controles_por_categoria[categoria_atual]["sliders"].items():
-                # Não restaure UI_ESCALA
-                if key == "UI_ESCALA":
-                    continue
                 if key in globals():
                     padrao = globals()[key]
                     slider.valor = padrao

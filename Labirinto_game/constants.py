@@ -40,7 +40,6 @@ QUICK_TIME_EVENTS = True
 
 DIALOGO_VELOCIDADE = 30  # ms/caractere, ou 0 para "instante"
 
-# Importa resize após definir UI_ESCALA para evitar importação circular
 from utils.drawing import resize
 
 # Fontes
@@ -87,3 +86,10 @@ if os.path.exists(DIALOGO_DENTRO_PATH):
     dialogo_dentro_img = pygame.transform.scale(dialogo_dentro_img, (LARGURA_TELA, ALTURA_TELA))
 else:
     dialogo_dentro_img = None
+
+# --- QTE Settings ---
+QTE_CHANCE = 0.5      
+QTE_TIMEOUT = 6        
+QTE_SEQ_MIN = 3        
+QTE_SEQ_MAX = 5       
+QTE_INTERVALO_MIN = 10 

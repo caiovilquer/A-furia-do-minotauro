@@ -63,6 +63,12 @@ class SistemaConquistas:
                 'descricao': 'Jogue o jogo 50 vezes',
                 'icone': 'Labirinto_game/assets/images/achievements/Pegadas_de_Bronze.png',
                 'desbloqueada': False
+            },
+            'mestre_dos_botoes': {
+                'nome': 'Mestre dos Botões', 
+                'descricao': 'Complete 10 QTEs sem erros',
+                'icone': 'Labirinto_game/assets/images/achievements/Mestre_dos_Botoes.png',
+                'desbloqueada': False
             }
         }
         
@@ -166,6 +172,13 @@ class SistemaConquistas:
             conquistas_desbloqueadas.append('pegadas_de_bronze')
             print("Conquista PEGADAS DE BRONZE desbloqueada!")
         
+        # Mestre dos Botões - Complete 10 QTEs sem erros
+        qte_sucesso = dados_jogo.get('qte_sucesso', 0)
+        if not self.conquistas['mestre_dos_botoes']['desbloqueada'] and qte_sucesso >= 10:
+            self.conquistas['mestre_dos_botoes']['desbloqueada'] = True
+            conquistas_desbloqueadas.append('mestre_dos_botoes')
+            print("Conquista MESTRE DOS BOTÕES desbloqueada!")
+        
         self.salvar_conquistas_usuario(usuario)
         
         if conquistas_desbloqueadas:
@@ -195,7 +208,10 @@ class SistemaConquistas:
         tempo_decorrido = time.time() - self.notificacao_inicio
         if tempo_decorrido > self.notificacao_duracao:
             self.notificacao_ativa = False
-            self.notificacao_texto = []
+            self.notificacao_texto.pop(0)
+            if self.notificacao_texto:  # Se ainda há notificações na fila
+                self.notificacao_inicio = time.time()
+                self.notificacao_ativa = True
             return
         
         largura_tela, altura_tela = tela.get_size()

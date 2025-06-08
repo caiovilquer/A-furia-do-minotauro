@@ -88,7 +88,7 @@ else:
     dialogo_dentro_img = None
 
 # --- QTE Settings ---
-QTE_CHANCE = 0.5      
+QTE_CHANCE = 0.5
 QTE_TIMEOUT = 6        
 QTE_SEQ_MIN = 3        
 QTE_SEQ_MAX = 5       

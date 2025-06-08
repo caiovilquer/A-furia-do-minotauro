@@ -157,6 +157,16 @@ class JogoLabirinto:
         self.servo_congelado = False
         self.tempo_servo_congelado = 0
         self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Tempo para o próximo sorteio de QTE
+
+        # Popup de Power-up QTE
+        self.popup_powerup_ativo = False
+        self.popup_powerup_titulo = ""
+        self.popup_powerup_descricao = ""
+        self.popup_powerup_icone_atual = None
+        self.popup_powerup_inicio_tempo = 0
+        self.popup_powerup_duracao = 3.0  # Segundos
+        self.popup_powerup_fade_duracao = 0.5 # Segundos para fade in/out
+        self.carregar_icones_powerup()
         
     def aplicar_opcoes_acessibilidade(self):
         # Número de vidas
@@ -203,6 +213,38 @@ class JogoLabirinto:
                 self.conexao_serial.write(f"SERVO:{self.servo_velocidade}\n".encode())
             except Exception as e:
                 print(f"Erro ao enviar velocidade do servo: {e}")
+
+    def carregar_icones_powerup(self):
+        """Carrega os ícones para os power-ups."""
+        icon_size = resize(64)
+        try:
+            self.icone_powerup_vida = pygame.image.load("Labirinto_game/assets/images/icons/powerup_vida.png").convert_alpha()
+            self.icone_powerup_vida = pygame.transform.scale(self.icone_powerup_vida, (icon_size, icon_size))
+        except Exception as e:
+            print(f"Erro ao carregar icone_powerup_vida: {e}")
+            self.icone_powerup_vida = pygame.Surface((icon_size, icon_size), pygame.SRCALPHA)
+            pygame.draw.circle(self.icone_powerup_vida, (255,0,0), (icon_size//2, icon_size//2), icon_size//2 - 2)
+            desenhar_texto("+", pygame.font.SysFont("Arial", resize(40), bold=True), (255,255,255), self.icone_powerup_vida, icon_size//2, icon_size//2, center=True)
+
+
+        try:
+            self.icone_powerup_congelar = pygame.image.load("Labirinto_game/assets/images/icons/powerup_freeze.png").convert_alpha()
+            self.icone_powerup_congelar = pygame.transform.scale(self.icone_powerup_congelar, (icon_size, icon_size))
+        except Exception as e:
+            print(f"Erro ao carregar icone_powerup_congelar: {e}")
+            self.icone_powerup_congelar = pygame.Surface((icon_size, icon_size), pygame.SRCALPHA)
+            pygame.draw.rect(self.icone_powerup_congelar, (0,200,255), (0,0,icon_size,icon_size), border_radius=5)
+            desenhar_texto("❄", pygame.font.SysFont("Arial", resize(40), bold=True), (255,255,255), self.icone_powerup_congelar, icon_size//2, icon_size//2, center=True)
+
+        try:
+            self.icone_powerup_tempo = pygame.image.load("Labirinto_game/assets/images/icons/powerup_time.png").convert_alpha()
+            self.icone_powerup_tempo = pygame.transform.scale(self.icone_powerup_tempo, (icon_size, icon_size))
+        except Exception as e:
+            print(f"Erro ao carregar icone_powerup_tempo: {e}")
+            self.icone_powerup_tempo = pygame.Surface((icon_size, icon_size), pygame.SRCALPHA)
+            pygame.draw.circle(self.icone_powerup_tempo, (255,215,0), (icon_size//2, icon_size//2), icon_size//2 - 2)
+            desenhar_texto("⏱", pygame.font.SysFont("Arial", resize(35), bold=True), (0,0,0), self.icone_powerup_tempo, icon_size//2, icon_size//2, center=True)
+
 
     def carregar_icones_audio(self):
         """Carrega os ícones de controle de áudio"""
@@ -580,11 +622,16 @@ class JogoLabirinto:
         self.qte_stats["qte_sucesso"] += 1
         print(f"QTE concluído com sucesso! Total: {self.qte_stats['qte_sucesso']}")
         
-        # Escolher power-up aleatório
-        power_up = random.choice(["vida_extra", "congelar_servos", "reduzir_tempo"])
+        if self.vidas < self.num_vidas:
+            power_up = random.choice(["vida_extra", "congelar_servos", "reduzir_tempo"])
+        else:
+            power_up = random.choice(["congelar_servos", "reduzir_tempo"])
         
+        self.popup_powerup_titulo = "RECOMPENSA!"
+        self.popup_powerup_ativo = True
+        self.popup_powerup_inicio_tempo = time.time()
+
         if power_up == "vida_extra" and self.vidas < self.num_vidas:
-            # +1 Vida (até o máximo)
             self.vidas += 1
             print(f"Power-up: Vida extra! Vidas: {self.vidas}")
             # Atualiza estados dos corações
@@ -594,6 +641,8 @@ class JogoLabirinto:
                 self.progresso_animacao_coracoes[indice_coracao_recuperado] = 0.0
             audio_manager.play_sound("powerup")
             audio_manager.play_voiced_dialogue("vida_extra")
+            self.popup_powerup_descricao = "Vida Extra!"
+            self.popup_powerup_icone_atual = self.icone_powerup_vida
             
         elif power_up == "congelar_servos":
             # Congelar servos por 5 segundos
@@ -607,6 +656,8 @@ class JogoLabirinto:
                     print(f"Erro ao enviar comando de congelamento: {e}")
             audio_manager.play_sound("powerup")
             audio_manager.play_voiced_dialogue("servos_congelados")
+            self.popup_powerup_descricao = "Servos Congelados!"
+            self.popup_powerup_icone_atual = self.icone_powerup_congelar
             
         elif power_up == "reduzir_tempo":
             # Reduzir 10 segundos do tempo
@@ -615,6 +666,8 @@ class JogoLabirinto:
             print(f"Power-up: Tempo reduzido em 10 segundos! Novo tempo: {tempo_atual:.1f}s")
             audio_manager.play_sound("powerup")
             audio_manager.play_voiced_dialogue("tempo_reduzido")
+            self.popup_powerup_descricao = "Tempo Reduzido!"
+            self.popup_powerup_icone_atual = self.icone_powerup_tempo
             
     def feedback_colisao(self):
         """Fornece feedback visual/sonoro para colisão."""
@@ -713,6 +766,7 @@ class JogoLabirinto:
         self.ultimo_qte = time.time()
         self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda o primeiro check
         self.qte_manager.resetar()
+        self.popup_powerup_ativo = False # Garante que o popup não persista entre níveis
         
         # Obter melhor tempo do jogador para este nível
         self.melhor_tempo = self.obter_melhor_tempo()
@@ -988,6 +1042,86 @@ class JogoLabirinto:
                 # Borda brilhante
                 pygame.draw.rect(self.tela, brilho_cor, indicador_rect, 
                                 width=resize(2), border_radius=resize(10))
+
+    def desenhar_popup_powerup(self):
+        if not self.popup_powerup_ativo:
+            return
+
+        tempo_decorrido = time.time() - self.popup_powerup_inicio_tempo
+        
+        if tempo_decorrido > self.popup_powerup_duracao:
+            self.popup_powerup_ativo = False
+            return
+
+        # Cálculo de Alpha para fade-in e fade-out
+        alpha = 255
+        if tempo_decorrido < self.popup_powerup_fade_duracao: # Fade-in
+            alpha = int(255 * (tempo_decorrido / self.popup_powerup_fade_duracao))
+        elif tempo_decorrido > self.popup_powerup_duracao - self.popup_powerup_fade_duracao: # Fade-out
+            alpha = int(255 * ((self.popup_powerup_duracao - tempo_decorrido) / self.popup_powerup_fade_duracao))
+        alpha = max(0, min(255, alpha)) # Garante que alpha esteja entre 0 e 255
+
+        if alpha == 0: # Se invisível, não desenha
+            return
+
+        # Dimensões e Posição do Popup
+        popup_largura = resize(450, eh_X=True)
+        popup_altura = resize(130)
+        popup_x = (LARGURA_TELA - popup_largura) // 2
+        popup_y = ALTURA_TELA // 2 - popup_altura - resize(50) # Um pouco acima do centro
+
+        # Superfície do Popup com transparência
+        popup_surface = pygame.Surface((popup_largura, popup_altura), pygame.SRCALPHA)
+        
+        # Fundo estilizado (ex: gradiente ou cor sólida com borda)
+        cor_fundo_base = (30, 30, 70) # Azul escuro
+        pygame.draw.rect(popup_surface, (*cor_fundo_base, int(alpha * 0.9)), (0,0, popup_largura, popup_altura), border_radius=resize(20))
+        
+        # Borda Dourada
+        cor_borda = (255, 215, 0)
+        pygame.draw.rect(popup_surface, (*cor_borda, alpha), (0,0, popup_largura, popup_altura), width=resize(3), border_radius=resize(20))
+
+        # Desenhar Ícone
+        if self.popup_powerup_icone_atual:
+            icone_rect = self.popup_powerup_icone_atual.get_rect(centery=popup_altura//2, left=resize(20, eh_X=True))
+            # Aplicar alpha ao ícone também
+            temp_icon_surf = self.popup_powerup_icone_atual.copy()
+            temp_icon_surf.set_alpha(alpha)
+            popup_surface.blit(temp_icon_surf, icone_rect)
+            texto_x_inicio = icone_rect.right + resize(20, eh_X=True)
+        else:
+            texto_x_inicio = resize(20, eh_X=True)
+
+        # Título "RECOMPENSA!"
+        fonte_titulo_popup = pygame.font.SysFont("Arial", resize(30, eh_X=True), bold=True)
+        texto_titulo_surf = fonte_titulo_popup.render(self.popup_powerup_titulo, True, (*cor_borda, alpha))
+        titulo_rect = texto_titulo_surf.get_rect(top=resize(15), centerx=popup_largura/2 + texto_x_inicio/3) # Ajustar centro
+        if self.popup_powerup_icone_atual: # Centraliza melhor se houver ícone
+             titulo_rect.left = texto_x_inicio
+        else: # Centraliza no painel se não houver ícone
+            titulo_rect.centerx = popup_largura / 2
+
+        popup_surface.blit(texto_titulo_surf, titulo_rect)
+
+        # Descrição do Power-up
+        fonte_desc_popup = pygame.font.SysFont("Arial", resize(24, eh_X=True))
+        texto_desc_surf = fonte_desc_popup.render(self.popup_powerup_descricao, True, (255, 255, 255, alpha))
+        desc_rect = texto_desc_surf.get_rect(top=titulo_rect.bottom + resize(10))
+        if self.popup_powerup_icone_atual:
+            desc_rect.left = texto_x_inicio
+        else:
+            desc_rect.centerx = popup_largura / 2
+        
+        popup_surface.blit(texto_desc_surf, desc_rect)
+
+        # Efeito de brilho sutil (opcional)
+        if tempo_decorrido < self.popup_powerup_fade_duracao or tempo_decorrido > self.popup_powerup_duracao - self.popup_powerup_fade_duracao:
+            brilho_alpha = int(alpha * 0.3 * (math.sin(tempo_decorrido * 10) * 0.5 + 0.5)) # Pulsante
+            pygame.draw.rect(popup_surface, (255, 255, 200, brilho_alpha), (0,0, popup_largura, popup_altura), width=resize(5), border_radius=resize(20))
+
+
+        self.tela.blit(popup_surface, (popup_x, popup_y))
+
 
     def desenhar_forma_coracao(self, superficie, area_retangulo, cor):
         """Desenha uma forma de coração na superfície fornecida dentro da area_retangulo."""
@@ -1402,6 +1536,7 @@ class JogoLabirinto:
             self.desenhar_timer_visual(tempo_atual)
 
             self.desenhar_qte()
+            self.desenhar_popup_powerup() # Desenha o popup de power-up
 
             self.desenhar_melhor_tempo()
             

@@ -65,7 +65,6 @@ class QTEManager:
                 self.sucesso = True
                 self.concluido = True
                 audio_manager.play_sound("qte_success")
-                print("passou aqui")
                 print("QTE completado com sucesso!")
                 return True
         else:

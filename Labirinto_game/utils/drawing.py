@@ -1,6 +1,5 @@
 import pygame
 import os
-import numpy as np
 import math
 
 
@@ -409,13 +408,26 @@ class TransitionEffect:
             
         tela.blit(tela_final, (0, 0))
         pygame.display.update()
-def resize(valor, eh_X = False):
-    """Redimensiona o valor baseado na proporção da tela."""
-    from constants import LARGURA_TELA, ALTURA_TELA
+def resize(valor, eh_X=False, largura_tela=None, altura_tela=None, ui_escala=None):
+    """
+    Redimensiona o valor baseado na proporção da tela.
+    (Escala de interface removida)
+    """
+
+    if largura_tela is None or altura_tela is None:
+        try:
+            from constants import LARGURA_TELA, ALTURA_TELA
+            if largura_tela is None:
+                largura_tela = LARGURA_TELA
+            if altura_tela is None:
+                altura_tela = ALTURA_TELA
+        except Exception:
+            largura_tela = largura_tela or 1920
+            altura_tela = altura_tela or 1080
     if eh_X:
-        return min(int(valor * LARGURA_TELA / 1920), int(1.1*valor))
+        return min(int(valor * largura_tela / 1920), int(1.1*valor))
     else:
-        return min(int(valor * ALTURA_TELA / 1080),int(1.1*valor))
+        return min(int(valor * altura_tela / 1080), int(1.1*valor))
 
 
 

@@ -46,7 +46,7 @@ def tela_escolha_usuario(tela):
             tela.fill(AZUL_CLARO)
 
         desenhar_texto_sombra("Selecione um Usuário", fonte_titulo, COR_TITULO, 
-                             tela, titulo_x-resize(100, eh_X=True), titulo_y)
+                             tela, titulo_x-resize(70, eh_X=True), titulo_y)
 
         y_offset = y_inicial_botoes
         for usr in lista_usuarios:

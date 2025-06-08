@@ -125,7 +125,8 @@ class GerenciadorDialogos:
             self.indice_atual = 0
             self.indice_animacao_texto = 0
             
-            # Verifica se a cena tem conteúdo
+            # Aplica configuração de velocidade de diálogo do usuário
+             # Verifica se a cena tem conteúdo
             if not self.dialogos_cena:
                 print(f"Aviso: A cena '{nome_cena}' não contém diálogos.")
                 return False
@@ -137,11 +138,29 @@ class GerenciadorDialogos:
             # Define o personagem inicial
             if self.dialogos_cena:
                 self.personagem_atual = self.dialogos_cena[0]['personagem']
-            
+                
+            from utils.user_data import get_acessibilidade
+            try:
+                import constants
+                usuario = constants.USUARIO_ATUAL if hasattr(constants, 'USUARIO_ATUAL') else None
+                if usuario:
+                    opcoes = get_acessibilidade(usuario)
+                    dialogo_vel = opcoes.get("DIALOGO_VELOCIDADE", constants.DIALOGO_VELOCIDADE)
+                    if dialogo_vel <= 0:
+                        # Velocidade zero significa exibir texto instantaneamente
+                        self.velocidade_animacao_texto = 999999  
+                    else:
+                        # Converte ms/caractere para caracteres/quadro
+                        self.velocidade_animacao_texto = max(1, int(60 / dialogo_vel)) if dialogo_vel > 0 else 1
+            except:
+                # Mantém a velocidade padrão se houver erro
+                self.velocidade_animacao_texto = 1
+                
             return True
         else:
             print(f"Erro: Cena {nome_cena} não encontrada no arquivo de diálogos.")
             return False
+        
     
     def quebrar_texto(self, texto):
         """Quebra o texto em múltiplas linhas para caber na caixa de diálogo."""

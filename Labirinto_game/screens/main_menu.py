@@ -13,9 +13,6 @@ def tela_menu_principal(tela, usuario):
     fonte_botao = FONTE_BOTAO
 
     import constants
-    global ESCALA_CINZA, SOM_LIGADO
-    ESCALA_CINZA = constants.ESCALA_CINZA
-    SOM_LIGADO = constants.SOM_LIGADO
     
     usuarios_data = carregar_usuarios()
     usuario_data = usuarios_data[usuario]
@@ -25,7 +22,14 @@ def tela_menu_principal(tela, usuario):
 
     while True:
         from utils.audio_manager import audio_manager
-        audio_manager.set_bg_volume(0.05) 
+        from utils.user_data import get_acessibilidade
+        try:
+            opcoes = get_acessibilidade(usuario, usuarios_data)
+            volume_musica = float(opcoes.get("VOLUME_MUSICA", 0.5))
+        except Exception:
+            volume_musica = 0.5
+        audio_manager.set_bg_volume(volume_musica)
+        
         events = pygame.event.get()
         clock.tick(FPS)
         for event in events:
@@ -104,44 +108,6 @@ def tela_menu_principal(tela, usuario):
         )
         if clicou_rejogar:
             return "REJOGAR"
-
-        clicou_escala, _ = desenhar_botao(
-            texto="Desativar Escala de Cinza" if ESCALA_CINZA else "Ativar Escala de Cinza",
-            x=LARGURA_TELA - resize(520, eh_X=True),
-            y=ALTURA_TELA-resize(100),
-            largura=resize(500, eh_X=True),
-            altura=resize(80),
-            cor_normal=cor_com_escala_cinza(100, 100, 100),
-            cor_hover=cor_com_escala_cinza(150, 150, 150),
-            fonte=FONTE_BOTAO_REDUZIDA,
-            tela=tela,
-            events=events,
-            imagem_fundo=BUTTON_PATH,
-            border_radius=resize(15)
-        )
-        if clicou_escala:
-            constants.ESCALA_CINZA = not constants.ESCALA_CINZA
-            ESCALA_CINZA = constants.ESCALA_CINZA
-        
-        clicou_som, _ = desenhar_botao(
-            texto="Ativar Som" if not SOM_LIGADO else "Desativar Som",
-            x=LARGURA_TELA - resize(520, eh_X=True),
-            y=ALTURA_TELA-resize(200),
-            largura=resize(500, eh_X=True),
-            altura=resize(80),
-            cor_normal=cor_com_escala_cinza(100, 100, 100),
-            cor_hover=cor_com_escala_cinza(150, 150, 150),
-            fonte=FONTE_BOTAO_REDUZIDA,
-            tela=tela,
-            events=events,
-            imagem_fundo=BUTTON_PATH,
-            border_radius=resize(15)
-        )
-        if clicou_som:
-            from utils.audio_manager import audio_manager
-            constants.SOM_LIGADO = not constants.SOM_LIGADO
-            SOM_LIGADO = constants.SOM_LIGADO
-            audio_manager.som_ligado = SOM_LIGADO
         
         clicou_conquistas, _ = desenhar_botao(
         texto="Conquistas",
@@ -176,11 +142,28 @@ def tela_menu_principal(tela, usuario):
         )
         if clicou_personagens:
             return "PERSONAGENS"
+            
+        clicou_acess, _ = desenhar_botao(
+            texto="Acessibilidade",
+            x=LARGURA_TELA//2 - resize(200, eh_X=True),
+            y=y_inicial + espacamento_botoes*5,  # Ajustado para manter espaçamento
+            largura=resize(400, eh_X=True),
+            altura=resize(80),
+            cor_normal=cor_com_escala_cinza(100, 100, 255),
+            cor_hover=cor_com_escala_cinza(150, 150, 255),
+            fonte=fonte_botao,
+            tela=tela,
+            events=events,
+            imagem_fundo=BUTTON_PATH,
+            border_radius=resize(15)
+        )
+        if clicou_acess:
+            return "ACESSIBILIDADE"
         
         clicou_voltar, _ = desenhar_botao(
             texto="Voltar",
             x=LARGURA_TELA//2 - resize(200, eh_X=True),
-            y=y_inicial + espacamento_botoes*5,
+            y=y_inicial + espacamento_botoes*6,  # Ajustado para manter espaçamento
             largura=resize(400, eh_X=True),
             altura=resize(80),
             cor_normal=cor_com_escala_cinza(255, 200, 0),
@@ -197,7 +180,7 @@ def tela_menu_principal(tela, usuario):
         clicou_sair, _ = desenhar_botao(
             texto="Sair",
             x=LARGURA_TELA//2 - resize(200, eh_X=True),
-            y=y_inicial + espacamento_botoes*6,
+            y=y_inicial + espacamento_botoes*7,  # Ajustado para manter espaçamento
             largura=resize(400, eh_X=True),
             altura=resize(80),
             cor_normal=cor_com_escala_cinza(200, 50, 50),

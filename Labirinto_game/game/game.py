@@ -5,11 +5,15 @@ import time
 import random
 import math
 from datetime import datetime
-from constants import (BUTTON_PATH, FONTE_BOTAO, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
-                     FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA, SOUND_PATH, dialogo_dentro_img)
+from constants import (
+    BUTTON_PATH, FONTE_BOTAO, LARGURA_TELA, ALTURA_TELA, FPS, AZUL_CLARO, background_img,
+    FONTE_TEXTO, COR_TEXTO, PORTA_SELECIONADA, SOUND_PATH, dialogo_dentro_img,
+    NUM_VIDAS, MODO_PRATICA, SERVO_VELOCIDADE, DEBOUNCE_COLISAO_MS, FEEDBACK_CANAL,
+    FEEDBACK_INTENSIDADE, REDUZIR_FLASHES, QUICK_TIME_EVENTS, ESCALA_CINZA, SOM_LIGADO, DIALOGO_VELOCIDADE
+)
 from utils.drawing import aplicar_filtro_cinza_superficie, desenhar_texto, desenhar_botao, resize, TransitionEffect
 from utils.colors import cor_com_escala_cinza
-from utils.user_data import carregar_usuarios, salvar_usuarios
+from utils.user_data import carregar_usuarios, salvar_usuarios, get_acessibilidade
 from screens.game_over import tela_falhou
 from screens.level_complete import tela_conclusao_nivel
 from screens.game_complete import tela_conclusao
@@ -26,6 +30,10 @@ class JogoLabirinto:
         self.fonte = FONTE_TEXTO
         self.conexao_serial = conexao_serial
         
+        # Carregar opções de acessibilidade do usuário
+        self.usuarios_data = carregar_usuarios()
+        self.opcoes = get_acessibilidade(usuario, self.usuarios_data)
+        self.aplicar_opcoes_acessibilidade()
         # Para o timer visual
         self.timer_raio = resize(50)
         self.timer_centro = (LARGURA_TELA - resize(100, eh_X=True), resize(100))
@@ -42,7 +50,7 @@ class JogoLabirinto:
         # Para controles de áudio
         self.icone_som_ligado = None
         self.icone_som_desligado = None
-        self.som_ligado = True
+        self.som_ligado = self.opcoes.get("SOM_LIGADO", True)
         self.carregar_icones_audio()
         
         if sistema_conquistas:
@@ -51,8 +59,7 @@ class JogoLabirinto:
             self.sistema_conquistas = SistemaConquistas()
         self.sistema_conquistas.carregar_conquistas_usuario(usuario)
         self.colisoes = 0 
-        self.usuarios_data = carregar_usuarios()
-        
+
         # Configurações para comunicação serial
         self.buffer_serial = ""
         self.ultima_verificacao = time.time()
@@ -110,13 +117,15 @@ class JogoLabirinto:
         # Quando o jogo inicia, não mostramos o diálogo ainda
         self.mostrou_dialogo_fase_atual = False
 
-        self.vidas = 3
-        # Configurações de exibição dos corações
+        # Vidas e corações - usar número dinâmico baseado nas opções do usuário
+        self.vidas = self.num_vidas
         self.tamanho_coracao = resize(150)
         self.posicao_y_coracoes = resize(320) 
         self.espacamento_coracoes = resize(25) 
-        self.estados_coracoes = [True, True, True]
-        self.progresso_animacao_coracoes = [0.0, 0.0, 0.0] 
+        # Criar array de estados com tamanho igual ao número de vidas
+        self.estados_coracoes = [True] * self.num_vidas
+        # Array de progresso de animação para cada coração
+        self.progresso_animacao_coracoes = [0.0] * self.num_vidas 
         self.duracao_animacao_coracoes = 0.5
 
         self.inicio_tempo = time.time()
@@ -137,6 +146,52 @@ class JogoLabirinto:
         if self.conexao_serial:
             self.enviar_nivel_arduino()
             
+    def aplicar_opcoes_acessibilidade(self):
+        # Número de vidas
+        self.num_vidas = self.opcoes.get("NUM_VIDAS", NUM_VIDAS)
+        # Modo prática
+        self.modo_pratica = self.opcoes.get("MODO_PRATICA", MODO_PRATICA)
+        # Debounce colisão
+        self.debounce_colisao_ms = self.opcoes.get("DEBOUNCE_COLISAO_MS", DEBOUNCE_COLISAO_MS)
+        # Feedback
+        self.feedback_canal = self.opcoes.get("FEEDBACK_CANAL", FEEDBACK_CANAL)
+        self.feedback_intensidade = self.opcoes.get("FEEDBACK_INTENSIDADE", FEEDBACK_INTENSIDADE)
+        # Servo velocidade
+        self.servo_velocidade = self.opcoes.get("SERVO_VELOCIDADE", SERVO_VELOCIDADE)
+        # Quick time events
+        self.quick_time_events = self.opcoes.get("QUICK_TIME_EVENTS", QUICK_TIME_EVENTS)
+        # Reduzir flashes
+        self.reduzir_flashes = self.opcoes.get("REDUZIR_FLASHES", REDUZIR_FLASHES)
+        # Escala de cinza
+        self.escala_cinza = self.opcoes.get("ESCALA_CINZA", ESCALA_CINZA)
+        # Som ligado
+        self.som_ligado = self.opcoes.get("SOM_LIGADO", SOM_LIGADO)
+        # Velocidade do diálogo
+        self.dialogo_velocidade = self.opcoes.get("DIALOGO_VELOCIDADE", DIALOGO_VELOCIDADE)
+
+        # Aplicar configurações globais
+        import constants
+        constants.ESCALA_CINZA = self.escala_cinza
+        constants.SOM_LIGADO = self.som_ligado
+
+
+        # Aplicar som ligado/desligado no audio_manager
+        from utils.audio_manager import audio_manager
+        audio_manager.som_ligado = self.som_ligado
+        audio_manager.set_music_volume(max(self.opcoes.get("VOLUME_MUSICA", 0.1)*0.1, 0.02))
+        audio_manager.set_sfx_volume(self.opcoes.get("VOLUME_SFX", 0.7))
+        audio_manager.set_voice_volume(self.opcoes.get("VOLUME_VOZ", 0.8))
+
+        # Ajustar duração do flash
+        self.flash_duracao = 0 if self.reduzir_flashes else 0.3
+
+        # Enviar velocidade do servo para Arduino se necessário
+        if self.conexao_serial:
+            try:
+                self.conexao_serial.write(f"SERVO:{self.servo_velocidade}\n".encode())
+            except Exception as e:
+                print(f"Erro ao enviar velocidade do servo: {e}")
+
     def carregar_icones_audio(self):
         """Carrega os ícones de controle de áudio"""
         try:
@@ -461,12 +516,9 @@ class JogoLabirinto:
 
         # Aciona a animação do coração
         # self.vidas é o número de vidas RESTANTES.
-        # Corações são indexados 0, 1, 2.
-        # Se 3 vidas -> 2 vidas restantes, coração no índice 2 é perdido.
-        # Se 2 vidas -> 1 vida restante, coração no índice 1 é perdido.
-        # Se 1 vida -> 0 vidas restantes, coração no índice 0 é perdido.
+        # Se o indice_coracao_perdido está dentro do range válido
         indice_coracao_perdido = self.vidas 
-        if 0 <= indice_coracao_perdido < 3 and self.estados_coracoes[indice_coracao_perdido]:
+        if 0 <= indice_coracao_perdido < self.num_vidas and self.estados_coracoes[indice_coracao_perdido]:
             # Inicia a animação apenas se não já iniciada
             if self.progresso_animacao_coracoes[indice_coracao_perdido] == 0.0: 
                 self.progresso_animacao_coracoes[indice_coracao_perdido] = 0.01 # Inicia animação
@@ -511,7 +563,7 @@ class JogoLabirinto:
             'colisoes': self.colisoes,
             'tentativas': usuario_data.get('tentativas', []),
             'vidas_restantes': self.vidas,
-            'vidas_iniciais': 3,
+            'vidas_iniciais': self.num_vidas,  # Usar o número de vidas configurado
             'concluido': not falhou
         }
         
@@ -527,15 +579,21 @@ class JogoLabirinto:
 
     def resetar_nivel(self):
         """Reseta o estado do jogo para o próximo nível"""
-        self.vidas = 3
-        self.estados_coracoes = [True, True, True]
-        self.progresso_animacao_coracoes = [0.0, 0.0, 0.0]
-        self.progresso = 0.0
+        self.vidas = self.num_vidas
+        # Usar número dinâmico de corações
+        self.estados_coracoes = [True] * self.num_vidas
+        self.progresso_animacao_coracoes = [0.0] * self.num_vidas
         # Recarga explícita das conquistas para garantir estado atualizado
         self.sistema_conquistas.limpar_notificacoes()
         self.sistema_conquistas.carregar_conquistas_usuario(self.usuario)
         self.usuarios_data = carregar_usuarios()
-        # Reset da flag de diálogo de fase
+        self.opcoes = get_acessibilidade(self.usuario, self.usuarios_data)
+        self.aplicar_opcoes_acessibilidade()
+        self.vidas = self.num_vidas
+        self.estados_coracoes = [True] * self.num_vidas + [False] * (5 - self.num_vidas)
+        self.estados_coracoes = self.estados_coracoes[:5]
+        self.progresso_animacao_coracoes = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.progresso = 0.0
         self.mostrou_dialogo_fase_atual = False
         
         self.melhor_tempo = self.obter_melhor_tempo()
@@ -546,22 +604,6 @@ class JogoLabirinto:
             self.enviar_nivel_arduino()
             
         print(f"Estado do jogo resetado.")
-
-    def mostrar_dialogo_fase(self):
-        """Mostra o diálogo correspondente à fase atual."""
-        if not self.mostrou_dialogo_fase_atual:
-            if self.nivel_atual == 2:
-                from utils.audio_manager import audio_manager
-                audio_manager.play_sound("earthquake")
-            TransitionEffect.fade_out(self.tela, velocidade=10)
-            
-            # Nome da fase para buscar no arquivo de diálogos
-            fase_dialogo = f"fase_{self.nivel_atual}"
-            
-
-            self.gerenciador_dialogos.executar(fase_dialogo, efeito_sonoro=None)
-            
-            self.mostrou_dialogo_fase_atual = True
 
     def desenhar_timer_visual(self, tempo_atual):
         """Desenha um timer visual animado"""
@@ -909,14 +951,14 @@ class JogoLabirinto:
 
 
     def desenhar_coracoes(self):
-        """Desenha os três corações representando as vidas."""
-        numero_coracoes = 3
+        """Desenha os corações representando as vidas."""
+        # Usar o número de vidas configurado pelo usuário
+        numero_coracoes = self.num_vidas
         largura_total_coracoes = numero_coracoes * self.tamanho_coracao + (numero_coracoes - 1) * self.espacamento_coracoes
         x_inicial = (LARGURA_TELA - largura_total_coracoes) / 2
         
         # Ajusta y_retangulo para centralizar verticalmente os corações maiores
         y_retangulo = self.posicao_y_coracoes - self.tamanho_coracao / 2
-
 
         for i in range(numero_coracoes):
             x_coracao = x_inicial + i * (self.tamanho_coracao + self.espacamento_coracoes)
@@ -1014,10 +1056,7 @@ class JogoLabirinto:
         tela = pygame.display.set_mode((LARGURA_TELA, ALTURA_TELA), pygame.NOFRAME)
         info_x = resize(20, eh_X=True)
         info_y = resize(100)
-
-        TransitionEffect.fade_in(tela, velocidade=8)
         
-
         nome_cena = f"fase_{self.nivel_atual}"
         if not pular_dialogo:
 
@@ -1105,7 +1144,7 @@ class JogoLabirinto:
                     
                 if self.nivel_atual >= 8:
                     TransitionEffect.fade_out(tela, velocidade=10)
-                    self.gerenciador_dialogos.executar("vitoria", efeito_sonoro="success")
+                    self.gerenciador_dialogos.executar("vitoria")
                     self.salvar_progresso(tempo_total)
                     self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
                     tela_conclusao(tela, self.sistema_conquistas)
@@ -1154,6 +1193,6 @@ class JogoLabirinto:
             
             import constants
             if constants.ESCALA_CINZA:
-                aplicar_filtro_cinza_superficie(tela)
+                aplicar_filtro_cinza_superficie(self.tela)
                 
             pygame.display.update()

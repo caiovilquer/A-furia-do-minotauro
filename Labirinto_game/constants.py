@@ -1,6 +1,5 @@
 import pygame
 import os
-from utils.drawing import resize
 
 # Configurações básicas
 display_info = pygame.display.Info()
@@ -10,7 +9,7 @@ TITULO_JOGO = "A Fúria do Minotauro"
 FPS = 60
 
 # Flags globais
-ESCALA_CINZA = False
+ESCALA_CINZA = False  # Valor padrão, será substituído pelas configurações do usuário quando disponíveis
 SOM_LIGADO = True
 PORTA_SELECIONADA = None
 
@@ -18,6 +17,31 @@ PORTA_SELECIONADA = None
 COR_TITULO = (250, 250, 100)
 COR_TEXTO = (255, 200, 0)
 COR_BOTAO_TEXTO = (255, 255, 255)
+
+# --- Acessibilidade: valores padrão ---
+VOLUME_MUSICA = 0.3
+VOLUME_SFX = 1.0
+VOLUME_VOZ = 0.8
+
+REDUZIR_FLASHES = False
+
+SERVO_VELOCIDADE = "normal"  # "lento", "normal", "rapido"
+
+NUM_VIDAS = 3  # 1 a 5
+
+DEBOUNCE_COLISAO_MS = 200  # ms
+
+MODO_PRATICA = False
+
+FEEDBACK_CANAL = "multiplo"  # "som", "cor", "led", "multiplo"
+FEEDBACK_INTENSIDADE = 100  # 0-100
+
+QUICK_TIME_EVENTS = True
+
+DIALOGO_VELOCIDADE = 30  # ms/caractere, ou 0 para "instante"
+
+# Importa resize após definir UI_ESCALA para evitar importação circular
+from utils.drawing import resize
 
 # Fontes
 pygame.font.init()

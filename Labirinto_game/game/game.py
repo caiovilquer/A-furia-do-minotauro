@@ -130,8 +130,12 @@ class JogoLabirinto:
         self.progresso_animacao_coracoes = [0.0] * self.num_vidas 
         self.duracao_animacao_coracoes = 0.5
 
-        self.inicio_tempo = time.time()
+        #self.inicio_tempo = time.time()
+        self.inicio_tempo = 0 
         self.jogo_ativo = True
+
+        self.esperando_inicio = True if self.conexao_serial else False # Flag para aguardar o sinal do sensor de início
+        self.nivel_concluido_hardware = False # Flag para sinal de conclusão do Arduino
         
         # Para transições mais suaves
         self.transicao_ativa = False
@@ -210,9 +214,12 @@ class JogoLabirinto:
         # Enviar velocidade do servo para Arduino se necessário
         if self.conexao_serial:
             try:
+                # Envia todas as configurações de uma vez
                 self.conexao_serial.write(f"SERVO:{self.servo_velocidade}\n".encode())
+                self.conexao_serial.write(f"DEBOUNCE:{self.debounce_colisao_ms}\n".encode())
+                self.conexao_serial.write(f"FEEDBACK:{self.feedback_canal}\n".encode())
             except Exception as e:
-                print(f"Erro ao enviar velocidade do servo: {e}")
+                print(f"Erro ao enviar configurações para o Arduino: {e}")
 
     def carregar_icones_powerup(self):
         """Carrega os ícones para os power-ups."""
@@ -491,7 +498,8 @@ class JogoLabirinto:
             self.servo_congelado = False
             if self.conexao_serial:
                 try:
-                    self.conexao_serial.write(f"FREEZE:0\n".encode())
+                    self.conexao_serial.write(b"FREEZE:0\n") # Envia o comando para descongelar
+                    print("Comando para descongelar servos enviado.")
                 except Exception as e:
                     print(f"Erro ao desativar congelamento: {e}")
         
@@ -519,8 +527,16 @@ class JogoLabirinto:
             
             if chance_atual < QTE_CHANCE:
                 print(f"Iniciando novo QTE! Próximo sorteio em {QTE_INTERVALO_MIN} segundos.")
-                self.qte_manager.iniciar()
+                sequencia_qte = self.qte_manager.iniciar()
                 self.ultimo_qte = tempo_atual
+
+                if self.conexao_serial:
+                    try:
+                        # O formato do comando é "QTE:E,D,E" (sem espaços)
+                        comando_qte = f"QTE:{','.join(sequencia_qte)}\n"
+                        self.conexao_serial.write(comando_qte.encode('utf-8'))
+                    except Exception as e:
+                        print(f"Erro ao enviar sequência de QTE: {e}")
             
             # Independente do resultado, agenda o próximo check para daqui a QTE_INTERVALO_MIN segundos
             self.proximo_check_qte = tempo_atual + QTE_INTERVALO_MIN
@@ -540,7 +556,7 @@ class JogoLabirinto:
                     if resultado is True:
                         self.qte_concluido_sucesso()
                 else:
-                    input_errado = "R" if self.qte_manager.sequencia[self.qte_manager.passo_atual] == "L" else "L"
+                    input_errado = "D" if self.qte_manager.sequencia[self.qte_manager.passo_atual] == "E" else "E"
                     self.qte_manager.processar_input(input_errado)
                     self.qte_stats["qte_falhas"] += 1
 
@@ -576,43 +592,41 @@ class JogoLabirinto:
             except Exception as e:
                 print(f"Erro na leitura serial: {e}")
 
+
     def processar_dados_serial(self, dados):
         """Processa os dados recebidos do Arduino."""
-        print(f"Dados recebidos: {dados}")
-        
-        # Formato esperado dos dados: COMANDO:VALOR
-        # Exemplos: PROGRESSO:0.75, COLISAO:1, CONCLUIDO:1, BTN:L, BTN:R
+        print(f"Dados recebidos do Arduino: {dados}")
         try:
-            if ':' in dados:
-                comando, valor = dados.split(':', 1)
-                
-                if comando == "PROGRESSO":
-                    if not self.servo_congelado:
-                        self.progresso = float(valor)
-                    
-                elif comando == "COLISAO":
-                    if int(valor) == 1:
-                        self.vidas -= 1
-                        self.colisoes += 1
-                        self.feedback_colisao()
-                        
-                elif comando == "CONCLUIDO":
-                    if int(valor) == 1:
-                        # Marca o nível como concluído
-                        self.progresso = 1.0
-                
-                elif comando == "BTN":
-                    # Processa botões para QTEs
-                    if valor in ["E", "D"]:
-                        if self.qte_manager.ativo and not self.qte_manager.concluido:
-                            resultado = self.qte_manager.processar_input(valor)
-                            if resultado is True:  # QTE concluído com sucesso
-                                self.qte_concluido_sucesso()
-                            elif resultado is False:  # Erro no QTE
-                                self.qte_stats["qte_falhas"] += 1
-                        
+            # Sinal de que o jogador está no sensor de início
+            if dados == "PLAYER_AT_START":
+                if self.esperando_inicio:
+                    self.inicio_tempo = time.time()  # Inicia o cronômetro AGORA
+                    self.esperando_inicio = False
+                    print("Cronômetro iniciado pelo hardware!")
+
+            # Sinal de colisão
+            elif dados == "COLLISION":
+                if not self.esperando_inicio: # Ignora colisões antes do início
+                    self.vidas -= 1
+                    self.colisoes += 1
+                    self.feedback_colisao() # Chama a função de feedback existente
+
+            # Sinal de que o jogador chegou ao sensor de fim
+            elif dados == "LEVEL_COMPLETE":
+                self.nivel_concluido_hardware = True
+
+            # Sinal de botão de QTE Esquerdo pressionado
+            elif dados == "BTN_E":
+                if self.qte_manager.ativo and not self.qte_manager.concluido:
+                    self.qte_manager.processar_input("E")
+
+            # Sinal de botão de QTE Direito pressionado
+            elif dados == "BTN_D":
+                if self.qte_manager.ativo and not self.qte_manager.concluido:
+                    self.qte_manager.processar_input("D")
+
         except Exception as e:
-            print(f"Erro ao processar dados: {e}")
+            print(f"Erro ao processar dados do Arduino: {e}")
     
     def qte_concluido_sucesso(self):
         """Aplica power-up aleatório quando um QTE é concluído com sucesso"""
@@ -651,7 +665,7 @@ class JogoLabirinto:
             print(f"Power-up: Servos congelados por 5 segundos!")
             if self.conexao_serial:
                 try:
-                    self.conexao_serial.write(f"FREEZE:1\n".encode())
+                    self.conexao_serial.write(b"FREEZE:1\n")
                 except Exception as e:
                     print(f"Erro ao enviar comando de congelamento: {e}")
             audio_manager.play_sound("powerup")
@@ -692,12 +706,11 @@ class JogoLabirinto:
         print(f"Colisão! Progresso atual: {self.progresso:.2f}")
 
     def verifica_conclusao_nivel(self):
-        """Verifica se o nível foi concluído."""
-
+        """Verifica se o nível foi concluído, agora baseado no sinal do hardware."""
         if self.conexao_serial:
-            return self.progresso >= 1.0
+            return self.nivel_concluido_hardware
         else:
-            return (time.time() - self.inicio_tempo) > 10 or self.progresso >= 1.0
+            return (time.time() - self.inicio_tempo) > 10 if self.inicio_tempo > 0 else False
     
     def salvar_progresso(self, tempo_gasto, falhou=False):
         """Salva o progresso do jogador."""
@@ -772,6 +785,9 @@ class JogoLabirinto:
         self.melhor_tempo = self.obter_melhor_tempo()
         
         self.conquistas_proximas = self.verificar_conquistas_proximas()
+
+        self.esperando_inicio = True if self.conexao_serial else False # Flag para aguardar o sinal do sensor de início
+        self.nivel_concluido_hardware = False # Flag para sinal de conclusão do Arduino
         
         if self.conexao_serial:
             self.enviar_nivel_arduino()
@@ -1415,7 +1431,7 @@ class JogoLabirinto:
             marcar_dialogo_como_visto(self.usuario, nome_cena)
         
         # Reinicia o timer após o diálogo (importante!) e também o timer do QTE
-        self.inicio_tempo = time.time()
+        # self.inicio_tempo = time.time()
         self.ultimo_qte = time.time()  
         self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda primeiro check
         
@@ -1476,7 +1492,8 @@ class JogoLabirinto:
                 self.jogo_ativo = False
                 from utils.audio_manager import audio_manager
                 audio_manager.stop_voiced_dialogue();
-
+                self.conexao_serial.write(b"TERMINAR\n")
+                print("Jogo encerrado pelo usuário.")
                 TransitionEffect.fade_out(tela, velocidade=8)
                 return
 
@@ -1484,7 +1501,8 @@ class JogoLabirinto:
             if self.vidas <= 0:
                 tempo_total = time.time() - self.inicio_tempo
                 self.salvar_progresso(tempo_total, falhou=True)
-
+                self.conexao_serial.write(b"LEVEL_FAILED\n")
+                self.conexao_serial.write(b"TERMINAR\n")
                 TransitionEffect.fade_out(tela, velocidade=10)
                 self.jogo_ativo, pular_dialogo = tela_falhou(tela, self.sistema_conquistas)
                 
@@ -1495,7 +1513,7 @@ class JogoLabirinto:
 
             if self.verifica_conclusao_nivel():
                 tempo_total = time.time() - self.inicio_tempo
-                    
+                self.conexao_serial.write(b"TERMINAR\n")    
                 if self.nivel_atual >= 8:
                     TransitionEffect.fade_out(tela, velocidade=10)
                     self.gerenciador_dialogos.executar("vitoria")
@@ -1528,12 +1546,23 @@ class JogoLabirinto:
                     return self.loop_principal(pular_dialogo=pular_dialogo)
 
 
-            desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
-            desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(60))
-            self.desenhar_coracoes()
-            
-            tempo_atual = time.time() - self.inicio_tempo
-            self.desenhar_timer_visual(tempo_atual)
+            if self.esperando_inicio:
+                fonte_aviso = pygame.font.SysFont("Arial", resize(50, eh_X=True), bold=True)
+                desenhar_texto("Posicione o anel no início para começar!", fonte_aviso, 
+                                     (255, 255, 100), self.tela, 
+                                     LARGURA_TELA//2, ALTURA_TELA//2, centralizado=True)
+            else:
+                # O jogo está rolando, desenha a interface normal
+                desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)
+                desenhar_texto(f"Nível: {self.nivel_atual}", self.fonte, COR_TEXTO, self.tela, info_x, info_y + resize(60))
+                self.desenhar_coracoes()
+
+                # O cronômetro só é desenhado se já tiver iniciado
+                if self.inicio_tempo > 0:
+                    tempo_atual = time.time() - self.inicio_tempo
+                    self.desenhar_timer_visual(tempo_atual)
+                else:
+                    self.desenhar_timer_visual(0) # Mostra timer em 0
 
             self.desenhar_qte()
             self.desenhar_popup_powerup() # Desenha o popup de power-up

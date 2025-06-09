@@ -1,5 +1,7 @@
 import pygame
 import sys
+import json
+import time
 
 # Inicialização do Pygame
 pygame.init()
@@ -50,6 +52,18 @@ def main():
     # Selecionar porta do Arduino
     TransitionEffect.fade_out(tela, velocidade=30)
     conexao_serial = tela_selecao_porta(tela)
+    # if conexao_serial:
+    #     try:
+    #         # Converte o dicionário Python para uma string JSON
+    #         json_config = json.dumps(SERVO_PATTERNS)
+    #         mensagem_completa = json_config + '\n'
+
+    #         conexao_serial.write(mensagem_completa.encode('utf-8'))
+    #         print("Configuração dos servos enviada para o Arduino.")
+    #         time.sleep(0.1)
+    #     except Exception as e:
+    #         print(f"Falha ao enviar configuração dos servos: {e}")
+    #         conexao_serial = None
     
     print("CONEXÃO SERIAL:", "Simulação" if conexao_serial is None else "Estabelecida")
     

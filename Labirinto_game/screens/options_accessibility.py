@@ -344,7 +344,7 @@ def tela_opcoes_acessibilidade(tela, usuario):
     
     # Define valores para os selects
     servo_opts = ["lento", "normal", "rapido"]
-    feedback_opts = ["som", "cor", "led", "multiplo"]
+    feedback_opts = ["som", "led", "multiplo"]
     
     # Posições e dimensões base
     x_central = LARGURA_TELA // 2

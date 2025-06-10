@@ -1,14 +1,14 @@
 #include <Servo.h>
-#include <avr/pgmspace.h>
+#include <avr/pgmspace.h> // Biblioteca para ler da memória Flash (PROGMEM)
 
 // --- MAPEAMENTO DE PINOS E CONSTANTES ---
 const int pinoServo1 = 9;
 const int pinoServo2 = 10;
-const int pinoHallInicio = 12;
-const int pinoHallFim = 13;
+const int pinoHallInicio = 13;
+const int pinoHallFim = 12;
 const int pinoLedR = 6, pinoLedG = 7, pinoLedB = 8;
 const int BTN_L = 5, BTN_R = 4;
-const int LedMR = 3, LedMB = 2;
+const int LedMR = 2, LedMB = 3; // Led Vermelho (Direita), Led Azul (Esquerda)
 const int fioLabirinto = A0;
 
 Servo servo1;
@@ -21,7 +21,7 @@ struct ServoStep {
 };
 
 const ServoStep level1_pattern[] PROGMEM = { {90, 8000} };
-const ServoStep level2_pattern[] PROGMEM = { {70, 2000}, {110, 1500} };
+const ServoStep level2_pattern[] PROGMEM = { {90, 2000}, {110, 1500} };
 const ServoStep level3_pattern[] PROGMEM = { {90, 1500}, {120, 1200}, {60, 1200} };
 const ServoStep level4_pattern[] PROGMEM = { {90, 1200}, {130, 1000}, {50, 1000}, {110, 1000} };
 const ServoStep level5_pattern[] PROGMEM = { {90, 1000}, {140, 800}, {40, 800}, {120, 700}, {60, 700} };
@@ -41,6 +41,7 @@ const uint8_t numStepsPerLevel[] PROGMEM = {
     sizeof(level7_pattern) / sizeof(ServoStep), sizeof(level8_pattern) / sizeof(ServoStep)
 };
 
+// --- MÁQUINA DE ESTADOS PARA OS SERVOS ---
 enum ServoState { MOVING, HOLDING };
 ServoState estadoAtualServo = HOLDING;
 
@@ -48,15 +49,19 @@ ServoState estadoAtualServo = HOLDING;
 bool jogoAtivo = false;
 int nivelAtual = 1;
 bool ledsAtivados = true;
+bool qteAtivo = false; // Flag para controlar o estado do QTE
 unsigned long debounceColisaoMs = 200;
 unsigned long ultimoTempoColisao = 0;
 bool servosCongelados = false;
-int passoAtualServo = -1; // Inicia em -1 para carregar o passo 0 na primeira transição
+int passoAtualServo = -1;
 unsigned long proximoMovimentoServoTimestamp = 0;
 int anguloAtualServo1 = 90, anguloAtualServo2 = 90;
 int anguloAlvoServo1 = 90, anguloAlvoServo2 = 90;
 unsigned long ultimoPassoServoTimestamp = 0;
 int velocidadeServo = 15;
+unsigned long tempoPrimeiraLeituraFim = 0;
+bool fimDetectado = false;
+const long debounceHallMs = 20;
 bool estadoBtnL_anterior = HIGH, estadoBtnR_anterior = HIGH;
 const long debounceBotaoMs = 50;
 unsigned long ultimoTempoBtnL = 0, ultimoTempoBtnR = 0;
@@ -65,7 +70,6 @@ unsigned long ultimoTempoBtnL = 0, ultimoTempoBtnR = 0;
 // --- SETUP ---
 void setup() {
     Serial.begin(9600);
-    // ... (resto do setup igual)
     pinMode(fioLabirinto, INPUT_PULLUP);
     pinMode(pinoHallInicio, INPUT_PULLUP);
     pinMode(pinoHallFim, INPUT_PULLUP);
@@ -94,92 +98,44 @@ void loop() {
     }
 }
 
-void atualizarServos() {
-    if (servosCongelados || !jogoAtivo || nivelAtual <= 0 || nivelAtual > 8) {
-        return;
-    }
-
-    unsigned long agora = millis();
-
-    switch (estadoAtualServo) {
-        case HOLDING:
-            // Fase de espera: Apenas verifica se o tempo de 'hold' acabou.
-            if (agora >= proximoMovimentoServoTimestamp) {
-                // Tempo de espera concluído. Prepara para o próximo movimento.
-                uint8_t totalPassos = pgm_read_byte(&numStepsPerLevel[nivelAtual - 1]);
-                if (totalPassos == 0) return;
-
-                passoAtualServo = (passoAtualServo + 1) % totalPassos;
-
-                ServoStep passoCorrente;
-                const ServoStep* patternPointer = (const ServoStep*)pgm_read_ptr(&servoPatternsTable[nivelAtual - 1]);
-                memcpy_P(&passoCorrente, &patternPointer[passoAtualServo], sizeof(ServoStep));
-                
-                anguloAlvoServo1 = passoCorrente.angle;
-                anguloAlvoServo2 = 180 - passoCorrente.angle;
-                
-                // Muda o estado para iniciar o movimento.
-                estadoAtualServo = MOVING;
-            }
-            break;
-
-        case MOVING:
-            // Fase de movimento: Move os servos gradualmente até o alvo.
-            if (agora >= ultimoPassoServoTimestamp + velocidadeServo) {
-                ultimoPassoServoTimestamp = agora;
-                
-                bool servo1NoAlvo = (anguloAtualServo1 == anguloAlvoServo1);
-                bool servo2NoAlvo = (anguloAtualServo2 == anguloAlvoServo2);
-
-                // Se ambos os servos já chegaram, não faz mais nada nesta fase.
-                if (servo1NoAlvo && servo2NoAlvo) {
-                    // O movimento terminou. Agora inicia a contagem do tempo de espera.
-                    ServoStep passoCorrente;
-                    const ServoStep* patternPointer = (const ServoStep*)pgm_read_ptr(&servoPatternsTable[nivelAtual - 1]);
-                    memcpy_P(&passoCorrente, &patternPointer[passoAtualServo], sizeof(ServoStep));
-
-                    proximoMovimentoServoTimestamp = agora + passoCorrente.hold;
-                    estadoAtualServo = HOLDING; // Muda o estado para aguardar.
-                    break; 
-                }
-
-                // Move os servos um grau por vez se ainda não chegaram ao alvo.
-                if (!servo1NoAlvo) {
-                    if (anguloAtualServo1 < anguloAlvoServo1) anguloAtualServo1++;
-                    else anguloAtualServo1--;
-                    servo1.write(anguloAtualServo1);
-                }
-                
-                if (!servo2NoAlvo) {
-                    if (anguloAtualServo2 < anguloAlvoServo2) anguloAtualServo2++;
-                    else anguloAtualServo2--;
-                    servo2.write(anguloAtualServo2);
-                }
-            }
-            break;
+// --- FUNÇÕES DE LÓGICA DE QTE ---
+void setQteLed(char cor) {
+    if (!ledsAtivados) return;
+    apagarLedsManopla();
+    if (cor == 'C') {
+        digitalWrite(LedMB, HIGH); // Azul para Esquerda
+    } else if (cor == 'B') {
+        digitalWrite(LedMR, HIGH); // Vermelho para Direita
     }
 }
 
-
-// --- LÓGICA DO JOGO E ESTADOS ---
-void resetServoStateMachine() {
-    passoAtualServo = -1; 
-    proximoMovimentoServoTimestamp = millis();
-    anguloAlvoServo1 = 90;
-    anguloAlvoServo2 = 90;
-    estadoAtualServo = HOLDING; // Garante que o estado inicial seja 'HOLDING'
+void piscarAckQte() {
+    if (!ledsAtivados) return;
+    apagarLedsManopla();
+    digitalWrite(LedMB, HIGH); // Roxo (Azul + Vermelho)
+    digitalWrite(LedMR, HIGH);
+    delay(80);
+    apagarLedsManopla();
 }
 
+// --- PROCESSAMENTO DE COMANDOS ---
 void processarComandoSerial() {
     String comando = Serial.readStringUntil('\n');
     comando.trim();
+
     if (comando == "INICIAR") {
         Serial.println("OK");
     } else if (comando.startsWith("NIVEL:")) {
         nivelAtual = comando.substring(6).toInt();
         iniciarNivel(nivelAtual);
-    } else if (comando.startsWith("QTE:")) {
-        mostrarSequenciaQTE(comando.substring(4));
+    } else if (comando.startsWith("QTE_SHOW:")) {
+        qteAtivo = true; // Ativa a escuta dos botões
+        setQteLed(comando.charAt(9));
+    } else if (comando == "QTE_ACK") {
+        piscarAckQte();
+    } else if (comando == "QTE_END") {
+        qteAtivo = false; // Desativa a escuta dos botões
+        apagarLedsManopla();
     } else if (comando == "LEVEL_FAILED") {
         piscarLed(255, 0, 0, 3, 200);
     } else if (comando == "TERMINAR") {
@@ -197,18 +153,37 @@ void processarComandoSerial() {
         else if (velocidade == "rapido") velocidadeServo = 5;
     }
 }
+
+// --- LÓGICA DO JOGO E ESTADOS ---
+void resetServoStateMachine() {
+    passoAtualServo = -1; 
+    proximoMovimentoServoTimestamp = millis();
+    anguloAlvoServo1 = 90;
+    anguloAlvoServo2 = 90;
+    estadoAtualServo = HOLDING;
+}
+
 void iniciarNivel(int nivel) {
     jogoAtivo = true;
     apagarLedsMesa();
     resetServos();
     resetServoStateMachine();
-    while (digitalRead(pinoHallInicio) == HIGH) {
-        if (ledsAtivados) { digitalWrite(LedMB, HIGH); delay(150); digitalWrite(LedMB, LOW); delay(150); } 
-        else { delay(300); }
+    fimDetectado = false;
+    qteAtivo = false;
+
+    // Acende o LED vermelho sólido para indicar espera
+    if (ledsAtivados) {
+        digitalWrite(LedMR, HIGH);
     }
+
+    while (digitalRead(pinoHallInicio) == HIGH) {
+        delay(10); // Aguarda o jogador posicionar o anel
+    }
+    
     Serial.println("PLAYER_AT_START");
-    apagarLedsManopla();
+    apagarLedsManopla(); // Apaga o LED vermelho
 }
+
 void terminarNivel() {
     jogoAtivo = false;
     resetServos();
@@ -216,51 +191,104 @@ void terminarNivel() {
     apagarLedsManopla();
     resetServoStateMachine();
 }
+
+void atualizarServos() {
+    if (servosCongelados || !jogoAtivo || nivelAtual <= 0 || nivelAtual > 8) {
+        return;
+    }
+
+    unsigned long agora = millis();
+
+    switch (estadoAtualServo) {
+        case HOLDING:
+            if (agora >= proximoMovimentoServoTimestamp) {
+                uint8_t totalPassos = pgm_read_byte(&numStepsPerLevel[nivelAtual - 1]);
+                if (totalPassos == 0) return;
+                passoAtualServo = (passoAtualServo + 1) % totalPassos;
+                ServoStep passoCorrente;
+                const ServoStep* patternPointer = (const ServoStep*)pgm_read_ptr(&servoPatternsTable[nivelAtual - 1]);
+                memcpy_P(&passoCorrente, &patternPointer[passoAtualServo], sizeof(ServoStep));
+                anguloAlvoServo1 = passoCorrente.angle;
+                anguloAlvoServo2 = 180 - passoCorrente.angle;
+                estadoAtualServo = MOVING;
+            }
+            break;
+
+        case MOVING:
+            if (agora >= ultimoPassoServoTimestamp + velocidadeServo) {
+                ultimoPassoServoTimestamp = agora;
+                bool servo1NoAlvo = (anguloAtualServo1 == anguloAlvoServo1);
+                bool servo2NoAlvo = (anguloAtualServo2 == anguloAlvoServo2);
+                if (servo1NoAlvo && servo2NoAlvo) {
+                    ServoStep passoCorrente;
+                    const ServoStep* patternPointer = (const ServoStep*)pgm_read_ptr(&servoPatternsTable[nivelAtual - 1]);
+                    memcpy_P(&passoCorrente, &patternPointer[passoAtualServo], sizeof(ServoStep));
+                    proximoMovimentoServoTimestamp = agora + passoCorrente.hold;
+                    estadoAtualServo = HOLDING;
+                    break; 
+                }
+                if (!servo1NoAlvo) {
+                    if (anguloAtualServo1 < anguloAlvoServo1) anguloAtualServo1++;
+                    else anguloAtualServo1--;
+                    servo1.write(anguloAtualServo1);
+                }
+                if (!servo2NoAlvo) {
+                    if (anguloAtualServo2 < anguloAlvoServo2) anguloAtualServo2++;
+                    else anguloAtualServo2--;
+                    servo2.write(anguloAtualServo2);
+                }
+            }
+            break;
+    }
+}
+
 void monitorarSensoresJogo() {
     if (digitalRead(fioLabirinto) == LOW) {
         if (millis() - ultimoTempoColisao > debounceColisaoMs) {
             ultimoTempoColisao = millis();
             Serial.println("COLLISION");
-            piscarLed(255, 255, 0, 2, 200);
+            piscarLed(255, 255, 0, 1, 150);
         }
     }
     if (digitalRead(pinoHallFim) == LOW) {
-        Serial.println("LEVEL_COMPLETE");
-        piscarLed(0, 255, 0, 3, 200);
-        terminarNivel();
+        if (!fimDetectado) {
+            fimDetectado = true;
+            tempoPrimeiraLeituraFim = millis();
+        } else {
+            if (millis() - tempoPrimeiraLeituraFim > debounceHallMs) {
+                Serial.println("LEVEL_COMPLETE");
+                piscarLed(0, 255, 0, 3, 200);
+                terminarNivel();
+            }
+        }
+    } else {
+        fimDetectado = false;
     }
-    bool estadoBtnL = digitalRead(BTN_L);
-    if (estadoBtnL == LOW && estadoBtnL_anterior == HIGH && millis() - ultimoTempoBtnL > debounceBotaoMs) {
-        Serial.println("BTN_E");
-        ultimoTempoBtnL = millis();
+
+    if (qteAtivo) {
+        bool estadoBtnL = digitalRead(BTN_L);
+        if (estadoBtnL == LOW && estadoBtnL_anterior == HIGH && millis() - ultimoTempoBtnL > debounceBotaoMs) {
+            Serial.println("BTN_B");
+            ultimoTempoBtnL = millis();
+        }
+        estadoBtnL_anterior = estadoBtnL;
+        bool estadoBtnR = digitalRead(BTN_R);
+        if (estadoBtnR == LOW && estadoBtnR_anterior == HIGH && millis() - ultimoTempoBtnR > debounceBotaoMs) {
+            Serial.println("BTN_C");
+            ultimoTempoBtnR = millis();
+        }
+        estadoBtnR_anterior = estadoBtnR;
     }
-    estadoBtnL_anterior = estadoBtnL;
-    bool estadoBtnR = digitalRead(BTN_R);
-    if (estadoBtnR == LOW && estadoBtnR_anterior == HIGH && millis() - ultimoTempoBtnR > debounceBotaoMs) {
-        Serial.println("BTN_D");
-        ultimoTempoBtnR = millis();
-    }
-    estadoBtnR_anterior = estadoBtnR;
 }
+
+// --- Funções Utilitárias de Hardware ---
 void resetServos() {
     anguloAtualServo1 = 90;
     anguloAtualServo2 = 90;
     servo1.write(anguloAtualServo1);
     servo2.write(anguloAtualServo2);
 }
-void mostrarSequenciaQTE(String sequencia) {
-    if (!ledsAtivados) return;
-    apagarLedsManopla();
-    delay(500);
-    for (unsigned int i = 0; i < sequencia.length(); i++) {
-        char passo = sequencia.charAt(i);
-        if (passo == 'E') { digitalWrite(LedMB, HIGH); } 
-        else if (passo == 'D') { digitalWrite(LedMR, HIGH); }
-        delay(400);
-        apagarLedsManopla();
-        delay(200);
-    }
-}
+
 void piscarLed(int r, int g, int b, int vezes, int duracao) {
     if (!ledsAtivados) return;
     for (int i = 0; i < vezes; i++) {
@@ -272,12 +300,14 @@ void piscarLed(int r, int g, int b, int vezes, int duracao) {
         delay(duracao);
     }
 }
+
 void apagarLedsMesa() {
     if (!ledsAtivados) return;
     digitalWrite(pinoLedR, LOW);
     digitalWrite(pinoLedG, LOW);
     digitalWrite(pinoLedB, LOW);
 }
+
 void apagarLedsManopla() {
     if (!ledsAtivados) return;
     digitalWrite(LedMR, LOW);

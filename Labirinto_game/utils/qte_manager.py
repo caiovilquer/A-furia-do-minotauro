@@ -31,7 +31,7 @@ class QTEManager:
         if sequencia is None:
             # Gera uma sequência aleatória
             tamanho = random.randint(self.seq_min, self.seq_max)
-            self.sequencia = [random.choice(["E", "D"]) for _ in range(tamanho)]
+            self.sequencia = [random.choice(["C", "B"]) for _ in range(tamanho)]
         else:
             self.sequencia = sequencia
         

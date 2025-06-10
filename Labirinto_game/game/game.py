@@ -161,7 +161,8 @@ class JogoLabirinto:
         self.servo_congelado = False
         self.tempo_servo_congelado = 0
         self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Tempo para o próximo sorteio de QTE
-
+        
+        self.qte_input_queue = [] # Fila para os inputs do QTE vindos do Arduino
         # Popup de Power-up QTE
         self.popup_powerup_ativo = False
         self.popup_powerup_titulo = ""
@@ -519,24 +520,26 @@ class JogoLabirinto:
         # Realiza o sorteio apenas quando chegar o momento do próximo check
         if (self.quick_time_events and           # Se QTEs estão ativados nas configurações
             not self.qte_manager.ativo and       # Se não há QTE em andamento
-            tempo_atual >= self.proximo_check_qte):  # Se chegou o momento do próximo check
+            tempo_atual >= self.proximo_check_qte and
+            not self.esperando_inicio):  # Se chegou o momento do próximo check
             
             # Faz um único sorteio por intervalo
             chance_atual = random.random() 
             print(f"Check de QTE: {chance_atual:.4f} (limite: {QTE_CHANCE})")
             
             if chance_atual < QTE_CHANCE:
-                print(f"Iniciando novo QTE! Próximo sorteio em {QTE_INTERVALO_MIN} segundos.")
+                self.qte_input_queue.clear()
                 sequencia_qte = self.qte_manager.iniciar()
                 self.ultimo_qte = tempo_atual
 
-                if self.conexao_serial:
+                if self.conexao_serial and sequencia_qte:
                     try:
-                        # O formato do comando é "QTE:E,D,E" (sem espaços)
-                        comando_qte = f"QTE:{','.join(sequencia_qte)}\n"
+                        # Envia o comando para mostrar apenas a PRIMEIRA luz da sequência
+                        primeiro_passo = sequencia_qte[0]
+                        comando_qte = f"QTE_SHOW:{primeiro_passo}\n"
                         self.conexao_serial.write(comando_qte.encode('utf-8'))
                     except Exception as e:
-                        print(f"Erro ao enviar sequência de QTE: {e}")
+                        print(f"Erro ao iniciar sequência de QTE: {e}")
             
             # Independente do resultado, agenda o próximo check para daqui a QTE_INTERVALO_MIN segundos
             self.proximo_check_qte = tempo_atual + QTE_INTERVALO_MIN
@@ -556,7 +559,7 @@ class JogoLabirinto:
                     if resultado is True:
                         self.qte_concluido_sucesso()
                 else:
-                    input_errado = "D" if self.qte_manager.sequencia[self.qte_manager.passo_atual] == "E" else "E"
+                    input_errado = "B" if self.qte_manager.sequencia[self.qte_manager.passo_atual] == "C" else "C"
                     self.qte_manager.processar_input(input_errado)
                     self.qte_stats["qte_falhas"] += 1
 
@@ -600,9 +603,12 @@ class JogoLabirinto:
             # Sinal de que o jogador está no sensor de início
             if dados == "PLAYER_AT_START":
                 if self.esperando_inicio:
-                    self.inicio_tempo = time.time()  # Inicia o cronômetro AGORA
+                    tempo_atual = time.time()
+                    self.inicio_tempo = tempo_atual  # Inicia o cronômetro do jogo
+                    self.ultimo_qte = tempo_atual  # Inicia o contador de QTE
+                    self.proximo_check_qte = tempo_atual + QTE_INTERVALO_MIN  # Agenda primeiro QTE
                     self.esperando_inicio = False
-                    print("Cronômetro iniciado pelo hardware!")
+                    print("Cronômetro e timer de QTE iniciados pelo hardware!")
 
             # Sinal de colisão
             elif dados == "COLLISION":
@@ -615,15 +621,10 @@ class JogoLabirinto:
             elif dados == "LEVEL_COMPLETE":
                 self.nivel_concluido_hardware = True
 
-            # Sinal de botão de QTE Esquerdo pressionado
-            elif dados == "BTN_E":
-                if self.qte_manager.ativo and not self.qte_manager.concluido:
-                    self.qte_manager.processar_input("E")
-
-            # Sinal de botão de QTE Direito pressionado
-            elif dados == "BTN_D":
-                if self.qte_manager.ativo and not self.qte_manager.concluido:
-                    self.qte_manager.processar_input("D")
+            if dados == "BTN_C":
+                self.qte_input_queue.append('C')
+            elif dados == "BTN_B":
+                self.qte_input_queue.append('B')
 
         except Exception as e:
             print(f"Erro ao processar dados do Arduino: {e}")
@@ -776,8 +777,8 @@ class JogoLabirinto:
         self.mostrou_dialogo_fase_atual = False
         
         # Reset QTE timer when starting a new level
-        self.ultimo_qte = time.time()
-        self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda o primeiro check
+        # self.ultimo_qte = time.time()
+        # self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda o primeiro check
         self.qte_manager.resetar()
         self.popup_powerup_ativo = False # Garante que o popup não persista entre níveis
         
@@ -1372,9 +1373,9 @@ class JogoLabirinto:
             elif i == self.qte_manager.passo_atual:  # Botão atual
                 # Efeito pulsante para o botão atual
                 pulso = (math.sin(time.time() * 5) + 1) / 2  # Varia de 0 a 1
-                if comando == "E":
+                if comando == "C":
                     cor_btn = (0, 0 , 255)
-                elif comando == "D":
+                elif comando == "B":
                     cor_btn = (255, 0, 0)
                 # Desenha efeito de pulso (círculo ao redor)
                 pulso_tamanho = int(btn_tamanho * (1 + 0.2 * pulso))
@@ -1384,9 +1385,9 @@ class JogoLabirinto:
                                  (btn_x + btn_tamanho // 2, btn_y + btn_tamanho // 2),
                                  pulso_tamanho // 2, width=resize(2))
             else:  # Botões futuros
-                if comando == "E":
+                if comando == "C":
                     cor_btn = (0, 0, 100)
-                elif comando == "D":
+                elif comando == "B":
                     cor_btn = (100, 0, 0)
 
             
@@ -1430,10 +1431,10 @@ class JogoLabirinto:
             from utils.user_data import marcar_dialogo_como_visto
             marcar_dialogo_como_visto(self.usuario, nome_cena)
         
-        # Reinicia o timer após o diálogo (importante!) e também o timer do QTE
+     # Reinicia o timer após o diálogo (importante!) e também o timer do QTE
         # self.inicio_tempo = time.time()
-        self.ultimo_qte = time.time()  
-        self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda primeiro check
+        # self.ultimo_qte = time.time()  
+        # self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda primeiro check   
         
         while self.jogo_ativo:
             events = pygame.event.get()
@@ -1450,9 +1451,30 @@ class JogoLabirinto:
                         return
                     # Simular botões QTE com teclado (para testes)
                     elif event.key == pygame.K_LEFT and self.qte_manager.ativo and not self.qte_manager.concluido:
-                        resultado = self.qte_manager.processar_input("E")
+                        resultado = self.qte_manager.processar_input("C")
                     elif event.key == pygame.K_RIGHT and self.qte_manager.ativo and not self.qte_manager.concluido:
-                        resultado = self.qte_manager.processar_input("D")
+                        resultado = self.qte_manager.processar_input("B")
+
+            if self.conexao_serial and self.qte_manager.ativo and self.qte_input_queue:
+                # Pega o último botão pressionado que veio do Arduino
+                input_do_jogador = self.qte_input_queue.pop(0) 
+                
+                # Valida o input
+                resultado = self.qte_manager.processar_input(input_do_jogador)
+
+                if resultado is None: # Acertou, mas a sequência não terminou
+                    # Pisca o LED de acerto e mostra a próxima luz
+                    self.conexao_serial.write(b"QTE_ACK\n")
+                    time.sleep(0.08) # Pequena pausa para a piscada
+                    proximo_passo = self.qte_manager.sequencia[self.qte_manager.passo_atual]
+                    self.conexao_serial.write(f"QTE_SHOW:{proximo_passo}\n".encode('utf-8'))
+
+                elif resultado is True: # Acertou o último passo
+                    self.conexao_serial.write(b"QTE_END\n")
+                    # A função qte_concluido_sucesso() será chamada pelo qte_manager
+                    
+                elif resultado is False: # Errou
+                    self.conexao_serial.write(b"QTE_END\n")
 
             self.atualizar_labirinto()
             

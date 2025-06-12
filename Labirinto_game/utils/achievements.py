@@ -173,8 +173,8 @@ class SistemaConquistas:
             print("Conquista PEGADAS DE BRONZE desbloqueada!")
         
         # Mestre dos Botões - Complete 10 QTEs sem erros
-        qte_sucesso = dados_jogo.get('qte_sucesso', 0)
-        if not self.conquistas['mestre_dos_botoes']['desbloqueada'] and qte_sucesso >= 10:
+        qtes_acertados = dados_jogo.get('qtes_acertados', 0)
+        if not self.conquistas['mestre_dos_botoes']['desbloqueada'] and qtes_acertados >= 10:
             self.conquistas['mestre_dos_botoes']['desbloqueada'] = True
             conquistas_desbloqueadas.append('mestre_dos_botoes')
             print("Conquista MESTRE DOS BOTÕES desbloqueada!")

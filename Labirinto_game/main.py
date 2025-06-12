@@ -38,32 +38,9 @@ def main():
     # Mostrar tela inicial
     tela_inicial(tela)
     
-    # Mostrar tela de seleção de usuário
-    # from screens.user_selection import tela_escolha_usuario
-    # usuario = tela_escolha_usuario(tela)
-    
-    # # Carregar configurações do usuário selecionado
-    # if usuario:
-    #     from utils.user_data import get_acessibilidade, carregar_usuarios
-    #     usuarios_data = carregar_usuarios()
-    #     opcoes = get_acessibilidade(usuario, usuarios_data)
-        
-    
     # Selecionar porta do Arduino
     TransitionEffect.fade_out(tela, velocidade=30)
     conexao_serial = tela_selecao_porta(tela)
-    # if conexao_serial:
-    #     try:
-    #         # Converte o dicionário Python para uma string JSON
-    #         json_config = json.dumps(SERVO_PATTERNS)
-    #         mensagem_completa = json_config + '\n'
-
-    #         conexao_serial.write(mensagem_completa.encode('utf-8'))
-    #         print("Configuração dos servos enviada para o Arduino.")
-    #         time.sleep(0.1)
-    #     except Exception as e:
-    #         print(f"Falha ao enviar configuração dos servos: {e}")
-    #         conexao_serial = None
     
     print("CONEXÃO SERIAL:", "Simulação" if conexao_serial is None else "Estabelecida")
     

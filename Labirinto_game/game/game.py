@@ -374,6 +374,19 @@ class JogoLabirinto:
         # Lista de tentativas do usuário
         tentativas = self.usuarios_data.get(self.usuario, {}).get("tentativas", [])
         
+        # Verificar progresso para "Mestre dos Botões"
+        if not self.sistema_conquistas.conquistas['mestre_dos_botoes']['desbloqueada']:
+            qtes_acertados = self.usuarios_data.get(self.usuario, {}).get("qtes_acertados", 0)
+            meta_qte = 10  # Meta para desbloquear a conquista
+            
+            if qtes_acertados > 0:  # Se já tem pelo menos 1 QTE acertado
+                conquistas_proximas.append({
+                    'chave': 'mestre_dos_botoes',
+                    'nome': self.sistema_conquistas.conquistas.get('mestre_dos_botoes', {}).get('nome', 'Mestre dos Botões'),
+                    'progresso': min(1.0, qtes_acertados / meta_qte),
+                    'meta': meta_qte,
+                    'atual': qtes_acertados
+                })
 
         if not self.sistema_conquistas.conquistas['pegadas_de_bronze']['desbloqueada']:
             total_jogos = len(tentativas)
@@ -389,7 +402,7 @@ class JogoLabirinto:
 
         if not self.sistema_conquistas.conquistas['domador_do_labirinto']['desbloqueada']:
             niveis_completados = set(t.get('nivel') for t in tentativas if t.get('vidas', 0) > 0)
-            if len(niveis_completados) >= 2:  # Reduzido para 2 (40% de 5)
+            if len(niveis_completados) >= 3:
                 conquistas_proximas.append({
                     'chave': 'domador_do_labirinto',
                     'nome': self.sistema_conquistas.conquistas['domador_do_labirinto']['nome'],
@@ -744,7 +757,8 @@ class JogoLabirinto:
             'vidas_restantes': self.vidas,
             'vidas_iniciais': self.num_vidas,  # Usar o número de vidas configurado
             'concluido': not falhou,
-            'qte_sucesso': self.qte_stats.get("qte_sucesso", 0)
+            'qte_sucesso': self.qte_stats.get("qte_sucesso", 0),
+            'qtes_acertados': usuario_data.get('qtes_acertados', 0)  # Adiciona contagem total de QTEs acertados
         }
         
         # Verificar conquistas com os dados atualizados
@@ -864,12 +878,6 @@ class JogoLabirinto:
 
         self.tela.blit(texto_surface, texto_rect)
         
-        # # Adiciona um pequeno ícone ou decoração relacionada ao nível
-        # if self.nivel_atual in self.elementos_tematicos and len(self.elementos_tematicos[self.nivel_atual]) > 0:
-        #     icone, _ = self.elementos_tematicos[self.nivel_atual][0]  # Usa o primeiro elemento como ícone
-        #     icone_pequeno = pygame.transform.scale(icone, (resize(30, eh_X=True), resize(30)))
-        #     self.tela.blit(icone_pequeno, (faixa_rect.left + resize(10, eh_X=True), faixa_rect.centery - resize(15)))
-
     def desenhar_elementos_tematicos(self):
         """Desenha elementos decorativos temáticos do nível atual"""
         if self.nivel_atual in self.elementos_tematicos:
@@ -1471,6 +1479,11 @@ class JogoLabirinto:
 
                 elif resultado is True: # Acertou o último passo
                     self.conexao_serial.write(b"QTE_END\n")
+                    # Incrementa o contador de QTEs acertados no usuário
+                    self.usuarios_data.setdefault(self.usuario, {}).setdefault("qtes_acertados", 0)
+                    self.usuarios_data[self.usuario]["qtes_acertados"] += 1
+                    salvar_usuarios(self.usuarios_data)
+                    print(f"QTE acertado! Total: {self.usuarios_data[self.usuario]['qtes_acertados']}")
                     # A função qte_concluido_sucesso() será chamada pelo qte_manager
                     
                 elif resultado is False: # Errou
@@ -1542,14 +1555,12 @@ class JogoLabirinto:
                     self.salvar_progresso(tempo_total)
                     self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
                     tela_conclusao(tela, self.sistema_conquistas)
-                    self.resetar_nivel() # Reseta corações
                     return
                 else:
                     self.salvar_progresso(tempo_total)
                     self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
                     proximo_nivel = self.nivel_atual + 1
                     
-
                     TransitionEffect.fade_out(tela, velocidade=10)
 
                     continuar_jogando, repetir_nivel, pular_dialogo = tela_conclusao_nivel(tela, self.nivel_atual, tempo_total, self.sistema_conquistas)
@@ -1558,13 +1569,11 @@ class JogoLabirinto:
 
                         self.jogo_ativo = False
                         return
-                    
+                  
                     self.nivel_atual = self.nivel_atual if repetir_nivel else proximo_nivel
                     
- 
                     self.resetar_nivel() # Reseta corações
                     
-   
                     return self.loop_principal(pular_dialogo=pular_dialogo)
 
 
@@ -1572,7 +1581,7 @@ class JogoLabirinto:
                 fonte_aviso = pygame.font.SysFont("Arial", resize(50, eh_X=True), bold=True)
                 desenhar_texto("Posicione o anel no início para começar!", fonte_aviso, 
                                      (255, 255, 100), self.tela, 
-                                     LARGURA_TELA//2, ALTURA_TELA//2, centralizado=True)
+                                     LARGURA_TELA//2, ALTURA_TELA//2 - resize(300), centralizado=True)
             else:
                 # O jogo está rolando, desenha a interface normal
                 desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)

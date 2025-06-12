@@ -103,19 +103,19 @@ void setQteLed(char cor) {
     if (!ledsAtivados) return;
     apagarLedsManopla();
     if (cor == 'C') {
-        digitalWrite(LedMB, HIGH); // Azul para Esquerda
+        digitalWrite(LedMB, HIGH); // Azul para Cima
     } else if (cor == 'B') {
-        digitalWrite(LedMR, HIGH); // Vermelho para Direita
+        digitalWrite(LedMR, HIGH); // Vermelho para Baixo
     }
 }
 
 void piscarAckQte() {
     if (!ledsAtivados) return;
     apagarLedsManopla();
-    digitalWrite(LedMB, HIGH); // Roxo (Azul + Vermelho)
-    digitalWrite(LedMR, HIGH);
-    delay(80);
-    apagarLedsManopla();
+    //digitalWrite(LedMB, HIGH); // Roxo (Azul + Vermelho)
+    //digitalWrite(LedMR, HIGH);
+    delay(50);
+    //apagarLedsManopla();
 }
 
 // --- PROCESSAMENTO DE COMANDOS ---

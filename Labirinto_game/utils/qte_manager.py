@@ -5,10 +5,11 @@ from utils.audio_manager import audio_manager
 class QTEManager:
     """Gerenciador de Quick Time Events (QTEs) para o jogo."""
     
-    def __init__(self, timeout=6, seq_min=3, seq_max=5):
+    def __init__(self, timeout=6, seq_min=3, seq_max=5, conexao_serial=None):
         self.timeout = timeout  # Tempo limite em segundos
         self.seq_min = seq_min  # Número mínimo de passos na sequência
         self.seq_max = seq_max  # Número máximo de passos na sequência
+        self.conexao_serial = conexao_serial  # Conexão serial para feedback externo, se necessário
         self.sequencia = []  # Sequência atual de QTE (L ou R)
         self.passo_atual = 0  # Posição atual na sequência
         self.tempo_inicio = 0  # Quando o QTE foi iniciado
@@ -87,6 +88,7 @@ class QTEManager:
         
         if tempo_decorrido >= self.timeout:
             # Timeout
+            self.conexao_serial.write(b"FREEZE:0\n")
             self.timeout_ocorrido = True
             self.concluido = True
             print("QTE falhou: tempo esgotado!")

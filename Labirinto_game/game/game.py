@@ -21,6 +21,7 @@ from screens.game_complete import tela_conclusao
 from utils.dialog_manager import GerenciadorDialogos
 from utils.achievements import SistemaConquistas
 from utils.qte_manager import QTEManager
+from utils.servo_animation import AnimacaoServos
 
 class JogoLabirinto:
     """Classe principal do jogo que gerencia o estado e a lógica do jogo."""
@@ -71,6 +72,9 @@ class JogoLabirinto:
             self.nivel_atual = nivel_inicial
         else:
             self.nivel_atual = self.usuarios_data[usuario]["nivel"]
+            
+        # Inicializa o animador de servos com a preferência do usuário
+        self.animacao_servos = AnimacaoServos(self.nivel_atual, servo_velocidade=self.opcoes.get("SERVO_VELOCIDADE", SERVO_VELOCIDADE))
 
         # Obter melhor tempo do jogador para este nível
         self.melhor_tempo = self.obter_melhor_tempo()
@@ -153,7 +157,7 @@ class JogoLabirinto:
             self.enviar_nivel_arduino()
             
         # Para sistema de QTE
-        self.qte_manager = QTEManager(QTE_TIMEOUT, QTE_SEQ_MIN, QTE_SEQ_MAX)
+        self.qte_manager = QTEManager(QTE_TIMEOUT, QTE_SEQ_MIN, QTE_SEQ_MAX, conexao_serial=self.conexao_serial)
         # Inicializa o último QTE para evitar que apareça imediatamente no início do jogo
         self.ultimo_qte = time.time()  # Alterado: Não subtrai o intervalo mínimo
         self.qte_ativado = False
@@ -526,6 +530,7 @@ class JogoLabirinto:
             if self.qte_manager.sucesso:
                 self.qte_concluido_sucesso()
             self.qte_manager.resetar()
+
         
         # Verificar se deve iniciar um novo QTE - apenas uma vez por intervalo
         tempo_atual = time.time()
@@ -547,6 +552,7 @@ class JogoLabirinto:
 
                 if self.conexao_serial and sequencia_qte:
                     try:
+                        self.conexao_serial.write(b"FREEZE:1\n") # Congela os servos para o QTE
                         # Envia o comando para mostrar apenas a PRIMEIRA luz da sequência
                         primeiro_passo = sequencia_qte[0]
                         comando_qte = f"QTE_SHOW:{primeiro_passo}\n"
@@ -621,6 +627,8 @@ class JogoLabirinto:
                     self.ultimo_qte = tempo_atual  # Inicia o contador de QTE
                     self.proximo_check_qte = tempo_atual + QTE_INTERVALO_MIN  # Agenda primeiro QTE
                     self.esperando_inicio = False
+                    # Pausa a animação dos servos ao iniciar o jogo
+                    # (opcional: pode zerar ou travar a animação, aqui não faz nada pois só desenha se esperando_inicio)
                     print("Cronômetro e timer de QTE iniciados pelo hardware!")
 
             # Sinal de colisão
@@ -634,7 +642,7 @@ class JogoLabirinto:
             elif dados == "LEVEL_COMPLETE":
                 self.nivel_concluido_hardware = True
 
-            if dados == "BTN_C":
+            elif dados == "BTN_C":
                 self.qte_input_queue.append('C')
             elif dados == "BTN_B":
                 self.qte_input_queue.append('B')
@@ -792,7 +800,7 @@ class JogoLabirinto:
         
         # Reset QTE timer when starting a new level
         # self.ultimo_qte = time.time()
-        # self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda o primeiro check
+        # self.proximo_check_qte = time.time() + QTE_INTERVALO_MIN  # Agenda o primeiro check   
         self.qte_manager.resetar()
         self.popup_powerup_ativo = False # Garante que o popup não persista entre níveis
         
@@ -803,6 +811,9 @@ class JogoLabirinto:
 
         self.esperando_inicio = True if self.conexao_serial else False # Flag para aguardar o sinal do sensor de início
         self.nivel_concluido_hardware = False # Flag para sinal de conclusão do Arduino
+        
+        # Reinicia a animação dos servos para o novo nível com a preferência do usuário
+        self.animacao_servos = AnimacaoServos(self.nivel_atual, servo_velocidade=self.opcoes.get("SERVO_VELOCIDADE", SERVO_VELOCIDADE))
         
         if self.conexao_serial:
             self.enviar_nivel_arduino()
@@ -1330,6 +1341,7 @@ class JogoLabirinto:
         return rect_audio
 
     def desenhar_qte(self):
+
         """Desenha a interface do QTE atual"""
         if not self.qte_manager.ativo:
             return
@@ -1479,6 +1491,7 @@ class JogoLabirinto:
 
                 elif resultado is True: # Acertou o último passo
                     self.conexao_serial.write(b"QTE_END\n")
+                    self.conexao_serial.write(b"FREEZE:0\n")
                     # Incrementa o contador de QTEs acertados no usuário
                     self.usuarios_data.setdefault(self.usuario, {}).setdefault("qtes_acertados", 0)
                     self.usuarios_data[self.usuario]["qtes_acertados"] += 1
@@ -1488,9 +1501,14 @@ class JogoLabirinto:
                     
                 elif resultado is False: # Errou
                     self.conexao_serial.write(b"QTE_END\n")
+                    self.conexao_serial.write(b"FREEZE:0\n")
 
             self.atualizar_labirinto()
             
+            # Atualiza a animação dos servos enquanto esperando início (nível > 1)
+            if self.esperando_inicio and self.nivel_atual > 1:
+                self.animacao_servos.atualizar()
+
             # Renderiza o fundo apropriado para o nível atual
             background_atual = self.background_images.get(self.nivel_atual)
             
@@ -1504,7 +1522,6 @@ class JogoLabirinto:
                 # Último fallback para cor sólida
                 self.tela.fill(AZUL_CLARO)
                 
-
             self.desenhar_elementos_tematicos()
             
             self.desenhar_nome_nivel()
@@ -1582,6 +1599,9 @@ class JogoLabirinto:
                 desenhar_texto("Posicione o anel no início para começar!", fonte_aviso, 
                                      (255, 255, 100), self.tela, 
                                      LARGURA_TELA//2, ALTURA_TELA//2 - resize(300), centralizado=True)
+                # Desenha a animação dos servos enquanto esperando início (nível > 1)
+                if self.nivel_atual > 1:
+                    self.animacao_servos.desenhar(self.tela)
             else:
                 # O jogo está rolando, desenha a interface normal
                 desenhar_texto(f"Usuário: {self.usuario}", self.fonte, COR_TEXTO, self.tela, info_x, info_y)

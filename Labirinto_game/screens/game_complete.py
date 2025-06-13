@@ -7,6 +7,10 @@ from utils.colors import cor_com_escala_cinza
 
 def tela_conclusao(tela, sistema_conquistas):
     """Tela quando o jogador conclui todos os níveis."""
+
+    from utils.audio_manager import audio_manager
+    audio_manager.play_voiced_dialogue("conclusao")
+
     clock = pygame.time.Clock()
     fonte_titulo = FONTE_TITULO
     fonte_botao = FONTE_BOTAO

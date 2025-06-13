@@ -403,18 +403,13 @@ def tela_opcoes_acessibilidade(tela, usuario):
             "selectors": {},
         },
         "feedback": {
-            "sliders": {
-                "FEEDBACK_INTENSIDADE": Slider(x_central - largura_slider//2, y_base + espac*2, largura_slider, 
-                                             opcoes["FEEDBACK_INTENSIDADE"], 0, 100, 
-                                             cores_categoria["feedback"], 
-                                             "Intensidade de Feedback", fonte_menor, 1, "%"),
-            },
+            "sliders": {},
             "checkboxes": {},
             "selectors": {
                 "SERVO_VELOCIDADE": Selector(x_central - largura_slider//2, y_base + espac, largura_slider, 
                                           servo_opts, servo_opts.index(opcoes["SERVO_VELOCIDADE"]), 
                                           "Velocidade do Servo", fonte_menor),
-                "FEEDBACK_CANAL": Selector(x_central - largura_slider//2, y_base + espac*3, largura_slider, 
+                "FEEDBACK_CANAL": Selector(x_central - largura_slider//2, y_base + espac*2, largura_slider, 
                                         feedback_opts, feedback_opts.index(opcoes["FEEDBACK_CANAL"]), 
                                         "Canal de Feedback", fonte_menor),
             },

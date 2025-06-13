@@ -84,7 +84,8 @@ class AudioManager:
             "perdeu": ["perdeu_1", "perdeu_2", "perdeu_3", "perdeu_4", "perdeu_5", 
                   "perdeu_6", "perdeu_7", "perdeu_8", "perdeu_9", "perdeu_10"],
             "ganhou": ["ganhou_1", "ganhou_2", "ganhou_3", "ganhou_4", "ganhou_5", 
-                  "ganhou_6", "ganhou_7", "ganhou_8", "ganhou_9", "ganhou_10"]
+                  "ganhou_6", "ganhou_7", "ganhou_8", "ganhou_9", "ganhou_10"],
+            "conclusao": ["conclusao_1", "conclusao_2", "conclusao_3", "conclusao_4", "conclusao_5"]
         }
         
         for evento, variacoes in eventos.items():

@@ -1568,6 +1568,8 @@ class JogoLabirinto:
                 self.conexao_serial.write(b"TERMINAR\n")    
                 if self.nivel_atual >= 8:
                     TransitionEffect.fade_out(tela, velocidade=10)
+                    from utils.audio_manager import audio_manager
+                    audio_manager.stop_voiced_dialogue()
                     self.gerenciador_dialogos.executar("vitoria")
                     self.salvar_progresso(tempo_total)
                     self.sistema_conquistas.salvar_conquistas_usuario(self.usuario)
